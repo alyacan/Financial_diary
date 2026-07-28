@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   description: "Yatırım ve harcama takibi, AI destekli tarihsel analiz",
   icons: {
     icon: "/icon.png",
+    apple: "/icon.png",
   },
 };
 
