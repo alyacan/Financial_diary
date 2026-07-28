@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarNote, RECURRING_CALENDAR_INFO } from "@/lib/types";
+import { CalendarNote, DividendEntry, RECURRING_CALENDAR_INFO } from "@/lib/types";
 import { EconomicEvent } from "@/lib/economicCalendar";
+import { AutoDividendEvent } from "@/lib/dividendCalendar";
+import { loadDividendAutoCache, saveDividendAutoCache } from "@/lib/storage";
 import DateSelect from "./DateSelect";
 
 const WEEKDAYS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
@@ -24,15 +26,31 @@ interface Props {
   notes: CalendarNote[];
   onAdd: (note: CalendarNote) => void;
   onDelete: (id: string) => void;
+  stockTickers: string[];
+  dividends: DividendEntry[];
+  onAddDividend: (entry: DividendEntry) => void;
+  onDeleteDividend: (id: string) => void;
 }
 
-export default function FinancialCalendar({ notes, onAdd, onDelete }: Props) {
+export default function FinancialCalendar({
+  notes,
+  onAdd,
+  onDelete,
+  stockTickers,
+  dividends,
+  onAddDividend,
+  onDeleteDividend,
+}: Props) {
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth()); // 0-indexed
   const [date, setDate] = useState("");
   const [text, setText] = useState("");
   const [economicEvents, setEconomicEvents] = useState<EconomicEvent[]>([]);
+  const [autoDividends, setAutoDividends] = useState<AutoDividendEvent[]>([]);
+  const [divTicker, setDivTicker] = useState("");
+  const [divDate, setDivDate] = useState("");
+  const [divAmount, setDivAmount] = useState("");
 
   useEffect(() => {
     fetch("/api/economic-calendar")
@@ -40,6 +58,51 @@ export default function FinancialCalendar({ notes, onAdd, onDelete }: Props) {
       .then((data) => setEconomicEvents(data.events ?? []))
       .catch(() => setEconomicEvents([]));
   }, []);
+
+  useEffect(() => {
+    if (stockTickers.length === 0) {
+      setAutoDividends([]);
+      return;
+    }
+    const tickersKey = stockTickers.join(",");
+    const cached = loadDividendAutoCache(tickersKey);
+    if (cached) {
+      setAutoDividends(cached);
+      return;
+    }
+    fetch(`/api/dividend-calendar?tickers=${tickersKey}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const events: AutoDividendEvent[] = data.events ?? [];
+        setAutoDividends(events);
+        saveDividendAutoCache(tickersKey, events);
+      })
+      .catch(() => setAutoDividends([]));
+  }, [stockTickers.join(",")]);
+
+  function handleAddDividendSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!divTicker || !divDate) return;
+    onAddDividend({
+      id: crypto.randomUUID(),
+      ticker: divTicker.toUpperCase(),
+      date: divDate,
+      amountPerShare: divAmount ? parseFloat(divAmount) : undefined,
+    });
+    setDivTicker("");
+    setDivDate("");
+    setDivAmount("");
+  }
+
+  // Nasdaq'tan otomatik gelen ve elle eklenen temettü tarihleri aynı listede birleşir;
+  // aynı hisse+tarih hem otomatik hem manuel eklenmişse tekrar göstermemek için elenir.
+  const manualKeys = new Set(dividends.map((d) => `${d.ticker}|${d.date}`));
+  const combinedDividends = [
+    ...dividends.map((d) => ({ ...d, source: "Manuel" as const })),
+    ...autoDividends
+      .filter((d) => !manualKeys.has(`${d.ticker}|${d.date}`))
+      .map((d) => ({ id: `auto-${d.ticker}-${d.date}`, ticker: d.ticker, date: d.date, amountPerShare: d.amount, source: d.source })),
+  ].sort((a, b) => a.date.localeCompare(b.date));
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +126,11 @@ export default function FinancialCalendar({ notes, onAdd, onDelete }: Props) {
   const eventsByDate = new Map<string, EconomicEvent[]>();
   for (const e of economicEvents) {
     eventsByDate.set(e.date, [...(eventsByDate.get(e.date) ?? []), e]);
+  }
+
+  const dividendsByDate = new Map<string, typeof combinedDividends>();
+  for (const d of combinedDividends) {
+    dividendsByDate.set(d.date, [...(dividendsByDate.get(d.date) ?? []), d]);
   }
 
   const todayForFilter = new Date().toISOString().slice(0, 10);
@@ -122,6 +190,7 @@ export default function FinancialCalendar({ notes, onAdd, onDelete }: Props) {
             const iso = toISODate(viewYear, viewMonth, day);
             const dayNotes = notesByDate.get(iso) ?? [];
             const dayEvents = eventsByDate.get(iso) ?? [];
+            const dayDividends = dividendsByDate.get(iso) ?? [];
             const isToday = iso === todayISO;
             const isWeekend = (leadingBlanks + day - 1) % 7 >= 5;
             const isSelected = date === iso;
@@ -140,12 +209,18 @@ export default function FinancialCalendar({ notes, onAdd, onDelete }: Props) {
                 }`}
               >
                 <span className={isToday && !isSelected ? "font-bold" : ""}>{day}</span>
-                {(dayNotes.length > 0 || dayEvents.length > 0) && (
+                {(dayNotes.length > 0 || dayEvents.length > 0 || dayDividends.length > 0) && (
                   <span className="flex gap-0.5">
                     {dayEvents.length > 0 && (
                       <span
                         className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white dark:bg-black" : "bg-blue-500"}`}
                         title={dayEvents.map((e) => e.title).join(", ")}
+                      />
+                    )}
+                    {dayDividends.length > 0 && (
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white dark:bg-black" : "bg-emerald-500"}`}
+                        title={dayDividends.map((d) => `Temettü: ${d.ticker}`).join(", ")}
                       />
                     )}
                     {dayNotes.length > 0 && (
@@ -179,6 +254,68 @@ export default function FinancialCalendar({ notes, onAdd, onDelete }: Props) {
             ))}
           </ul>
         )}
+      </div>
+
+      <div>
+        <h3 className="mb-2 text-sm font-semibold text-zinc-500">Temettü Takvimi (portföyündeki hisseler)</h3>
+        {combinedDividends.length === 0 ? (
+          <p className="text-sm text-zinc-500">
+            {stockTickers.length === 0
+              ? "Portföyünde henüz hisse yok."
+              : "Şu an gösterilecek temettü tarihi yok — yabancı (Nasdaq/NYSE) hisselerin varsa otomatik gelir, BIST hisseleri için aşağıdan elle ekleyebilirsin."}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {combinedDividends.map((d) => (
+              <li key={d.id} className="flex items-center gap-2 rounded-lg border border-zinc-200 p-2 text-sm dark:border-zinc-800">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                <strong>{formatDate(d.date)}</strong>
+                <span>{d.ticker}</span>
+                {d.amountPerShare !== undefined && <span className="text-zinc-400">{d.amountPerShare} / hisse</span>}
+                <span className="ml-auto text-xs text-zinc-400">{d.source}</span>
+                {d.source === "Manuel" && (
+                  <button onClick={() => onDeleteDividend(d.id)} className="shrink-0 text-zinc-400 hover:text-red-600">Sil</button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <form onSubmit={handleAddDividendSubmit} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <label className="flex flex-col gap-1 text-sm">
+            Hisse
+            <input
+              type="text"
+              list="dividend-ticker-options"
+              value={divTicker}
+              onChange={(e) => setDivTicker(e.target.value)}
+              placeholder="Örn: THYAO"
+              required
+              className="rounded border border-zinc-300 p-2 dark:border-zinc-700 dark:bg-zinc-900"
+            />
+            <datalist id="dividend-ticker-options">
+              {stockTickers.map((t) => (
+                <option key={t} value={t} />
+              ))}
+            </datalist>
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            Tarih
+            <DateSelect value={divDate} onChange={setDivDate} required />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            Hisse Başı Tutar (opsiyonel)
+            <input
+              type="number"
+              step="any"
+              value={divAmount}
+              onChange={(e) => setDivAmount(e.target.value)}
+              className="rounded border border-zinc-300 p-2 dark:border-zinc-700 dark:bg-zinc-900"
+            />
+          </label>
+          <button type="submit" className="rounded bg-zinc-900 px-4 py-2 text-white dark:bg-zinc-100 dark:text-black">
+            Ekle
+          </button>
+        </form>
       </div>
 
       <div>

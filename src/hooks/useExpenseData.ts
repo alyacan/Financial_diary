@@ -5,6 +5,7 @@ import { ArchivedPeriod, CategoryBudget, Expense } from "@/lib/types";
 import {
   addExpense,
   addExpenses,
+  clearPortfolioSnapshots,
   closePeriod,
   deleteArchivedPeriod,
   deleteCategoryBudget,
@@ -42,6 +43,7 @@ export function useExpenseData() {
 
   function handleDeleteExpense(id: string) {
     setExpenses(deleteExpense(id));
+    clearPortfolioSnapshots();
   }
 
   function handleImportExpenses(newExpenses: Expense[]) {
@@ -56,6 +58,7 @@ export function useExpenseData() {
 
   function handleDeleteArchivedPeriod(id: string) {
     setArchivedPeriods(deleteArchivedPeriod(id));
+    clearPortfolioSnapshots();
   }
 
   function handleUpdateArchivedPeriod(

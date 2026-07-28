@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Transaction, GOLD_SUBTYPES } from "@/lib/types";
-import { addTransaction, deleteTransaction, loadTransactions } from "@/lib/storage";
+import { addTransaction, deleteTransaction, loadTransactions, clearPortfolioSnapshots } from "@/lib/storage";
 import { fetchLivePrices, getManualPrice, setManualPrice, getFundMetadata, setFundMetadata, FundMetadata } from "@/lib/prices";
 import { calculatePositions, calculateTransactionProfits, priceKey, PriceMap } from "@/lib/calculations";
 
@@ -87,6 +87,7 @@ export function useInvestments() {
 
   function handleDelete(id: string) {
     setTransactions(deleteTransaction(id));
+    clearPortfolioSnapshots();
   }
 
   function handleManualGoldSave(subTypeId: string) {

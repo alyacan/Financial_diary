@@ -1,4 +1,5 @@
-import { ArchivedPeriod, CalendarNote, CategoryBudget, Expense, PortfolioSnapshot, Transaction } from "./types";
+import { ArchivedPeriod, CalendarNote, CategoryBudget, DividendEntry, Expense, PortfolioSnapshot, Transaction } from "./types";
+import { AutoDividendEvent } from "./dividendCalendar";
 
 const STORAGE_KEY = "financial-diary-transactions";
 const EXPENSES_STORAGE_KEY = "financial-diary-expenses";
@@ -6,6 +7,8 @@ const CALENDAR_STORAGE_KEY = "financial-diary-calendar-notes";
 const ARCHIVED_PERIODS_STORAGE_KEY = "financial-diary-archived-periods";
 const PORTFOLIO_SNAPSHOTS_STORAGE_KEY = "financial-diary-portfolio-snapshots";
 const BUDGETS_STORAGE_KEY = "financial-diary-category-budgets";
+const DIVIDENDS_STORAGE_KEY = "financial-diary-dividends";
+const DIVIDEND_AUTO_CACHE_KEY = "financial-diary-dividend-auto-cache";
 const MAX_PORTFOLIO_SNAPSHOTS = 90;
 
 export function loadTransactions(): Transaction[] {
@@ -195,6 +198,13 @@ export function recordPortfolioSnapshot(value: number): PortfolioSnapshot[] {
   return updated;
 }
 
+// Bir işlem/harcama/dönem silindiğinde geçmiş grafiğin artık var olmayan veriye
+// ait eski bir toplamı göstermeye devam etmemesi için trend geçmişi sıfırlanır.
+export function clearPortfolioSnapshots(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(PORTFOLIO_SNAPSHOTS_STORAGE_KEY);
+}
+
 export function loadCategoryBudgets(): CategoryBudget[] {
   if (typeof window === "undefined") return [];
   const raw = window.localStorage.getItem(BUDGETS_STORAGE_KEY);
@@ -221,4 +231,59 @@ export function deleteCategoryBudget(category: string): CategoryBudget[] {
     window.localStorage.setItem(BUDGETS_STORAGE_KEY, JSON.stringify(updated));
   }
   return updated;
+}
+
+export function loadDividends(): DividendEntry[] {
+  if (typeof window === "undefined") return [];
+  const raw = window.localStorage.getItem(DIVIDENDS_STORAGE_KEY);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as DividendEntry[];
+  } catch {
+    return [];
+  }
+}
+
+export function addDividend(entry: DividendEntry): DividendEntry[] {
+  const entries = [...loadDividends(), entry];
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(DIVIDENDS_STORAGE_KEY, JSON.stringify(entries));
+  }
+  return entries;
+}
+
+export function deleteDividend(id: string): DividendEntry[] {
+  const entries = loadDividends().filter((d) => d.id !== id);
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(DIVIDENDS_STORAGE_KEY, JSON.stringify(entries));
+  }
+  return entries;
+}
+
+interface DividendAutoCache {
+  tickers: string; // virgülle ayrılmış, karşılaştırma anahtarı
+  fetchedAt: string; // YYYY-MM-DD
+  events: AutoDividendEvent[];
+}
+
+// Nasdaq'ın yanıt süresi tekrarlanan isteklerde çok yavaşlayabiliyor (bkz. dividendCalendar.ts);
+// bu yüzden aynı hisse listesi için günde bir defadan fazla otomatik çekim yapılmaz.
+export function loadDividendAutoCache(tickers: string): AutoDividendEvent[] | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(DIVIDEND_AUTO_CACHE_KEY);
+  if (!raw) return null;
+  try {
+    const cache = JSON.parse(raw) as DividendAutoCache;
+    const today = new Date().toISOString().slice(0, 10);
+    if (cache.tickers !== tickers || cache.fetchedAt !== today) return null;
+    return cache.events;
+  } catch {
+    return null;
+  }
+}
+
+export function saveDividendAutoCache(tickers: string, events: AutoDividendEvent[]): void {
+  if (typeof window === "undefined") return;
+  const cache: DividendAutoCache = { tickers, fetchedAt: new Date().toISOString().slice(0, 10), events };
+  window.localStorage.setItem(DIVIDEND_AUTO_CACHE_KEY, JSON.stringify(cache));
 }

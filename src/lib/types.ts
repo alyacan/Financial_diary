@@ -110,6 +110,16 @@ export interface CalendarNote {
   text: string;
 }
 
+// Portföydeki hisseler için temettü tarihi kaydı. Yabancı (Nasdaq/NYSE) hisseler için
+// otomatik çekilen veri de, BIST gibi otomatik kaynağı olmayan hisseler için elle
+// girilen veri de aynı şekle sahiptir — ikisi de takvimde aynı yerde gösterilir.
+export interface DividendEntry {
+  id: string;
+  ticker: string; // örn: THYAO, NVDA
+  date: string; // YYYY-MM-DD, ex-dividend / temettü tarihi
+  amountPerShare?: number;
+}
+
 // Dönemi Kapat / Klasörle: kullanıcı istediği an mevcut harcamaları silmeden
 // arşivler, ana ekran yeni dönem için temizlenir.
 export interface ArchivedPeriod {
