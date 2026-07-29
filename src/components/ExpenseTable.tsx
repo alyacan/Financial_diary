@@ -1,6 +1,6 @@
 "use client";
 
-import { Expense } from "@/lib/types";
+import { EXPENSE_CATEGORIES, Expense } from "@/lib/types";
 
 function formatTRY(value: number): string {
   return value.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
@@ -9,9 +9,10 @@ function formatTRY(value: number): string {
 interface Props {
   expenses: Expense[];
   onDelete?: (id: string) => void;
+  onUpdateCategory?: (id: string, category: string) => void;
 }
 
-export default function ExpenseTable({ expenses, onDelete }: Props) {
+export default function ExpenseTable({ expenses, onDelete, onUpdateCategory }: Props) {
   if (expenses.length === 0) {
     return <p className="text-sm text-zinc-500">Henüz harcama eklenmedi.</p>;
   }
@@ -34,7 +35,21 @@ export default function ExpenseTable({ expenses, onDelete }: Props) {
           {sorted.map((e) => (
             <tr key={e.id} className="border-b border-zinc-100 dark:border-zinc-900">
               <td className="p-2">{e.date}</td>
-              <td className="p-2">{e.category}</td>
+              <td className="p-2">
+                {onUpdateCategory ? (
+                  <select
+                    value={e.category}
+                    onChange={(ev) => onUpdateCategory(e.id, ev.target.value)}
+                    className="rounded border border-transparent bg-transparent p-1 hover:border-zinc-300 dark:hover:border-zinc-700"
+                  >
+                    {EXPENSE_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                ) : (
+                  e.category
+                )}
+              </td>
               <td className="p-2">{formatTRY(e.amount)}</td>
               <td className="p-2 max-w-[200px] truncate" title={e.note}>{e.note}</td>
               {onDelete && (

@@ -91,7 +91,7 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
                   </span>
                   {p && p.lastMonthTotal > 0 && (
                     <span className={delta > 0 ? "text-red-600" : delta < 0 ? "text-green-600" : ""}>
-                      Geçen aya göre {delta > 0 ? "+" : ""}
+                      Geçen döneme göre {delta > 0 ? "+" : ""}
                       {formatTRY(delta)}
                     </span>
                   )}

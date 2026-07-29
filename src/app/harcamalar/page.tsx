@@ -18,6 +18,7 @@ export default function HarcamalarPage() {
     expenses,
     handleAddExpense,
     handleDeleteExpense,
+    handleUpdateExpenseCategory,
     handleImportExpenses,
     totalExpenses,
     archivedPeriods,
@@ -77,7 +78,8 @@ export default function HarcamalarPage() {
       <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
         <h2 className="text-lg font-semibold">Hedef Bazlı Bütçe</h2>
         <p className="mb-3 text-xs text-zinc-500">
-          Kategori başına aylık bir hedef belirle; bu ayki harcaman hedefe göre ve geçen aya göre karşılaştırılsın.
+          Kategori başına aylık bir hedef belirle; harcaman hesap özeti dönemine göre (ayın 15&apos;inden bir
+          sonraki ayın 14&apos;üne kadar) hedefe ve bir önceki döneme göre karşılaştırılsın.
         </p>
         <BudgetGoals budgets={budgets} progress={budgetProgress} onSave={handleSaveBudget} onDelete={handleDeleteBudget} />
       </section>
@@ -88,7 +90,8 @@ export default function HarcamalarPage() {
 
       <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
         <h2 className="mb-2 text-lg font-semibold">Harcamalar</h2>
-        <ExpenseTable expenses={expenses} onDelete={handleDeleteExpense} />
+        <p className="mb-2 text-xs text-zinc-500">Bir kategoriyi yanlış bulursan üzerine tıklayıp değiştirebilirsin.</p>
+        <ExpenseTable expenses={expenses} onDelete={handleDeleteExpense} onUpdateCategory={handleUpdateExpenseCategory} />
       </section>
 
       {archivedPeriods.length > 0 && (

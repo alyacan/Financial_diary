@@ -15,6 +15,7 @@ import {
   loadExpenses,
   saveCategoryBudget,
   updateArchivedPeriod,
+  updateExpenseCategory,
 } from "@/lib/storage";
 import { computeBudgetProgress } from "@/lib/budgetStats";
 
@@ -44,6 +45,10 @@ export function useExpenseData() {
   function handleDeleteExpense(id: string) {
     setExpenses(deleteExpense(id));
     clearPortfolioSnapshots();
+  }
+
+  function handleUpdateExpenseCategory(id: string, category: string) {
+    setExpenses(updateExpenseCategory(id, category));
   }
 
   function handleImportExpenses(newExpenses: Expense[]) {
@@ -79,6 +84,7 @@ export function useExpenseData() {
     expenses,
     handleAddExpense,
     handleDeleteExpense,
+    handleUpdateExpenseCategory,
     handleImportExpenses,
     totalExpenses,
     archivedPeriods,

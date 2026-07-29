@@ -67,6 +67,12 @@ export function deleteExpense(id: string): Expense[] {
   return expenses;
 }
 
+export function updateExpenseCategory(id: string, category: string): Expense[] {
+  const expenses = loadExpenses().map((e) => (e.id === id ? { ...e, category } : e));
+  saveExpenses(expenses);
+  return expenses;
+}
+
 export function addExpenses(newExpenses: Expense[]): Expense[] {
   const expenses = [...loadExpenses(), ...newExpenses];
   saveExpenses(expenses);
