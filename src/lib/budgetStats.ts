@@ -31,25 +31,32 @@ function previousPeriodKey(key: string): string {
   return `${y}-${String(prevMonth).padStart(2, "0")}`;
 }
 
-// Hedefler hesap özeti dönemine göre (15'inden 15'ine) değerlendirilir (Dönemi
-// Kapat/Klasörle sınırlarından bağımsız) — bu yüzden hem aktif hem arşivlenmiş
-// tüm harcamalar birlikte verilmeli.
+// Hedefler hesap özeti dönemine göre (15'inden 15'ine) değerlendirilir. "Bu dönem"
+// toplamı yalnızca aktif (henüz arşivlenmemiş) harcamalardan hesaplanır — bir dönem
+// Dönemi Kapat/Klasörle ile arşivlendiğinde artık "bu dönem" toplamına karışmaz,
+// böylece arşivleme gerçekten sıfırdan başlamış gibi hissettirir. "Geçen döneme göre"
+// karşılaştırması ise hem aktif hem arşivlenmiş harcamalardan hesaplanır, çünkü önceki
+// dönemin verisi artık arşive taşınmış olabilir.
 export function computeBudgetProgress(
-  allExpenses: Expense[],
+  activeExpenses: Expense[],
+  archivedExpenses: Expense[],
   budgets: CategoryBudget[],
   referenceDate: Date = new Date()
 ): BudgetProgress[] {
   const thisPeriodKey = periodKey(referenceDate.getFullYear(), referenceDate.getMonth() + 1, referenceDate.getDate());
   const lastPeriodKey = previousPeriodKey(thisPeriodKey);
+  const allExpenses = [...activeExpenses, ...archivedExpenses];
 
   return budgets.map((b) => {
     let thisMonthTotal = 0;
+    for (const e of activeExpenses) {
+      if (e.category !== b.category) continue;
+      if (periodKeyForDateString(e.date) === thisPeriodKey) thisMonthTotal += e.amount;
+    }
     let lastMonthTotal = 0;
     for (const e of allExpenses) {
       if (e.category !== b.category) continue;
-      const k = periodKeyForDateString(e.date);
-      if (k === thisPeriodKey) thisMonthTotal += e.amount;
-      else if (k === lastPeriodKey) lastMonthTotal += e.amount;
+      if (periodKeyForDateString(e.date) === lastPeriodKey) lastMonthTotal += e.amount;
     }
     return {
       category: b.category,

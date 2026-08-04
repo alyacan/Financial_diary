@@ -75,10 +75,8 @@ export function useExpenseData() {
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
-  // Bütçe hedefleri takvim ayına göre değerlendirilir, Dönemi Kapat sınırlarından
-  // bağımsızdır — bu yüzden aktif + arşivlenmiş tüm harcamalar birlikte kullanılır.
-  const allExpensesForBudget = [...expenses, ...archivedPeriods.flatMap((p) => p.expenses)];
-  const budgetProgress = computeBudgetProgress(allExpensesForBudget, budgets);
+  const archivedExpenses = archivedPeriods.flatMap((p) => p.expenses);
+  const budgetProgress = computeBudgetProgress(expenses, archivedExpenses, budgets);
 
   return {
     expenses,
