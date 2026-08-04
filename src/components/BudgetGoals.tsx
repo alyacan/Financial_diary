@@ -9,17 +9,9 @@ function formatTRY(value: number): string {
   return value.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
 }
 
-// Clean mapping of exact cat photos to expense categories
+// Exact category image mapping - setting Eğitim strictly to the uploaded math cat photo
 const CATEGORY_CAT_IMAGES: Record<string, string> = {
-  Market: "/cats/cat_yogurt.jpg",
-  Ulaşım: "/cats/cat_car.jpg",
-  Eğitim: "/cats/cat_math.jpg",
-  Sağlık: "/cats/cat_stethoscope.jpg",
-  Restoran: "/cats/cat_bread.jpg",
-  Fatura: "/cats/cat_masher.jpg",
-  "Kişisel Bakım": "/cats/cat_stethoscope.jpg",
-  Eğlence: "/cats/cat_car.jpg",
-  Diğer: "/cats/cat_bread.jpg",
+  Eğitim: "/cats/egitim.jpg",
 };
 
 interface Props {
@@ -51,15 +43,21 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
         </h4>
         <div className="flex flex-wrap gap-2.5">
           {EXPENSE_CATEGORIES.filter((c) => !budgetedCategories.has(c)).map((category) => {
-            const imgSrc = CATEGORY_CAT_IMAGES[category] ?? "/cats/cat_bread.jpg";
+            const imgSrc = CATEGORY_CAT_IMAGES[category];
             return (
               <div
                 key={category}
                 className="flex items-center gap-2.5 rounded-xl border border-zinc-200 bg-white p-2 text-xs shadow-2xs dark:border-zinc-800 dark:bg-zinc-900"
               >
-                <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg">
-                  <Image src={imgSrc} alt={category} fill className="object-cover" />
-                </div>
+                {imgSrc ? (
+                  <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg">
+                    <Image src={imgSrc} alt={category} fill className="object-cover" />
+                  </div>
+                ) : (
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-100 text-xs dark:bg-zinc-800">
+                    📂
+                  </div>
+                )}
                 <span className="font-semibold text-zinc-800 dark:text-zinc-200">{category}</span>
                 <input
                   type="number"
@@ -81,7 +79,7 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
         </div>
       </div>
 
-      {/* Active Budget Cards with Cat Avatars */}
+      {/* Active Budget Cards */}
       {budgets.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-800">
           Henüz bir kategori için aylık bütçe hedefi koymadın. Yukarıdaki listeden dilediğin kategoriye bütçe limiti belirleyebilirsin.
@@ -93,7 +91,7 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
             const percent = p ? Math.min(100, p.percentUsed) : 0;
             const over = p ? p.percentUsed > 100 : false;
             const delta = p?.deltaVsLastMonth ?? 0;
-            const imgSrc = CATEGORY_CAT_IMAGES[b.category] ?? "/cats/cat_bread.jpg";
+            const imgSrc = CATEGORY_CAT_IMAGES[b.category];
             const spent = p?.thisMonthTotal ?? 0;
             const remaining = Math.max(0, b.monthlyGoal - spent);
 
@@ -105,9 +103,15 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
                 <div>
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-zinc-200 shadow-2xs dark:border-zinc-700">
-                        <Image src={imgSrc} alt={b.category} fill className="object-cover" />
-                      </div>
+                      {imgSrc ? (
+                        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-zinc-200 shadow-2xs dark:border-zinc-700">
+                          <Image src={imgSrc} alt={b.category} fill className="object-cover" />
+                        </div>
+                      ) : (
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-zinc-100 text-lg dark:bg-zinc-800">
+                          📂
+                        </div>
+                      )}
                       <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">{b.category}</h3>
                     </div>
 
