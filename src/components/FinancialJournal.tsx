@@ -23,7 +23,7 @@ export default function FinancialJournal({ transactions }: Props) {
   if (entries.length === 0) {
     return (
       <p className="text-sm text-zinc-500">
-        Henüz günlük notu yok. İşlem eklerken "Not" alanına o anki düşünceni yazarsan burada birikir.
+        Henüz günlük notu yok. İşlem eklerken &quot;Not&quot; alanına o anki düşünceni yazarsan burada birikir.
       </p>
     );
   }

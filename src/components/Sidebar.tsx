@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const LINKS = [
   {
@@ -46,14 +46,13 @@ const LINKS = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [today, setToday] = useState<string | null>(null);
-
-  useEffect(() => {
+  const [today] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
     const now = new Date();
     const dateStr = now.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
     const weekday = now.toLocaleDateString("tr-TR", { weekday: "long" });
-    setToday(`${dateStr}\n${weekday}`);
-  }, []);
+    return `${dateStr}\n${weekday}`;
+  });
 
   return (
     <aside

@@ -59,16 +59,16 @@ export default function FinancialCalendar({
       .catch(() => setEconomicEvents([]));
   }, []);
 
+  const tickersKey = stockTickers.join(",");
+
   useEffect(() => {
-    if (stockTickers.length === 0) {
-      setAutoDividends([]);
+    if (!tickersKey) {
       return;
     }
-    const tickersKey = stockTickers.join(",");
     const cached = loadDividendAutoCache(tickersKey);
     if (cached) {
-      setAutoDividends(cached);
-      return;
+      const timer = setTimeout(() => setAutoDividends(cached), 0);
+      return () => clearTimeout(timer);
     }
     fetch(`/api/dividend-calendar?tickers=${tickersKey}`)
       .then((res) => res.json())
@@ -78,7 +78,7 @@ export default function FinancialCalendar({
         saveDividendAutoCache(tickersKey, events);
       })
       .catch(() => setAutoDividends([]));
-  }, [stockTickers.join(",")]);
+  }, [tickersKey]);
 
   function handleAddDividendSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ArchivedPeriod, CategoryBudget, Expense } from "@/lib/types";
 import {
   addExpense,
@@ -20,15 +20,9 @@ import {
 import { computeBudgetProgress } from "@/lib/budgetStats";
 
 export function useExpenseData() {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [archivedPeriods, setArchivedPeriods] = useState<ArchivedPeriod[]>([]);
-  const [budgets, setBudgets] = useState<CategoryBudget[]>([]);
-
-  useEffect(() => {
-    setExpenses(loadExpenses());
-    setArchivedPeriods(loadArchivedPeriods());
-    setBudgets(loadCategoryBudgets());
-  }, []);
+  const [expenses, setExpenses] = useState<Expense[]>(() => loadExpenses());
+  const [archivedPeriods, setArchivedPeriods] = useState<ArchivedPeriod[]>(() => loadArchivedPeriods());
+  const [budgets, setBudgets] = useState<CategoryBudget[]>(() => loadCategoryBudgets());
 
   function handleSaveBudget(category: string, monthlyGoal: number) {
     setBudgets(saveCategoryBudget(category, monthlyGoal));

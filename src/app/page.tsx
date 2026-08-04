@@ -57,15 +57,16 @@ const QUICK_LINKS = [
 export default function Home() {
   const { positions, totalInvested, totalValue, totalProfit, missingPricePositions } = useInvestments();
   const { expenses, totalExpenses, archivedPeriods } = useExpenseData();
-  const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>([]);
-
-  useEffect(() => {
-    setSnapshots(loadPortfolioSnapshots());
-  }, []);
+  const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>(() => loadPortfolioSnapshots());
 
   // Değer fiyatlar yüklendikten sonra oturur; 0 iken bugünün kaydını yazmayı atla.
   useEffect(() => {
-    if (totalValue > 0) setSnapshots(recordPortfolioSnapshot(totalValue));
+    if (totalValue > 0) {
+      const handle = requestAnimationFrame(() => {
+        setSnapshots(recordPortfolioSnapshot(totalValue));
+      });
+      return () => cancelAnimationFrame(handle);
+    }
   }, [totalValue]);
 
   const profitPercent = totalInvested > 0 ? (totalProfit / totalInvested) * 100 : 0;
@@ -97,7 +98,7 @@ export default function Home() {
 
       <section aria-label="genel bakış" className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <div
-          className="flex flex-col justify-between gap-8 rounded-[20px] p-8 sm:row-span-2"
+          className="flex flex-col justify-between gap-6 rounded-[20px] p-6"
           style={{
             background: "linear-gradient(150deg, var(--shell-hero-from), var(--shell-hero-to))",
             color: "var(--shell-hero-fg)",
@@ -128,45 +129,45 @@ export default function Home() {
             )}
           </div>
           <div>
-            <div className="font-serif text-[46px] font-semibold tracking-tight">{formatTRY(totalValue)}</div>
-            <div className="mt-2 text-[13px]" style={{ color: "oklch(0.75 0.03 60)" }}>
+            <div className="font-serif text-3xl font-semibold tracking-tight sm:text-4xl">{formatTRY(totalValue)}</div>
+            <div className="mt-1.5 text-[13px]" style={{ color: "oklch(0.75 0.03 60)" }}>
               {pricedPositionCount} pozisyon
             </div>
           </div>
         </div>
 
-        <div className="rounded-[20px] p-6" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
+        <div className="flex flex-col justify-between gap-4 rounded-[20px] p-6" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
           <div className="text-xs tracking-wide uppercase" style={{ color: "var(--shell-muted)" }}>
             Toplam Yatırım
           </div>
-          <div className="mt-2 text-2xl font-semibold tracking-tight">{formatTRY(totalInvested)}</div>
+          <div className="text-2xl font-semibold tracking-tight sm:text-3xl">{formatTRY(totalInvested)}</div>
         </div>
 
         <div
-          className="flex flex-col justify-between gap-3 rounded-[20px] p-6 sm:row-span-2"
+          className="flex flex-col justify-between gap-4 rounded-[20px] p-6"
           style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
         >
           <div>
-            <div className="mb-2 text-xs tracking-wide uppercase" style={{ color: "var(--shell-muted)" }}>
+            <div className="text-xs tracking-wide uppercase" style={{ color: "var(--shell-muted)" }}>
               Toplam Harcama
             </div>
-            <div className="text-2xl font-semibold tracking-tight">{formatTRY(totalExpenses)}</div>
+            <div className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{formatTRY(totalExpenses)}</div>
           </div>
-          <div className="border-t pt-3.5 text-xs" style={{ borderColor: "var(--shell-border)", color: "var(--shell-muted)" }}>
+          <div className="border-t pt-2.5 text-xs" style={{ borderColor: "var(--shell-border)", color: "var(--shell-muted)" }}>
             {expenseDelta === null || !lastPeriodTotal
-              ? "Henüz karşılaştırılacak kapanmış dönem yok"
+              ? "Kapanmış dönem yok"
               : `Önceki döneme göre %${Math.abs((expenseDelta / lastPeriodTotal) * 100).toFixed(0)} ${
                   expenseDelta > 0 ? "fazla" : expenseDelta < 0 ? "az" : "aynı"
                 }`}
           </div>
         </div>
 
-        <div className="rounded-[20px] p-6" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
+        <div className="flex flex-col justify-between gap-4 rounded-[20px] p-6" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
           <div className="text-xs tracking-wide uppercase" style={{ color: "var(--shell-muted)" }}>
             Toplam Kâr/Zarar
           </div>
           <div
-            className="mt-2 text-2xl font-semibold tracking-tight"
+            className="text-2xl font-semibold tracking-tight sm:text-3xl"
             style={{ color: totalProfit >= 0 ? "var(--shell-positive)" : "var(--shell-negative)" }}
           >
             {totalProfit >= 0 ? "+" : ""}

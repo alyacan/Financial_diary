@@ -1,15 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { DividendEntry } from "@/lib/types";
 import { addDividend, deleteDividend, loadDividends } from "@/lib/storage";
 
 export function useDividends() {
-  const [dividends, setDividends] = useState<DividendEntry[]>([]);
-
-  useEffect(() => {
-    setDividends(loadDividends());
-  }, []);
+  const [dividends, setDividends] = useState<DividendEntry[]>(() => loadDividends());
 
   function handleAddDividend(entry: DividendEntry) {
     setDividends(addDividend(entry));

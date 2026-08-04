@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const MONTHS = [
   "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
@@ -27,15 +27,14 @@ interface Props {
 // Türkçe ay adlarıyla gösteren tarih seçici. Native <input type="date"> yerine
 // kullanılır çünkü onun formatı sistem diline bağlıdır ve garanti edilemez.
 //
-// Gün/Ay/Yıl kendi iç state'inde tutulur (dıştaki `value` yalnızca tam bir tarih
-// tamamlandığında güncellenir) — yoksa sıfırdan başlarken üçü birden dolu olmadan
-// hiçbir seçim işlenemez.
 export default function DateSelect({ value, onChange, required }: Props) {
+  const [prevValue, setPrevValue] = useState(value);
   const [parts, setParts] = useState(() => parseValue(value));
 
-  useEffect(() => {
+  if (value !== prevValue) {
+    setPrevValue(value);
     setParts(parseValue(value));
-  }, [value]);
+  }
 
   const { day, month, year } = parts;
   const currentYear = new Date().getFullYear();

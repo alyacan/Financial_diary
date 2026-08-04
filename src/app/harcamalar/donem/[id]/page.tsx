@@ -1,8 +1,7 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArchivedPeriod, ASSET_LABELS, Transaction } from "@/lib/types";
 import { deleteArchivedPeriod, loadArchivedPeriods, loadTransactions, updateArchivedPeriod } from "@/lib/storage";
 import { computePeriodStats, transactionsInPeriod } from "@/lib/periodStats";
@@ -21,27 +20,23 @@ function formatDate(isoDate: string): string {
 
 export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
-  const [allPeriods, setAllPeriods] = useState<ArchivedPeriod[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [allPeriods, setAllPeriods] = useState<ArchivedPeriod[]>(() => loadArchivedPeriods());
+  const [transactions] = useState<Transaction[]>(() => loadTransactions());
+  const [loaded] = useState(true);
   const [editing, setEditing] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [startInput, setStartInput] = useState("");
   const [endInput, setEndInput] = useState("");
-  const [noteInput, setNoteInput] = useState("");
-
-  useEffect(() => {
-    setAllPeriods(loadArchivedPeriods());
-    setTransactions(loadTransactions());
-    setLoaded(true);
-  }, []);
 
   const period = allPeriods.find((p) => p.id === id);
 
-  useEffect(() => {
-    if (period) setNoteInput(period.note ?? "");
-  }, [period]);
+  const [prevNote, setPrevNote] = useState(() => period?.note ?? "");
+  const [noteInput, setNoteInput] = useState(() => period?.note ?? "");
+
+  if ((period?.note ?? "") !== prevNote) {
+    setPrevNote(period?.note ?? "");
+    setNoteInput(period?.note ?? "");
+  }
 
   function startEdit() {
     if (!period) return;
@@ -79,7 +74,7 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
     );
     if (confirmed) {
       deleteArchivedPeriod(period.id);
-      router.push("/harcamalar");
+      window.location.href = "/harcamalar";
     }
   }
 
