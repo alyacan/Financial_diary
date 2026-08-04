@@ -23,10 +23,6 @@ interface Props {
   required?: boolean;
 }
 
-// Tarayıcı/işletim sistemi bölgesi ne olursa olsun her zaman GG/AA/YYYY sırasında,
-// Türkçe ay adlarıyla gösteren tarih seçici. Native <input type="date"> yerine
-// kullanılır çünkü onun formatı sistem diline bağlıdır ve garanti edilemez.
-//
 export default function DateSelect({ value, onChange, required }: Props) {
   const [prevValue, setPrevValue] = useState(value);
   const [parts, setParts] = useState(() => parseValue(value));
@@ -52,13 +48,13 @@ export default function DateSelect({ value, onChange, required }: Props) {
   }
 
   return (
-    <div className="flex gap-1">
+    <div className="flex w-full min-w-0 gap-1.5">
       <select
         aria-label="Gün"
         required={required}
         value={day ?? ""}
         onChange={(e) => update({ day: Number(e.target.value) })}
-        className="rounded border border-zinc-300 p-2 dark:border-zinc-700 dark:bg-zinc-900"
+        className="flex-1 min-w-0 rounded-xl border border-zinc-300 bg-white p-2 text-xs transition-colors dark:border-zinc-700 dark:bg-zinc-900"
       >
         <option value="" disabled>Gün</option>
         {Array.from({ length: maxDay }, (_, i) => i + 1).map((d) => (
@@ -70,7 +66,7 @@ export default function DateSelect({ value, onChange, required }: Props) {
         required={required}
         value={month ?? ""}
         onChange={(e) => update({ month: Number(e.target.value) })}
-        className="rounded border border-zinc-300 p-2 dark:border-zinc-700 dark:bg-zinc-900"
+        className="flex-1 min-w-0 rounded-xl border border-zinc-300 bg-white p-2 text-xs transition-colors dark:border-zinc-700 dark:bg-zinc-900"
       >
         <option value="" disabled>Ay</option>
         {MONTHS.map((m, i) => (
@@ -82,7 +78,7 @@ export default function DateSelect({ value, onChange, required }: Props) {
         required={required}
         value={year ?? ""}
         onChange={(e) => update({ year: Number(e.target.value) })}
-        className="rounded border border-zinc-300 p-2 dark:border-zinc-700 dark:bg-zinc-900"
+        className="flex-1 min-w-0 rounded-xl border border-zinc-300 bg-white p-2 text-xs transition-colors dark:border-zinc-700 dark:bg-zinc-900"
       >
         <option value="" disabled>Yıl</option>
         {years.map((y) => (
