@@ -293,3 +293,30 @@ export function saveDividendAutoCache(tickers: string, events: AutoDividendEvent
   const cache: DividendAutoCache = { tickers, fetchedAt: new Date().toISOString().slice(0, 10), events };
   window.localStorage.setItem(DIVIDEND_AUTO_CACHE_KEY, JSON.stringify(cache));
 }
+
+const ECONOMIC_EVENTS_CACHE_KEY = "financial-diary-economic-events-cache";
+
+export interface EconomicEventsCache {
+  timestamp: number;
+  events: unknown[];
+}
+
+export function loadEconomicEventsCache(maxAgeHours = 24): unknown[] | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(ECONOMIC_EVENTS_CACHE_KEY);
+  if (!raw) return null;
+  try {
+    const cache = JSON.parse(raw) as EconomicEventsCache;
+    const ageInHours = (Date.now() - cache.timestamp) / (1000 * 60 * 60);
+    if (ageInHours > maxAgeHours) return null;
+    return cache.events;
+  } catch {
+    return null;
+  }
+}
+
+export function saveEconomicEventsCache(events: unknown[]): void {
+  if (typeof window === "undefined") return;
+  const cache: EconomicEventsCache = { timestamp: Date.now(), events };
+  window.localStorage.setItem(ECONOMIC_EVENTS_CACHE_KEY, JSON.stringify(cache));
+}

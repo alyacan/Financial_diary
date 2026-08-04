@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { CalendarNote, DividendEntry, RECURRING_CALENDAR_INFO } from "@/lib/types";
 import { EconomicEvent } from "@/lib/economicCalendar";
 import { AutoDividendEvent } from "@/lib/dividendCalendar";
-import { loadDividendAutoCache, saveDividendAutoCache } from "@/lib/storage";
+import { loadDividendAutoCache, saveDividendAutoCache, loadEconomicEventsCache, saveEconomicEventsCache } from "@/lib/storage";
 import DateSelect from "./DateSelect";
 
 const WEEKDAYS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
@@ -46,7 +46,10 @@ export default function FinancialCalendar({
   const [viewMonth, setViewMonth] = useState(today.getMonth()); // 0-indexed
   const [date, setDate] = useState("");
   const [text, setText] = useState("");
-  const [economicEvents, setEconomicEvents] = useState<EconomicEvent[]>([]);
+  const [economicEvents, setEconomicEvents] = useState<EconomicEvent[]>(() => {
+    const cached = loadEconomicEventsCache(24);
+    return (cached as EconomicEvent[]) ?? [];
+  });
   const [autoDividends, setAutoDividends] = useState<AutoDividendEvent[]>([]);
   const [divTicker, setDivTicker] = useState("");
   const [divDate, setDivDate] = useState("");
@@ -95,11 +98,37 @@ export default function FinancialCalendar({
     }
   }
 
-  useEffect(() => {
+  const [loadingEconomicEvents, setLoadingEconomicEvents] = useState(false);
+  const [economicRefreshMsg, setEconomicRefreshMsg] = useState<string | null>(null);
+
+  function loadEconomicEvents(forceRefresh = false) {
+    setLoadingEconomicEvents(true);
+    setEconomicRefreshMsg(null);
+
     fetch("/api/economic-calendar")
       .then((res) => res.json())
-      .then((data) => setEconomicEvents(data.events ?? []))
-      .catch(() => setEconomicEvents([]));
+      .then((data) => {
+        const events = data.events ?? [];
+        setEconomicEvents(events);
+        saveEconomicEventsCache(events);
+        if (forceRefresh) {
+          setEconomicRefreshMsg(`✅ ${events.length} adet güncel faiz, enflasyon ve ekonomik olay takvime yüklendi (24 saat önbelleklendi).`);
+        }
+      })
+      .catch(() => {
+        if (forceRefresh) {
+          setEconomicRefreshMsg("⚠️ Ekonomik takvim yenilenirken bir sorun oluştu.");
+        }
+      })
+      .finally(() => setLoadingEconomicEvents(false));
+  }
+
+  useEffect(() => {
+    const cached = loadEconomicEventsCache(24);
+    if (!cached) {
+      const handle = requestAnimationFrame(() => loadEconomicEvents(false));
+      return () => cancelAnimationFrame(handle);
+    }
   }, []);
 
   const tickersKey = stockTickers.join(",");
@@ -281,7 +310,25 @@ export default function FinancialCalendar({
       </div>
 
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-zinc-500">Otomatik Ekonomik Olaylar (önümüzdeki 90 gün)</h3>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-zinc-500">
+            Otomatik Ekonomik Olaylar & Haberler (TCMB, FED, TÜİK, ABD Enflasyon)
+          </h3>
+          <button
+            type="button"
+            onClick={() => loadEconomicEvents(true)}
+            disabled={loadingEconomicEvents}
+            className="flex items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1 text-xs font-medium transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+          >
+            <span>{loadingEconomicEvents ? "⌛" : "🔄"}</span>
+            <span>{loadingEconomicEvents ? "Yenileniyor..." : "Canlı Ekonomik Takvimi Yenile"}</span>
+          </button>
+        </div>
+
+        {economicRefreshMsg && (
+          <p className="mb-2.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">{economicRefreshMsg}</p>
+        )}
+
         {upcomingEvents.length === 0 ? (
           <p className="text-sm text-zinc-500">Şu an gösterilecek olay yok (veya kaynak geçici olarak erişilemedi).</p>
         ) : (
