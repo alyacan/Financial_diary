@@ -229,9 +229,14 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
 
       {/* Category Distribution & Highlights */}
       <section className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <h2 className="mb-4 text-lg font-semibold tracking-tight">Kategori Dağılımı</h2>
-          <ExpenseChart expenses={period.expenses} />
+        <div className="flex flex-col gap-6">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+            <h2 className="mb-4 text-lg font-semibold tracking-tight">Kategori Dağılımı</h2>
+            <ExpenseChart expenses={period.expenses} />
+          </div>
+
+          {/* AI Analysis Package placed directly under Pie Chart */}
+          <AiAnalysisPackage period={period} allPeriods={allPeriods} periodTransactions={periodTransactions} />
         </div>
 
         <div className="flex flex-col gap-4">
@@ -315,9 +320,6 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
           </div>
         </section>
       )}
-
-      {/* AI Analysis Package */}
-      <AiAnalysisPackage period={period} allPeriods={allPeriods} periodTransactions={periodTransactions} />
     </div>
   );
 }
