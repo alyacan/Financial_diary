@@ -13,6 +13,7 @@ function formatTRY(value: number): string {
 const CATEGORY_CAT_IMAGES: Record<string, string> = {
   Eğitim: "/cats/egitim.jpg",
   Ulaşım: "/cats/ulasim.jpg",
+  Spor: "/cats/spor.jpg",
 };
 
 interface Props {
