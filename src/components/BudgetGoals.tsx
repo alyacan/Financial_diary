@@ -15,6 +15,8 @@ const CATEGORY_CAT_IMAGES: Record<string, string> = {
   Ulaşım: "/cats/ulasim.jpg",
   Spor: "/cats/spor.jpg",
   Market: "/cats/market.jpg",
+  Yemek: "/cats/yemek.jpg",
+  Restoran: "/cats/yemek.jpg",
 };
 
 interface Props {
