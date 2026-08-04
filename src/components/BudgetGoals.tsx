@@ -9,15 +9,17 @@ function formatTRY(value: number): string {
   return value.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
 }
 
-const CATEGORY_CAT_IMAGES: Record<string, { src: string; title: string }> = {
-  Market: { src: "/cats/cat_yogurt.jpg", title: "Yoğurt Kovası Şapkalı İkizler" },
-  Ulaşım: { src: "/cats/cat_car.jpg", title: "Spor Araba Süren Kedi" },
-  Eğitim: { src: "/cats/cat_math.jpg", title: "Matematik Çalışan Kedi" },
-  Restoran: { src: "/cats/cat_bread.jpg", title: "Ekmek Sepetindeki Baget Kedi" },
-  Fatura: { src: "/cats/cat_masher.jpg", title: "Meraklı Kedi" },
-  "Kişisel Bakım": { src: "/cats/cat_masher.jpg", title: "Meraklı Kedi" },
-  Eğlence: { src: "/cats/cat_car.jpg", title: "Gezgin Kedi" },
-  Diğer: { src: "/cats/cat_bread.jpg", title: "Baget Kedi" },
+// Clean mapping of exact cat photos to expense categories
+const CATEGORY_CAT_IMAGES: Record<string, string> = {
+  Market: "/cats/cat_yogurt.jpg",
+  Ulaşım: "/cats/cat_car.jpg",
+  Eğitim: "/cats/cat_math.jpg",
+  Sağlık: "/cats/cat_stethoscope.jpg",
+  Restoran: "/cats/cat_bread.jpg",
+  Fatura: "/cats/cat_masher.jpg",
+  "Kişisel Bakım": "/cats/cat_stethoscope.jpg",
+  Eğlence: "/cats/cat_car.jpg",
+  Diğer: "/cats/cat_bread.jpg",
 };
 
 interface Props {
@@ -49,14 +51,14 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
         </h4>
         <div className="flex flex-wrap gap-2.5">
           {EXPENSE_CATEGORIES.filter((c) => !budgetedCategories.has(c)).map((category) => {
-            const catImg = CATEGORY_CAT_IMAGES[category] ?? { src: "/cats/cat_bread.jpg", title: "Kedi Avatar" };
+            const imgSrc = CATEGORY_CAT_IMAGES[category] ?? "/cats/cat_bread.jpg";
             return (
               <div
                 key={category}
                 className="flex items-center gap-2.5 rounded-xl border border-zinc-200 bg-white p-2 text-xs shadow-2xs dark:border-zinc-800 dark:bg-zinc-900"
               >
                 <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg">
-                  <Image src={catImg.src} alt={catImg.title} fill className="object-cover" />
+                  <Image src={imgSrc} alt={category} fill className="object-cover" />
                 </div>
                 <span className="font-semibold text-zinc-800 dark:text-zinc-200">{category}</span>
                 <input
@@ -79,10 +81,10 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
         </div>
       </div>
 
-      {/* Active Budget Cards with Cat Avatars and Progress Bars */}
+      {/* Active Budget Cards with Cat Avatars */}
       {budgets.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-800">
-          🐾 Henüz bir kategori için aylık bütçe hedefi koymadın. Yukarıdaki listeden dilediğin kategoriye bütçe limiti belirleyebilirsin.
+          Henüz bir kategori için aylık bütçe hedefi koymadın. Yukarıdaki listeden dilediğin kategoriye bütçe limiti belirleyebilirsin.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -91,7 +93,7 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
             const percent = p ? Math.min(100, p.percentUsed) : 0;
             const over = p ? p.percentUsed > 100 : false;
             const delta = p?.deltaVsLastMonth ?? 0;
-            const catImg = CATEGORY_CAT_IMAGES[b.category] ?? { src: "/cats/cat_bread.jpg", title: "Kedi Avatar" };
+            const imgSrc = CATEGORY_CAT_IMAGES[b.category] ?? "/cats/cat_bread.jpg";
             const spent = p?.thisMonthTotal ?? 0;
             const remaining = Math.max(0, b.monthlyGoal - spent);
 
@@ -104,12 +106,9 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-zinc-200 shadow-2xs dark:border-zinc-700">
-                        <Image src={catImg.src} alt={catImg.title} fill className="object-cover" />
+                        <Image src={imgSrc} alt={b.category} fill className="object-cover" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">{b.category}</h3>
-                        <p className="text-[11px] text-zinc-400">{catImg.title}</p>
-                      </div>
+                      <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">{b.category}</h3>
                     </div>
 
                     <button
