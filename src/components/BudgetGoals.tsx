@@ -9,9 +9,10 @@ function formatTRY(value: number): string {
   return value.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
 }
 
-// Exact category image mapping - setting Eğitim strictly to the uploaded math cat photo
+// Exact category image mapping - setting categories strictly step-by-step
 const CATEGORY_CAT_IMAGES: Record<string, string> = {
   Eğitim: "/cats/egitim.jpg",
+  Ulaşım: "/cats/ulasim.jpg",
 };
 
 interface Props {
