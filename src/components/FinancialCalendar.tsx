@@ -52,6 +52,49 @@ export default function FinancialCalendar({
   const [divDate, setDivDate] = useState("");
   const [divAmount, setDivAmount] = useState("");
 
+  const [aiTicker, setAiTicker] = useState("");
+  const [searchingDividend, setSearchingDividend] = useState(false);
+  const [aiMessage, setAiMessage] = useState<string | null>(null);
+
+  async function handleAiDividendSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const symbol = aiTicker.trim().toUpperCase();
+    if (!symbol) return;
+
+    setSearchingDividend(true);
+    setAiMessage(null);
+
+    try {
+      const res = await fetch(`/api/dividend-search?ticker=${symbol}`);
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        setAiMessage(`⚠️ ${data.error ?? "Temettü araması yapılamadı."}`);
+      } else if (data.events && data.events.length > 0) {
+        let count = 0;
+        for (const ev of data.events) {
+          if (ev.date) {
+            onAddDividend({
+              id: crypto.randomUUID(),
+              ticker: symbol,
+              date: ev.date,
+              amountPerShare: ev.amountPerShare,
+            });
+            count++;
+          }
+        }
+        setAiMessage(`✅ ${symbol} için ${count} adet yayınlanmış temettü tarihi bulundu ve takvime eklendi!`);
+        setAiTicker("");
+      } else {
+        setAiMessage(`ℹ️ ${symbol} için ilan edilmiş resmi temettü tarihi bulunamadı.`);
+      }
+    } catch {
+      setAiMessage("⚠️ Temettü araştırması yapılırken bir hata oluştu.");
+    } finally {
+      setSearchingDividend(false);
+    }
+  }
+
   useEffect(() => {
     fetch("/api/economic-calendar")
       .then((res) => res.json())
@@ -257,12 +300,40 @@ export default function FinancialCalendar({
       </div>
 
       <div>
-        <h3 className="mb-2 text-sm font-semibold text-zinc-500">Temettü Takvimi (portföyündeki hisseler)</h3>
+        <h3 className="mb-2 text-sm font-semibold text-zinc-500">Temettü Takvimi</h3>
+
+        {/* AI Dividend Search Box */}
+        <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-900/40 dark:bg-blue-950/20">
+          <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            🤖 AI ile Hisse Temettü Tarihini Bul & Takvime Ekle
+          </h4>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            İstediğin hisse kodunu yaz (örn: BIMAS, TUPRS, THYAO, AAPL). AI ilan edilmiş resmi temettü tarihini araştırıp bulacak ve otomatik takvime ekleyecektir.
+          </p>
+
+          <form onSubmit={handleAiDividendSearch} className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              type="text"
+              value={aiTicker}
+              onChange={(e) => setAiTicker(e.target.value)}
+              placeholder="Hisse Kodu (Örn: BIMAS)"
+              className="rounded-lg border border-zinc-300 bg-white p-2 text-sm uppercase dark:border-zinc-700 dark:bg-zinc-900"
+            />
+            <button
+              type="submit"
+              disabled={searchingDividend || !aiTicker.trim()}
+              className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+            >
+              {searchingDividend ? "🔍 Araştırılıyor..." : "🔍 Temettü Tarihini Bul & Takvime Ekle"}
+            </button>
+          </form>
+
+          {aiMessage && <p className="mt-2 text-xs font-medium">{aiMessage}</p>}
+        </div>
+
         {combinedDividends.length === 0 ? (
           <p className="text-sm text-zinc-500">
-            {stockTickers.length === 0
-              ? "Portföyünde henüz hisse yok."
-              : "Şu an gösterilecek temettü tarihi yok — yabancı (Nasdaq/NYSE) hisselerin varsa otomatik gelir, BIST hisseleri için aşağıdan elle ekleyebilirsin."}
+            Takvimde henüz temettü tarihi yok — yukarıdan istediğin hissenin temettü tarihini AI ile bulabilir veya aşağıdan elle ekleyebilirsin.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
