@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import ExpenseForm from "@/components/ExpenseForm";
 import ExpenseChart from "@/components/ExpenseChart";
 import ExpenseTable from "@/components/ExpenseTable";
@@ -12,6 +13,16 @@ import { useExpenseData } from "@/hooks/useExpenseData";
 function formatTRY(value: number): string {
   return value.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
 }
+
+type TabType = "overview" | "budget" | "add" | "table" | "archives";
+
+const TABS: { id: TabType; label: string; icon: string }[] = [
+  { id: "overview", label: "Genel Bakış", icon: "📊" },
+  { id: "budget", label: "Bütçe Hedefleri", icon: "🎯" },
+  { id: "add", label: "Harcama Ekle / Ekstre", icon: "➕" },
+  { id: "table", label: "Harcamalar Listesi", icon: "📋" },
+  { id: "archives", label: "Arşivlenen Dönemler", icon: "📁" },
+];
 
 export default function HarcamalarPage() {
   const {
@@ -31,6 +42,8 @@ export default function HarcamalarPage() {
     handleDeleteBudget,
   } = useExpenseData();
 
+  const [activeTab, setActiveTab] = useState<TabType>("overview");
+
   function onClosePeriod() {
     if (expenses.length === 0) return;
     const confirmed = window.confirm(
@@ -39,69 +52,149 @@ export default function HarcamalarPage() {
     if (confirmed) handleClosePeriod();
   }
 
+  // Filter tabs if no archives exist
+  const visibleTabs = TABS.filter((t) => t.id !== "archives" || archivedPeriods.length > 0);
+
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6 sm:p-10">
+      <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Harcama Analizi</h1>
-          <p className="text-sm text-zinc-500">Kategori bazlı harcama takibi</p>
+          <h1 className="font-serif text-3xl font-semibold tracking-tight">Harcama Analizi</h1>
+          <p className="mt-1 text-sm text-zinc-500">Kategori bazlı harcama takibi ve bütçe yönetimi</p>
         </div>
         <button
           onClick={onClosePeriod}
           disabled={expenses.length === 0}
-          className="rounded border border-zinc-300 px-3 py-2 text-sm hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-900"
+          className="flex items-center gap-2 rounded-xl border border-zinc-300 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
         >
-          📁 Dönemi Kapat / Klasörle
+          <span>📁</span> Dönemi Kapat / Klasörle
         </button>
       </header>
 
-      <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <div className="mb-4">
-          <p className="text-sm text-zinc-500">Toplam Harcama</p>
-          <p className="text-xl font-semibold">{formatTRY(totalExpenses)}</p>
-        </div>
-        <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <h2 className="mb-2 text-lg font-semibold">Kategori Dağılımı</h2>
-            <ExpenseChart expenses={expenses} />
+      {/* Quick KPI Summary Bar */}
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="text-xs uppercase tracking-wider text-zinc-500">Bu Dönem Toplam Harcama</div>
+          <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            {formatTRY(totalExpenses)}
           </div>
-          <div>
-            <h2 className="text-lg font-semibold">Harcama Yoğunluk Takvimi</h2>
-            <p className="mb-3 text-xs text-zinc-500">
-              Finansal Takvim&apos;den bağımsızdır, sadece bu dönemin harcamalarını gösterir.
-            </p>
-            <ExpenseHeatmapCalendar expenses={expenses} />
+          <div className="mt-1 text-xs text-zinc-400">{expenses.length} adet harcama kaydı</div>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="text-xs uppercase tracking-wider text-zinc-500">Bütçe Takibi</div>
+          <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            {budgets.length} Kategori
           </div>
+          <div className="mt-1 text-xs text-zinc-400">15&apos;inden 15&apos;ine hesap dönemi</div>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="text-xs uppercase tracking-wider text-zinc-500">Arşivlenen Dönemler</div>
+          <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            {archivedPeriods.length} Klasör
+          </div>
+          <div className="mt-1 text-xs text-zinc-400">Kapanmış geçmiş dönemler</div>
         </div>
       </section>
 
-      <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="text-lg font-semibold">Hedef Bazlı Bütçe</h2>
-        <p className="mb-3 text-xs text-zinc-500">
-          Kategori başına aylık bir hedef belirle; harcaman hesap özeti dönemine göre (ayın 15&apos;inden bir
-          sonraki ayın 14&apos;üne kadar) hedefe ve bir önceki döneme göre karşılaştırılsın.
-        </p>
-        <BudgetGoals budgets={budgets} progress={budgetProgress} onSave={handleSaveBudget} onDelete={handleDeleteBudget} />
-      </section>
+      {/* Tabs Navigation */}
+      <nav className="flex flex-wrap gap-1.5 border-b border-zinc-200 pb-2 dark:border-zinc-800" aria-label="Harcama sekmeleri">
+        {visibleTabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+                isActive
+                  ? "bg-zinc-900 text-white shadow-xs dark:bg-zinc-100 dark:text-black"
+                  : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+              {tab.id === "table" && expenses.length > 0 && (
+                <span
+                  className={`ml-1 rounded-full px-2 py-0.5 text-xs ${
+                    isActive ? "bg-zinc-700 text-zinc-100 dark:bg-zinc-300 dark:text-zinc-900" : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                  }`}
+                >
+                  {expenses.length}
+                </span>
+              )}
+              {tab.id === "archives" && archivedPeriods.length > 0 && (
+                <span
+                  className={`ml-1 rounded-full px-2 py-0.5 text-xs ${
+                    isActive ? "bg-zinc-700 text-zinc-100 dark:bg-zinc-300 dark:text-zinc-900" : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                  }`}
+                >
+                  {archivedPeriods.length}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
 
-      <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="mb-3 text-lg font-semibold">Harcama Ekle</h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          <StatementUpload existingExpenses={expenses} onImport={handleImportExpenses} />
-          <ExpenseForm onAdd={handleAddExpense} />
-        </div>
-      </section>
+      {/* Tab Content 1: Overview */}
+      {activeTab === "overview" && (
+        <section className="flex flex-col gap-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+              <h2 className="mb-4 text-lg font-semibold tracking-tight">Kategori Dağılımı</h2>
+              <ExpenseChart expenses={expenses} />
+            </div>
 
-      <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="mb-2 text-lg font-semibold">Harcamalar</h2>
-        <p className="mb-2 text-xs text-zinc-500">Bir kategoriyi yanlış bulursan üzerine tıklayıp değiştirebilirsin.</p>
-        <ExpenseTable expenses={expenses} onDelete={handleDeleteExpense} onUpdateCategory={handleUpdateExpenseCategory} />
-      </section>
+            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+              <h2 className="text-lg font-semibold tracking-tight">Harcama Yoğunluk Takvimi</h2>
+              <p className="mb-4 text-xs text-zinc-500">
+                Finansal Takvim&apos;den bağımsızdır, sadece bu dönemin harcamalarını gün bazlı yoğunlukla gösterir.
+              </p>
+              <ExpenseHeatmapCalendar expenses={expenses} />
+            </div>
+          </div>
+        </section>
+      )}
 
-      {archivedPeriods.length > 0 && (
-        <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-          <h2 className="mb-3 text-lg font-semibold">Arşivlenen Dönemler ({archivedPeriods.length})</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+      {/* Tab Content 2: Budget Goals */}
+      {activeTab === "budget" && (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+          <h2 className="text-lg font-semibold tracking-tight">Hedef Bazlı Bütçe</h2>
+          <p className="mb-4 text-xs text-zinc-500">
+            Kategori başına aylık bir hedef belirle; harcaman hesap özeti dönemine göre (ayın 15&apos;inden bir sonraki ayın 14&apos;üne kadar) hedefe ve bir önceki döneme göre karşılaştırılsın.
+          </p>
+          <BudgetGoals budgets={budgets} progress={budgetProgress} onSave={handleSaveBudget} onDelete={handleDeleteBudget} />
+        </section>
+      )}
+
+      {/* Tab Content 3: Add Expense / Statement Upload */}
+      {activeTab === "add" && (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+          <h2 className="mb-4 text-lg font-semibold tracking-tight">Harcama Ekle ve Ekstre Yükle</h2>
+          <div className="grid gap-8 md:grid-cols-2">
+            <StatementUpload existingExpenses={expenses} onImport={handleImportExpenses} />
+            <ExpenseForm onAdd={handleAddExpense} />
+          </div>
+        </section>
+      )}
+
+      {/* Tab Content 4: Expenses Table */}
+      {activeTab === "table" && (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+          <h2 className="mb-1 text-lg font-semibold tracking-tight">Harcamalar Listesi</h2>
+          <p className="mb-4 text-xs text-zinc-500">
+            Kayıtlı harcamalarını görebilir, silebilir veya kategorisine tıklayarak değiştirebilirsin.
+          </p>
+          <ExpenseTable expenses={expenses} onDelete={handleDeleteExpense} onUpdateCategory={handleUpdateExpenseCategory} />
+        </section>
+      )}
+
+      {/* Tab Content 5: Archived Periods */}
+      {activeTab === "archives" && archivedPeriods.length > 0 && (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+          <h2 className="mb-4 text-lg font-semibold tracking-tight">Arşivlenen Dönemler ({archivedPeriods.length})</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {[...archivedPeriods].reverse().map((period) => (
               <ArchivedPeriodCard
                 key={period.id}
