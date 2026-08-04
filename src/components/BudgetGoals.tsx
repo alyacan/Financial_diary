@@ -44,38 +44,38 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
     <div className="flex flex-col gap-6">
       {/* Category Budget Target Selector */}
       <div className="rounded-2xl border border-zinc-200 bg-zinc-50/60 p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
-        <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+        <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
           Yeni Bütçe Hedefi Belirle
         </h4>
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-3">
           {EXPENSE_CATEGORIES.filter((c) => !budgetedCategories.has(c)).map((category) => {
             const imgSrc = CATEGORY_CAT_IMAGES[category];
             return (
               <div
                 key={category}
-                className="flex items-center gap-2.5 rounded-xl border border-zinc-200 bg-white p-2 text-xs shadow-2xs dark:border-zinc-800 dark:bg-zinc-900"
+                className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white p-2.5 shadow-2xs dark:border-zinc-800 dark:bg-zinc-900"
               >
                 {imgSrc ? (
-                  <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-lg">
+                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
                     <Image src={imgSrc} alt={category} fill className="object-cover" />
                   </div>
                 ) : (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-100 text-xs dark:bg-zinc-800">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-sm dark:bg-zinc-800">
                     📂
                   </div>
                 )}
-                <span className="font-semibold text-zinc-800 dark:text-zinc-200">{category}</span>
+                <span className="font-semibold text-zinc-800 dark:text-zinc-200 text-xs sm:text-sm">{category}</span>
                 <input
                   type="number"
                   step="any"
                   placeholder="Hedef (TL)"
                   value={inputs[category] ?? ""}
                   onChange={(e) => setInputs((prev) => ({ ...prev, [category]: e.target.value }))}
-                  className="w-24 rounded-lg border border-zinc-300 bg-zinc-50 p-1.5 text-xs dark:border-zinc-700 dark:bg-zinc-950"
+                  className="w-24 rounded-xl border border-zinc-300 bg-zinc-50 p-1.5 text-xs dark:border-zinc-700 dark:bg-zinc-950"
                 />
                 <button
                   onClick={() => handleSave(category)}
-                  className="rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-black"
+                  className="rounded-xl bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-black"
                 >
                   Ekle
                 </button>
@@ -85,13 +85,13 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
         </div>
       </div>
 
-      {/* Active Budget Cards */}
+      {/* Active Budget Cards with Enlarged Featured Cat Photos */}
       {budgets.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-800">
           Henüz bir kategori için aylık bütçe hedefi koymadın. Yukarıdaki listeden dilediğin kategoriye bütçe limiti belirleyebilirsin.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {budgets.map((b) => {
             const p = progressByCategory.get(b.category);
             const percent = p ? Math.min(100, p.percentUsed) : 0;
@@ -104,23 +104,23 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
             return (
               <div
                 key={b.category}
-                className="group relative flex flex-col justify-between rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs transition-all hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/60"
+                className="group relative flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-xs transition-all hover:shadow-md sm:flex-row sm:items-center dark:border-zinc-800 dark:bg-zinc-900/60"
               >
-                <div>
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {imgSrc ? (
-                        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-zinc-200 shadow-2xs dark:border-zinc-700">
-                          <Image src={imgSrc} alt={b.category} fill className="object-cover" />
-                        </div>
-                      ) : (
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-zinc-100 text-lg dark:bg-zinc-800">
-                          📂
-                        </div>
-                      )}
-                      <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">{b.category}</h3>
-                    </div>
+                {/* Large Featured Cat Image Container */}
+                {imgSrc ? (
+                  <div className="relative h-36 w-full shrink-0 overflow-hidden rounded-xl border border-zinc-200 shadow-2xs sm:h-32 sm:w-32 dark:border-zinc-700">
+                    <Image src={imgSrc} alt={b.category} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                  </div>
+                ) : (
+                  <div className="flex h-36 w-full shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-3xl sm:h-32 sm:w-32 dark:bg-zinc-800">
+                    📂
+                  </div>
+                )}
 
+                {/* Right Side Compact Stats & Progress Bar */}
+                <div className="flex flex-1 flex-col justify-between gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">{b.category}</h3>
                     <button
                       onClick={() => onDelete(b.category)}
                       className="text-xs text-zinc-400 hover:text-red-600"
@@ -130,11 +130,11 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
                   </div>
 
                   {/* Progress Stats Summary */}
-                  <div className="mb-2 flex items-baseline justify-between text-xs">
-                    <span className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">
+                  <div className="flex items-baseline justify-between text-xs">
+                    <span className="text-sm font-extrabold text-zinc-900 dark:text-zinc-100">
                       {formatTRY(spent)}
                     </span>
-                    <span className="text-zinc-500">
+                    <span className="text-zinc-500 text-xs">
                       Hedef: <strong>{formatTRY(b.monthlyGoal)}</strong>
                     </span>
                   </div>
@@ -150,7 +150,7 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
                   </div>
 
                   {/* Stat Footer */}
-                  <div className="mt-2.5 flex flex-wrap items-center justify-between gap-1 text-[11px]">
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-[11px]">
                     <span
                       className={`font-semibold ${
                         over ? "text-red-600 dark:text-red-400" : percent > 85 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"
