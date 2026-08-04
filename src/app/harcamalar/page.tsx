@@ -56,23 +56,23 @@ export default function HarcamalarPage() {
       </header>
 
       <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <p className="text-sm text-zinc-500">Toplam Harcama</p>
-        <p className="text-xl font-semibold">{formatTRY(totalExpenses)}</p>
-      </section>
-
-      <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="mb-2 text-lg font-semibold">Kategori Dağılımı</h2>
-        <ExpenseChart expenses={expenses} />
-      </section>
-
-      <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="text-lg font-semibold">Harcama Yoğunluk Takvimi</h2>
-        <p className="mb-3 text-xs text-zinc-500">
-          Finansal Takvim&apos;den bağımsızdır — yalnızca bu dönemin geçmiş harcamalarını, günlere göre tutar
-          yoğunluğuyla (koyu = yüksek harcama, pastel = düşük harcama) gösterir. Bir güne tıklayarak o günün
-          harcamalarını görebilirsin.
-        </p>
-        <ExpenseHeatmapCalendar expenses={expenses} />
+        <div className="mb-4">
+          <p className="text-sm text-zinc-500">Toplam Harcama</p>
+          <p className="text-xl font-semibold">{formatTRY(totalExpenses)}</p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div>
+            <h2 className="mb-2 text-lg font-semibold">Kategori Dağılımı</h2>
+            <ExpenseChart expenses={expenses} />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold">Harcama Yoğunluk Takvimi</h2>
+            <p className="mb-3 text-xs text-zinc-500">
+              Finansal Takvim&apos;den bağımsızdır, sadece bu dönemin harcamalarını gösterir.
+            </p>
+            <ExpenseHeatmapCalendar expenses={expenses} />
+          </div>
+        </div>
       </section>
 
       <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
@@ -84,9 +84,13 @@ export default function HarcamalarPage() {
         <BudgetGoals budgets={budgets} progress={budgetProgress} onSave={handleSaveBudget} onDelete={handleDeleteBudget} />
       </section>
 
-      <StatementUpload existingExpenses={expenses} onImport={handleImportExpenses} />
-
-      <ExpenseForm onAdd={handleAddExpense} />
+      <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+        <h2 className="mb-3 text-lg font-semibold">Harcama Ekle</h2>
+        <div className="grid gap-6 md:grid-cols-2">
+          <StatementUpload existingExpenses={expenses} onImport={handleImportExpenses} />
+          <ExpenseForm onAdd={handleAddExpense} />
+        </div>
+      </section>
 
       <section className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
         <h2 className="mb-2 text-lg font-semibold">Harcamalar</h2>

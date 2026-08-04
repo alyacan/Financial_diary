@@ -21,20 +21,20 @@ export default function ExpenseTable({ expenses, onDelete, onUpdateCategory }: P
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[500px] border-collapse text-sm">
+      <table className="w-full min-w-[380px] border-collapse text-sm">
         <thead>
           <tr className="border-b border-zinc-200 text-left dark:border-zinc-800">
             <th className="p-2">Tarih</th>
             <th className="p-2">Kategori</th>
             <th className="p-2">Tutar</th>
-            <th className="p-2">Not</th>
+            <th className="hidden p-2 sm:table-cell">Not</th>
             {onDelete && <th className="p-2"></th>}
           </tr>
         </thead>
         <tbody>
           {sorted.map((e) => (
             <tr key={e.id} className="border-b border-zinc-100 dark:border-zinc-900">
-              <td className="p-2">{e.date}</td>
+              <td className="p-2 whitespace-nowrap">{e.date}</td>
               <td className="p-2">
                 {onUpdateCategory ? (
                   <select
@@ -50,8 +50,8 @@ export default function ExpenseTable({ expenses, onDelete, onUpdateCategory }: P
                   e.category
                 )}
               </td>
-              <td className="p-2">{formatTRY(e.amount)}</td>
-              <td className="p-2 max-w-[200px] truncate" title={e.note}>{e.note}</td>
+              <td className="p-2 whitespace-nowrap">{formatTRY(e.amount)}</td>
+              <td className="hidden max-w-[200px] truncate p-2 sm:table-cell" title={e.note}>{e.note}</td>
               {onDelete && (
                 <td className="p-2">
                   <button onClick={() => onDelete(e.id)} className="text-zinc-400 hover:text-red-600">

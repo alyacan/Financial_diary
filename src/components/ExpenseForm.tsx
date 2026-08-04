@@ -32,10 +32,10 @@ export default function ExpenseForm({ onAdd }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-      <h2 className="text-lg font-semibold">Yeni Harcama Ekle</h2>
+    <form onSubmit={handleSubmit} className="grid gap-3">
+      <h3 className="font-semibold">Elle Ekle</h3>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <label className="flex flex-col gap-1 text-sm">
           Tarih
           <DateSelect value={date} onChange={setDate} required />

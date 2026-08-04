@@ -83,19 +83,19 @@ export default function StatementUpload({ existingExpenses, onImport }: Props) {
   }
 
   return (
-    <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-      <h2 className="mb-2 text-lg font-semibold">Hesap Ekstresi Yükle</h2>
+    <div>
+      <h3 className="mb-2 font-semibold">Hesap Ekstresi Yükle</h3>
       <p className="mb-3 text-sm text-zinc-500">
         Kredi kartı/banka ekstreni PDF olarak yükle, işlemler otomatik ayrıştırılıp AI ile kategorize edilir.
         Sadece harcama (pozitif tutarlı) işlemler listelenir — ödeme/aktarım/iade satırları dahil edilmez.
       </p>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <input
           type="file"
           accept="application/pdf"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="text-sm"
+          className="max-w-full text-sm"
         />
         <button
           onClick={handleUpload}
@@ -115,12 +115,12 @@ export default function StatementUpload({ existingExpenses, onImport }: Props) {
             {rows.length} işlem bulundu{bankLabel ? ` — algılanan format: ${bankLabel}` : ""}. Kategorileri kontrol et, istemediklerini işaretten kaldır.
           </p>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px] border-collapse text-sm">
+            <table className="w-full min-w-[480px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-left dark:border-zinc-800">
                   <th className="p-2"></th>
                   <th className="p-2">Tarih</th>
-                  <th className="p-2">Açıklama</th>
+                  <th className="hidden p-2 sm:table-cell">Açıklama</th>
                   <th className="p-2">Tutar</th>
                   <th className="p-2">Kategori</th>
                 </tr>
@@ -132,7 +132,7 @@ export default function StatementUpload({ existingExpenses, onImport }: Props) {
                       <input type="checkbox" checked={r.include} onChange={(e) => updateRow(i, { include: e.target.checked })} />
                     </td>
                     <td className="p-2 whitespace-nowrap">{r.date.split("-").reverse().join(".")}</td>
-                    <td className="p-2 max-w-[220px] truncate" title={r.description}>
+                    <td className="hidden max-w-[160px] truncate p-2 sm:table-cell" title={r.description}>
                       {r.description}
                       {r.isDuplicate && <span className="ml-1 text-xs text-amber-600">(tekrar?)</span>}
                     </td>
