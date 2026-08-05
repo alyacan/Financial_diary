@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { EXPENSE_CATEGORIES, Expense } from "@/lib/types";
+import { EXPENSE_CATEGORIES, Expense, PaymentCard } from "@/lib/types";
+import { getStoredCards } from "@/lib/cardsStorage";
 import DateSelect from "./DateSelect";
 
 interface Props {
@@ -13,6 +14,8 @@ export default function ExpenseForm({ onAdd }: Props) {
   const [category, setCategory] = useState<string>(EXPENSE_CATEGORIES[0]);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
+  const [cards] = useState<PaymentCard[]>(() => getStoredCards());
+  const [selectedCardId, setSelectedCardId] = useState<string>(() => (cards.length > 0 ? cards[0].id : ""));
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,6 +27,7 @@ export default function ExpenseForm({ onAdd }: Props) {
       category,
       amount: parseFloat(amount),
       note: note || undefined,
+      cardId: selectedCardId || undefined,
     });
 
     setDate("");
@@ -68,6 +72,23 @@ export default function ExpenseForm({ onAdd }: Props) {
             />
           </label>
         </div>
+
+        {cards.length > 0 && (
+          <label className="flex flex-col gap-1 text-xs text-zinc-500">
+            Ödeme Yöntemi / Kart
+            <select
+              value={selectedCardId}
+              onChange={(e) => setSelectedCardId(e.target.value)}
+              className="w-full rounded-xl border border-zinc-300 bg-white p-2.5 text-sm font-semibold transition-colors dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              {cards.map((card) => (
+                <option key={card.id} value={card.id}>
+                  💳 {card.name} ({card.cardType === "credit" ? "Kredi Kartı" : card.cardType === "debit" ? "Banka Kartı" : "Nakit"})
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label className="flex flex-col gap-1 text-xs text-zinc-500">
           Not (opsiyonel)

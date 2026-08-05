@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import ExpenseForm from "@/components/ExpenseForm";
 import ExpenseChart from "@/components/ExpenseChart";
 import ExpenseTable from "@/components/ExpenseTable";
@@ -8,6 +8,7 @@ import ExpenseHeatmapCalendar from "@/components/ExpenseHeatmapCalendar";
 import BudgetGoals from "@/components/BudgetGoals";
 import ArchivedPeriodCard from "@/components/ArchivedPeriodCard";
 import StatementUpload from "@/components/StatementUpload";
+import CardWalletWidget from "@/components/CardWalletWidget";
 import { useExpenseData } from "@/hooks/useExpenseData";
 
 function formatTRY(value: number): string {
@@ -31,7 +32,6 @@ export default function HarcamalarPage() {
     handleDeleteExpense,
     handleUpdateExpenseCategory,
     handleImportExpenses,
-    totalExpenses,
     archivedPeriods,
     handleClosePeriod,
     handleDeleteArchivedPeriod,
@@ -43,13 +43,23 @@ export default function HarcamalarPage() {
   } = useExpenseData();
 
   const [activeTab, setActiveTab] = useState<TabType>("overview");
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+
+  // Filter expenses by selected card if card filter is active
+  const filteredExpenses = useMemo(() => {
+    if (!selectedCardId) return expenses;
+    return expenses.filter((e) => e.cardId === selectedCardId);
+  }, [expenses, selectedCardId]);
 
   function onClosePeriod() {
     if (expenses.length === 0) return;
     const confirmed = window.confirm(
       "Mevcut dönemi kapatmak istediğine emin misin? Harcamaların silinmeyecek, arşive taşınacak ve ana ekran yeni dönem için temizlenecek."
     );
-    if (confirmed) handleClosePeriod();
+    if (confirmed) {
+      handleClosePeriod();
+      setSelectedCardId(null);
+    }
   }
 
   // Filter tabs if no archives exist
@@ -59,8 +69,8 @@ export default function HarcamalarPage() {
     <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6 sm:p-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl font-semibold tracking-tight">Harcama Analizi</h1>
-          <p className="mt-1 text-sm text-zinc-500">Kategori bazlı harcama takibi ve bütçe yönetimi</p>
+          <h1 className="font-serif text-3xl font-semibold tracking-tight">Harcama Analizi & Kartlarım</h1>
+          <p className="mt-1 text-sm text-zinc-500">Banka/kredi kartı takibi, bütçe yönetimi ve dönem analizi</p>
         </div>
         <button
           onClick={onClosePeriod}
@@ -71,14 +81,25 @@ export default function HarcamalarPage() {
         </button>
       </header>
 
+      {/* Real Credit/Debit Card Wallet Widget */}
+      <CardWalletWidget
+        expenses={expenses}
+        selectedCardId={selectedCardId}
+        onSelectCard={setSelectedCardId}
+      />
+
       {/* Quick KPI Summary Bar */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <div className="text-xs uppercase tracking-wider text-zinc-500">Bu Dönem Toplam Harcama</div>
-          <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            {formatTRY(totalExpenses)}
+          <div className="text-xs uppercase tracking-wider text-zinc-500">
+            {selectedCardId ? "Seçili Kart Harcaması" : "Bu Dönem Toplam Harcama"}
           </div>
-          <div className="mt-1 text-xs text-zinc-400">{expenses.length} adet harcama kaydı</div>
+          <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            {formatTRY(filteredExpenses.reduce((sum, e) => sum + e.amount, 0))}
+          </div>
+          <div className="mt-1 text-xs text-zinc-400">
+            {filteredExpenses.length} adet harcama kaydı {selectedCardId && "(Filtreli)"}
+          </div>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
@@ -114,13 +135,13 @@ export default function HarcamalarPage() {
             >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
-              {tab.id === "table" && expenses.length > 0 && (
+              {tab.id === "table" && filteredExpenses.length > 0 && (
                 <span
                   className={`ml-1 rounded-full px-2 py-0.5 text-xs ${
                     isActive ? "bg-zinc-700 text-zinc-100 dark:bg-zinc-300 dark:text-zinc-900" : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
                   }`}
                 >
-                  {expenses.length}
+                  {filteredExpenses.length}
                 </span>
               )}
               {tab.id === "archives" && archivedPeriods.length > 0 && (
@@ -143,7 +164,7 @@ export default function HarcamalarPage() {
           <div className="grid gap-6 md:grid-cols-2">
             <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
               <h2 className="mb-4 text-lg font-semibold tracking-tight">Kategori Dağılımı</h2>
-              <ExpenseChart expenses={expenses} />
+              <ExpenseChart expenses={filteredExpenses} />
             </div>
 
             <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
@@ -151,7 +172,7 @@ export default function HarcamalarPage() {
               <p className="mb-4 text-xs text-zinc-500">
                 Finansal Takvim&apos;den bağımsızdır, sadece bu dönemin harcamalarını gün bazlı yoğunlukla gösterir.
               </p>
-              <ExpenseHeatmapCalendar expenses={expenses} />
+              <ExpenseHeatmapCalendar expenses={filteredExpenses} />
             </div>
           </div>
         </section>
@@ -182,11 +203,20 @@ export default function HarcamalarPage() {
       {/* Tab Content 4: Expenses Table */}
       {activeTab === "table" && (
         <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <h2 className="mb-1 text-lg font-semibold tracking-tight">Harcamalar Listesi</h2>
-          <p className="mb-4 text-xs text-zinc-500">
-            Kayıtlı harcamalarını görebilir, silebilir veya kategorisine tıklayarak değiştirebilirsin.
-          </p>
-          <ExpenseTable expenses={expenses} onDelete={handleDeleteExpense} onUpdateCategory={handleUpdateExpenseCategory} />
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Harcamalar Listesi</h2>
+              <p className="text-xs text-zinc-500">
+                Kayıtlı harcamalarını görebilir, silebilir veya kategorisine tıklayarak değiştirebilirsin.
+              </p>
+            </div>
+            {selectedCardId && (
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900 dark:bg-amber-950 dark:text-amber-300">
+                🔍 Kart Filtresi Aktif
+              </span>
+            )}
+          </div>
+          <ExpenseTable expenses={filteredExpenses} onDelete={handleDeleteExpense} onUpdateCategory={handleUpdateExpenseCategory} />
         </section>
       )}
 

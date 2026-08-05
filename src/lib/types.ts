@@ -86,12 +86,21 @@ export const EXPENSE_CATEGORIES = [
   "Diğer",
 ] as const;
 
+export interface PaymentCard {
+  id: string;
+  name: string; // e.g. "Garanti Bonus", "Akbank Axess", "Nakit"
+  color: string; // gradient color preset key or hex
+  cardType: "credit" | "debit" | "cash";
+  limit?: number;
+}
+
 export interface Expense {
   id: string;
   date: string; // YYYY-MM-DD
   category: string;
   amount: number;
   note?: string;
+  cardId?: string; // payment method card reference
 }
 
 export interface CategoryBudget {
