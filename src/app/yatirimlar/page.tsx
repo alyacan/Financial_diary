@@ -4,7 +4,7 @@ import { useState } from "react";
 import TransactionForm from "@/components/TransactionForm";
 import PortfolioChart from "@/components/PortfolioChart";
 import TransactionTable from "@/components/TransactionTable";
-import { useInvestments, MANUAL_GOLD_SUBTYPES } from "@/hooks/useInvestments";
+import { useInvestments } from "@/hooks/useInvestments";
 import { ASSET_LABELS, CRYPTO_OPTIONS, FOREX_OPTIONS, tefasUrl } from "@/lib/types";
 import { priceKey } from "@/lib/calculations";
 
@@ -24,8 +24,6 @@ const TABS: { id: TabType; label: string; icon: string }[] = [
 export default function YatirimlarPage() {
   const {
     prices,
-    manualGoldInputs,
-    setManualGoldInputs,
     manualFundInputs,
     setManualFundInputs,
     manualFundReturnInputs,
@@ -38,7 +36,6 @@ export default function YatirimlarPage() {
     refreshPrices,
     handleAdd,
     handleDelete,
-    handleManualGoldSave,
     handleManualFundSave,
     handleManualFundMetadataSave,
     positions,
@@ -175,12 +172,24 @@ export default function YatirimlarPage() {
         <section className="flex flex-col gap-6">
           {/* Live Market Tickers Bar */}
           <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-            <h2 className="mb-3 text-lg font-semibold tracking-tight">Canlı Piyasa Fiyatları</h2>
+            <h2 className="mb-3 text-lg font-semibold tracking-tight">Canlı Piyasa Fiyatları & Endeksler</h2>
             <div className="flex flex-wrap gap-3 text-xs">
               <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-2.5 dark:border-amber-900/40 dark:bg-amber-950/20">
-                <span className="font-medium text-amber-900 dark:text-amber-200">Gram Altın (Ons Hesabı): </span>
+                <span className="font-medium text-amber-900 dark:text-amber-200">Gram Altın: </span>
                 <strong className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
                   {formatTRY(prices[priceKey("gold", "gram")] ?? 0)}
+                </strong>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 dark:border-slate-800 dark:bg-slate-900/40">
+                <span className="font-medium text-slate-800 dark:text-slate-200">Gram Gümüş: </span>
+                <strong className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                  {formatTRY(prices[priceKey("silver", "gram")] ?? 0)}
+                </strong>
+              </div>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-2.5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+                <span className="font-medium text-emerald-900 dark:text-emerald-200">BIST 100 Endeksi: </span>
+                <strong className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                  {(prices["bist_100"] ?? 0).toLocaleString("tr-TR", { maximumFractionDigits: 2 })} puan
                 </strong>
               </div>
               {CRYPTO_OPTIONS.map((c) => (
@@ -201,36 +210,8 @@ export default function YatirimlarPage() {
               ))}
             </div>
             <p className="mt-3 text-[11px] text-zinc-400">
-              * Gram altın fiyatı uluslararası ons altın vadeli işlem fiyatından hesaplanan referanstır.
+              * Gram altın ve gümüş fiyatları uluslararası ons vadeli işlem fiyatından hesaplanan referanstır. BIST 100 canlı piyasa verisidir.
             </p>
-          </div>
-
-          {/* Manual Gold Subtype Prices */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-            <h3 className="mb-2 text-base font-semibold tracking-tight">Fiziki Altın Türleri (Çeyrek, Ziynet vs.) Güncel Fiyat Girişi</h3>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {MANUAL_GOLD_SUBTYPES.map((g) => (
-                <div key={g.id} className="flex flex-col gap-2 rounded-xl border border-zinc-200 p-3.5 dark:border-zinc-800">
-                  <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{g.label} Alım Bedeli (TL)</span>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      step="any"
-                      placeholder="Örn: 4850"
-                      value={manualGoldInputs[g.id] ?? ""}
-                      onChange={(e) => setManualGoldInputs((prev) => ({ ...prev, [g.id]: e.target.value }))}
-                      className="w-full rounded-xl border border-zinc-300 p-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-                    />
-                    <button
-                      onClick={() => handleManualGoldSave(g.id)}
-                      className="shrink-0 rounded-xl bg-zinc-900 px-3.5 py-2 text-xs font-medium text-white transition-colors dark:bg-zinc-100 dark:text-black"
-                    >
-                      Kaydet
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* TEFAS Manual Fund Entry */}

@@ -1,28 +1,28 @@
 export type AssetType =
   | "gold"
+  | "silver"
   | "crypto"
   | "forex"
   | "fund"
   | "stock"
   | "bank"
-  | "time_deposit"
   | "deposit"
   | "cash";
 
 export const ASSET_LABELS: Record<string, string> = {
   gold: "Altın",
+  silver: "Gümüş",
   crypto: "Kripto",
   forex: "Döviz",
   fund: "Fon",
   stock: "Hisse",
   bank: "Banka",
-  time_deposit: "Vadeli Hesap",
   deposit: "Mevduat",
   cash: "Nakit",
 };
 
 // Bunlar için kâr/zarar hesaplanmaz — sadece bakiye olarak portföye eklenir.
-export const BALANCE_ONLY_TYPES: AssetType[] = ["bank", "time_deposit", "deposit", "cash"];
+export const BALANCE_ONLY_TYPES: AssetType[] = ["bank", "deposit", "cash"];
 
 export const CRYPTO_OPTIONS = [
   { id: "bitcoin", label: "Bitcoin (BTC)" },

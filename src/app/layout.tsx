@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Manrope, Newsreader } from "next/font/google";
+import { Montserrat, Newsreader } from "next/font/google";
 import Sidebar from "@/components/Sidebar";
+import TopHeader from "@/components/TopHeader";
 import "./globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
 });
 
@@ -28,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className={`${manrope.variable} ${newsreader.variable} h-full antialiased`}>
+    <html lang="tr" className={`${montserrat.variable} ${newsreader.variable} h-full antialiased`}>
       <body className="min-h-full font-sans" style={{ background: "var(--background)", color: "var(--foreground)" }}>
         <div className="relative min-h-screen">
           <div
@@ -43,7 +44,10 @@ export default function RootLayout({
           />
           <div className="relative z-10 grid min-h-screen grid-cols-1 md:grid-cols-[248px_1fr]">
             <Sidebar />
-            <main className="min-w-0">{children}</main>
+            <div className="flex flex-col min-w-0">
+              <TopHeader />
+              <main className="flex-1 min-w-0">{children}</main>
+            </div>
           </div>
         </div>
       </body>

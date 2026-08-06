@@ -1,9 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 
 const LINKS = [
   {
@@ -46,13 +44,6 @@ const LINKS = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [today] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    const now = new Date();
-    const dateStr = now.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
-    const weekday = now.toLocaleDateString("tr-TR", { weekday: "long" });
-    return `${dateStr}\n${weekday}`;
-  });
 
   return (
     <aside
@@ -93,27 +84,6 @@ export default function Sidebar() {
           );
         })}
       </nav>
-
-      <div className="mt-auto hidden flex-col gap-3 md:flex">
-        <div className="flex items-center gap-2.5 px-1">
-          <Image
-            src="/avatar.png"
-            alt="Profil"
-            width={40}
-            height={40}
-            className="rounded-full object-cover"
-            style={{ border: "1.5px solid var(--shell-border)" }}
-          />
-          <span className="text-sm font-medium">Gökçe</span>
-        </div>
-
-        <div
-          className="rounded-2xl p-4 text-xs leading-relaxed whitespace-pre-line"
-          style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)", color: "var(--shell-muted)" }}
-        >
-          {today ?? ""}
-        </div>
-      </div>
     </aside>
   );
 }

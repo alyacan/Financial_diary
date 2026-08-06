@@ -39,6 +39,7 @@ export default function TransactionForm({ onAdd }: Props) {
   function handleAssetTypeChange(next: AssetType) {
     setAssetType(next);
     if (next === "gold") setSubType(GOLD_SUBTYPES[0].id);
+    else if (next === "silver") setSubType("gram");
     else if (next === "crypto") setSubType(CRYPTO_OPTIONS[0].id);
     else if (next === "forex") setSubType(FOREX_OPTIONS[0].code);
     else if (next === "fund") { setSubType(""); setFundCategory(FUND_CATEGORIES[0]); }
@@ -100,12 +101,12 @@ export default function TransactionForm({ onAdd }: Props) {
             className="rounded border border-zinc-300 p-2 dark:border-zinc-700 dark:bg-zinc-900"
           >
             <option value="gold">Altın</option>
+            <option value="silver">Gümüş</option>
             <option value="crypto">Kripto</option>
             <option value="forex">Döviz</option>
             <option value="fund">Fon</option>
             <option value="stock">Hisse</option>
             <option value="bank">Banka</option>
-            <option value="time_deposit">Vadeli Hesap</option>
             <option value="deposit">Mevduat</option>
             <option value="cash">Nakit</option>
           </select>

@@ -30,24 +30,51 @@ export async function GET() {
     })
   );
 
-  // Ons altın (USD) fiyatını çekip USD/TRY kuruyla gram başına TL'ye çeviriyoruz.
-  // Not: Bu COMEX vadeli işlem fiyatıdır (spot'a çok yakın), kuyumcu satış fiyatındaki
-  // işçilik/prim dahil değildir — referans niteliğindedir.
+  const usdTry = prices[priceKey("forex", "USD")] || 36.5;
+  const GRAMS_PER_TROY_OUNCE = 31.1034768;
+
+  // Ons Altın (USD) -> Gram Altın (TRY)
   try {
-    const usdTry = prices[priceKey("forex", "USD")];
     const res = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/GC=F", {
       headers: { "User-Agent": "Mozilla/5.0" },
     });
     const data = await res.json();
     const ouncePriceUsd = data.chart?.result?.[0]?.meta?.regularMarketPrice;
     if (ouncePriceUsd && usdTry) {
-      const GRAMS_PER_TROY_OUNCE = 31.1034768;
       prices[priceKey("gold", "gram")] = (ouncePriceUsd / GRAMS_PER_TROY_OUNCE) * usdTry;
     } else {
       prices[priceKey("gold", "gram")] = 0;
     }
   } catch {
     prices[priceKey("gold", "gram")] = 0;
+  }
+
+  // Ons Gümüş (USD) -> Gram Gümüş (TRY)
+  try {
+    const res = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/SI=F", {
+      headers: { "User-Agent": "Mozilla/5.0" },
+    });
+    const data = await res.json();
+    const ounceSilverUsd = data.chart?.result?.[0]?.meta?.regularMarketPrice;
+    if (ounceSilverUsd && usdTry) {
+      prices[priceKey("silver", "gram")] = (ounceSilverUsd / GRAMS_PER_TROY_OUNCE) * usdTry;
+    } else {
+      prices[priceKey("silver", "gram")] = 0;
+    }
+  } catch {
+    prices[priceKey("silver", "gram")] = 0;
+  }
+
+  // BIST 100 Endeksi (XU100.IS)
+  try {
+    const res = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/XU100.IS", {
+      headers: { "User-Agent": "Mozilla/5.0" },
+    });
+    const data = await res.json();
+    const bistPrice = data.chart?.result?.[0]?.meta?.regularMarketPrice;
+    prices["bist_100"] = bistPrice ?? 0;
+  } catch {
+    prices["bist_100"] = 0;
   }
 
   return NextResponse.json(prices);
