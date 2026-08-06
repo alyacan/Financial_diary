@@ -175,7 +175,7 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
             <div className="flex items-center gap-3">
               <span className="text-3xl">📁</span>
               <div>
-                <h1 className="font-serif text-2xl font-bold tracking-tight">
+                <h1 className="text-2xl font-bold tracking-tight">
                   {period.name ? period.name : `${formatDate(period.startDate)} - ${formatDate(period.endDate)}`}
                 </h1>
                 <span className="mt-1 inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">

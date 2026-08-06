@@ -69,7 +69,7 @@ export default function HarcamalarPage() {
     <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6 sm:p-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl font-semibold tracking-tight">Harcama Analizi & Kartlarım</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Harcama Analizi & Kartlarım</h1>
           <p className="mt-1 text-sm text-zinc-500">Banka/kredi kartı takibi, bütçe yönetimi ve dönem analizi</p>
         </div>
         <button

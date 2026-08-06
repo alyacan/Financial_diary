@@ -51,8 +51,8 @@ export default function Sidebar() {
       style={{ borderColor: "var(--shell-border)" }}
     >
       <div className="flex flex-col gap-0.5">
-        <div className="font-serif text-xl font-medium tracking-tight">Finansal Günlük</div>
-        <div className="text-xs tracking-wide" style={{ color: "var(--shell-muted)" }}>
+        <div className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">Finansal Günlük</div>
+        <div className="text-xs font-medium tracking-wide text-zinc-500">
           kişisel finans defterin
         </div>
       </div>

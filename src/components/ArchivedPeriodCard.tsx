@@ -139,7 +139,7 @@ export default function ArchivedPeriodCard({ period, onDelete, onUpdate }: Props
         </div>
 
         <div className="flex flex-col gap-0.5">
-          <h3 className="font-serif text-base font-semibold text-zinc-900 dark:text-zinc-100">
+          <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
             {period.name ? period.name : `${formatDate(period.startDate)} - ${formatDate(period.endDate)}`}
           </h3>
           <p className="text-xs text-zinc-500">

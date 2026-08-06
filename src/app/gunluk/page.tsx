@@ -24,7 +24,7 @@ export default function GunlukPage() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6 sm:p-10">
       <header className="flex flex-col gap-1">
-        <h1 className="font-serif text-3xl font-semibold tracking-tight">Finans Günlüğüm 📓</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Finans Günlüğüm 📓</h1>
         <p className="text-sm text-zinc-500">
           Önemli ekonomik tarihler, temettü takvimi ve yatırım kararlarının gerekçeleri tek ekranda.
         </p>

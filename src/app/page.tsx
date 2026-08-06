@@ -75,52 +75,15 @@ export default function Home() {
   const expenseDelta = lastPeriodTotal !== null ? totalExpenses - lastPeriodTotal : null;
   const insight = computeHomeInsight(expenses, archivedPeriods);
 
-  const currentDateFormatted = new Date().toLocaleDateString("tr-TR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
   return (
     <div className="mx-auto flex max-w-[1400px] flex-col gap-10 p-6 sm:p-10">
-      {/* Top Header Bar with Helios Profile Styling */}
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200/80 pb-6 dark:border-zinc-800">
-        <div>
-          <h1 className="font-serif text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-4xl">
-            {greeting()}
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Yatırım ve harcama takibi, kartlarım cüzdanı ve AI destekli finansal günlük
-          </p>
-        </div>
-
-        {/* Profile & Controls Pill Bar */}
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex flex-col items-end">
-            <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Finansal Günlük</span>
-            <span className="text-[11px] text-zinc-400">{currentDateFormatted}</span>
-          </div>
-
-          <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 bg-zinc-50/80 p-1.5 shadow-2xs dark:border-zinc-800 dark:bg-zinc-900">
-            <button
-              title="Bildirimler"
-              className="flex h-8 w-8 items-center justify-center rounded-xl text-xs text-zinc-600 transition-colors hover:bg-zinc-200 dark:text-zinc-400 dark:hover:bg-zinc-800"
-            >
-              🔔
-            </button>
-            <Link
-              href="/gunluk"
-              title="Takvim ve Günlük"
-              className="flex h-8 w-8 items-center justify-center rounded-xl text-xs text-zinc-600 transition-colors hover:bg-zinc-200 dark:text-zinc-400 dark:hover:bg-zinc-800"
-            >
-              ⚙️
-            </Link>
-            <div className="flex items-center gap-2 rounded-xl bg-zinc-900 px-3 py-1 text-xs font-semibold text-white dark:bg-zinc-100 dark:text-black">
-              <span>👤</span>
-              <span className="hidden sm:inline">Portföy Hesabı</span>
-            </div>
-          </div>
-        </div>
+      <header className="flex flex-col gap-1">
+        <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-4xl">
+          {greeting()}
+        </h1>
+        <p className="text-sm text-zinc-500 font-medium">
+          Yatırım ve harcama takibi, kartlarım cüzdanı ve AI destekli finansal günlük
+        </p>
       </header>
 
       {missingPricePositions.length > 0 && (
@@ -167,7 +130,7 @@ export default function Home() {
             )}
           </div>
           <div>
-            <div className="font-serif text-3xl font-semibold tracking-tight sm:text-4xl">{formatTRY(totalValue)}</div>
+            <div className="text-3xl font-extrabold tracking-tight sm:text-4xl">{formatTRY(totalValue)}</div>
             <div className="mt-1.5 text-[13px]" style={{ color: "oklch(0.75 0.03 60)" }}>
               {pricedPositionCount} aktif pozisyon
             </div>

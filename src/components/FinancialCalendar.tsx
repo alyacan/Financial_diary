@@ -242,7 +242,7 @@ export default function FinancialCalendar({
             ←
           </button>
           <div className="flex items-center gap-2">
-            <span className="font-serif text-lg font-semibold tracking-tight">{MONTH_NAMES[viewMonth]} {viewYear}</span>
+            <span className="text-lg font-bold tracking-tight">{MONTH_NAMES[viewMonth]} {viewYear}</span>
             {viewYear === today.getFullYear() && viewMonth === today.getMonth() && (
               <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                 Bu Ay

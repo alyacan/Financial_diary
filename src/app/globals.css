@@ -9,7 +9,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-montserrat);
-  --font-serif: var(--font-newsreader);
+  --font-serif: var(--font-montserrat);
 }
 
 /* Ana Sayfa tasarım paleti — sıcak/terrakota, oklch tabanlı kabuk (sidebar + arkaplan) */
