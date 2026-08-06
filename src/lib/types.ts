@@ -21,6 +21,17 @@ export const ASSET_LABELS: Record<string, string> = {
   cash: "Nakit",
 };
 
+export function getAssetIcon(assetType: string, subType?: string): string {
+  if (assetType === "gold") return "🥇";
+  if (assetType === "silver") return "🥈";
+  if (assetType === "crypto") {
+    if (subType === "ethereum") return "🟣";
+    return "🟠";
+  }
+  if (assetType === "forex" || assetType === "cash") return "💲";
+  return "";
+}
+
 // Bunlar için kâr/zarar hesaplanmaz — sadece bakiye olarak portföye eklenir.
 export const BALANCE_ONLY_TYPES: AssetType[] = ["bank", "deposit", "cash"];
 

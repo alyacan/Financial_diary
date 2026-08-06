@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Transaction, ASSET_LABELS, AssetType } from "@/lib/types";
+import { Transaction, ASSET_LABELS, AssetType, getAssetIcon } from "@/lib/types";
 
 function formatTRY(value: number): string {
   return value.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
@@ -11,17 +11,6 @@ function formatDate(isoDate: string): string {
   const [y, m, d] = isoDate.split("-");
   return `${d}.${m}.${y}`;
 }
-
-const ASSET_ICONS: Record<string, string> = {
-  gold: "🪙",
-  crypto: "🪙",
-  forex: "💵",
-  stock: "📈",
-  fund: "📊",
-  bank: "🏦",
-  deposit: "🏦",
-  cash: "💵",
-};
 
 interface Props {
   transactions: Transaction[];
@@ -95,7 +84,7 @@ export default function FinancialJournal({ transactions }: Props) {
                   : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
               }`}
             >
-              {ASSET_ICONS[type] ?? "📌"} {ASSET_LABELS[type as AssetType] ?? type}
+              {getAssetIcon(type)} {ASSET_LABELS[type as AssetType] ?? type}
             </button>
           ))}
         </div>
@@ -119,7 +108,7 @@ export default function FinancialJournal({ transactions }: Props) {
                     📅 {formatDate(t.date)}
                   </span>
                   <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                    {ASSET_ICONS[t.assetType] ?? "📌"} {ASSET_LABELS[t.assetType] ?? t.assetType} ({t.subType})
+                    {getAssetIcon(t.assetType, t.subType)} {ASSET_LABELS[t.assetType] ?? t.assetType} ({t.subType})
                   </span>
                 </div>
                 <div className="text-xs text-zinc-500">
