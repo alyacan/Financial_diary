@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   UserProfile,
   saveUserProfile,
@@ -343,7 +344,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: Props) {
                 className="mt-0.5 h-4 w-4 rounded-md border-zinc-300"
               />
               <span>
-                Kullanım ve kişisel veri güvenliği koşullarını okudum, kabul ediyorum.
+                <Link href="/gizlilik" target="_blank" className="font-semibold underline">
+                  Kullanım ve kişisel veri güvenliği koşullarını
+                </Link>{" "}
+                okudum, kabul ediyorum.
               </span>
             </label>
 
