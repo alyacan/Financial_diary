@@ -107,21 +107,21 @@ export default function Home() {
           }}
         >
           <div className="flex items-start justify-between">
-            <div className="text-[13px] tracking-wide uppercase font-semibold" style={{ color: "oklch(0.85 0.05 25)" }}>
+            <div className="text-[13px] tracking-wide uppercase font-bold text-[#96E072]">
               Güncel Portföy Değeri
             </div>
             {totalInvested > 0 && (
               <div
-                className="flex items-center gap-1.5 rounded-full px-2.5 py-1"
-                style={{ background: profitPercent >= 0 ? "var(--shell-positive-bg)" : "oklch(0.4 0.1 25 / 0.3)" }}
+                className="flex items-center gap-1.5 rounded-full px-2.5 py-1 border border-[#96E072]/40"
+                style={{ background: profitPercent >= 0 ? "rgba(150, 224, 114, 0.2)" : "rgba(217, 56, 56, 0.2)" }}
               >
                 <span
                   className="h-1.5 w-1.5 rounded-full"
-                  style={{ background: profitPercent >= 0 ? "oklch(0.75 0.16 145)" : "oklch(0.7 0.16 25)" }}
+                  style={{ background: profitPercent >= 0 ? "#96E072" : "#d93838" }}
                 />
                 <span
-                  className="text-xs font-semibold"
-                  style={{ color: profitPercent >= 0 ? "oklch(0.85 0.1 145)" : "oklch(0.85 0.1 25)" }}
+                  className="text-xs font-bold"
+                  style={{ color: profitPercent >= 0 ? "#E8FCCF" : "#ff8888" }}
                 >
                   {profitPercent >= 0 ? "+" : ""}
                   {profitPercent.toFixed(1)}%
@@ -130,8 +130,8 @@ export default function Home() {
             )}
           </div>
           <div>
-            <div className="text-3xl font-extrabold tracking-tight sm:text-4xl">{formatTRY(totalValue)}</div>
-            <div className="mt-1.5 text-[13px]" style={{ color: "oklch(0.75 0.03 60)" }}>
+            <div className="text-3xl font-extrabold tracking-tight sm:text-4xl text-[#E8FCCF]">{formatTRY(totalValue)}</div>
+            <div className="mt-1.5 text-[13px] font-medium text-[#96E072]">
               {pricedPositionCount} aktif pozisyon
             </div>
           </div>
