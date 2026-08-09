@@ -1,17 +1,43 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import NotificationDropdown from "./NotificationDropdown";
 import ProfileModal from "./ProfileModal";
 import AuthModal from "./AuthModal";
-import { UserProfile, loadUserProfile, signOutUser } from "@/lib/supabase";
+import { UserProfile, loadUserProfile, saveUserProfile, signOutUser, supabase, profileFromUser } from "@/lib/supabase";
 
 export default function TopHeader() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
+
+  // Keep local profile in sync with the real Supabase session (e.g. after a page reload).
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      const user = data.session?.user;
+      if (user) {
+        const profile = profileFromUser(user);
+        saveUserProfile(profile);
+        setUserProfile(profile);
+      }
+    });
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        setUserProfile(null);
+        return;
+      }
+      if (session?.user) {
+        const profile = profileFromUser(session.user);
+        saveUserProfile(profile);
+        setUserProfile(profile);
+      }
+    });
+
+    return () => subscription.subscription.unsubscribe();
+  }, []);
 
   const [dateInfo] = useState(() => {
     if (typeof window === "undefined") return { dateNumMonthYear: "", weekday: "" };
@@ -25,8 +51,8 @@ export default function TopHeader() {
     return { dateNumMonthYear, weekday };
   });
 
-  function handleSignOut() {
-    signOutUser();
+  async function handleSignOut() {
+    await signOutUser();
     setUserProfile(null);
   }
 

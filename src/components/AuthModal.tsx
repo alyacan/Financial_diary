@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { UserProfile, saveUserProfile } from "@/lib/supabase";
+import {
+  UserProfile,
+  saveUserProfile,
+  signUpWithEmail,
+  signInWithEmail,
+  requestPasswordReset,
+  profileFromUser,
+} from "@/lib/supabase";
 
 interface Props {
   isOpen: boolean;
@@ -10,6 +17,15 @@ interface Props {
 }
 
 type AuthMode = "signup" | "login" | "reset";
+
+function translateAuthError(message: string): string {
+  const known: Record<string, string> = {
+    "User already registered": "Bu e-posta adresi zaten kayıtlı. Giriş yapmayı dene.",
+    "Invalid login credentials": "E-posta veya şifre hatalı.",
+    "Email not confirmed": "Bu hesap henüz doğrulanmamış. Lütfen mailindeki bağlantıya tıkla.",
+  };
+  return known[message] ?? message;
+}
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }: Props) {
   const [mode, setMode] = useState<AuthMode>("signup");
@@ -43,7 +59,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: Props) {
     resetForm();
   }
 
-  function handleSignUp(e: React.FormEvent) {
+  async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
@@ -70,27 +86,31 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: Props) {
     }
 
     setIsLoading(true);
+    const { data, error } = await signUpWithEmail(nameInput.trim(), emailInput.trim(), passwordInput);
+    setIsLoading(false);
 
-    setTimeout(() => {
-      const newUser: UserProfile = {
-        name: nameInput.trim(),
-        email: emailInput.trim(),
-        avatarUrl: "/avatar.png",
-      };
+    if (error) {
+      setErrorMsg(translateAuthError(error.message));
+      return;
+    }
 
+    if (data.session && data.user) {
+      const newUser = profileFromUser(data.user);
       saveUserProfile(newUser);
-      setIsLoading(false);
       setSuccessMsg("Hesabınız başarıyla oluşturuldu! Giriş yapılıyor... 🎉");
-
       setTimeout(() => {
         onAuthSuccess(newUser);
         onClose();
         resetForm();
       }, 1000);
-    }, 600);
+    } else {
+      setSuccessMsg(
+        `"${emailInput}" adresine bir doğrulama bağlantısı gönderdik. Hesabını aktifleştirmek için lütfen mailindeki bağlantıya tıkla, sonra giriş yap. 📩`
+      );
+    }
   }
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
@@ -105,27 +125,26 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: Props) {
     }
 
     setIsLoading(true);
+    const { data, error } = await signInWithEmail(emailInput.trim(), passwordInput);
+    setIsLoading(false);
+
+    if (error || !data.user) {
+      setErrorMsg(translateAuthError(error?.message ?? "Giriş yapılamadı."));
+      return;
+    }
+
+    const existingUser = profileFromUser(data.user);
+    saveUserProfile(existingUser);
+    setSuccessMsg("Başarıyla giriş yapıldı! Yönlendiriliyorsunuz... ✨");
 
     setTimeout(() => {
-      const existingUser: UserProfile = {
-        name: emailInput.split("@")[0] || "Kullanıcı",
-        email: emailInput.trim(),
-        avatarUrl: "/avatar.png",
-      };
-
-      saveUserProfile(existingUser);
-      setIsLoading(false);
-      setSuccessMsg("Başarıyla giriş yapıldı! Yönlendiriliyorsunuz... ✨");
-
-      setTimeout(() => {
-        onAuthSuccess(existingUser);
-        onClose();
-        resetForm();
-      }, 1000);
-    }, 600);
+      onAuthSuccess(existingUser);
+      onClose();
+      resetForm();
+    }, 1000);
   }
 
-  function handlePasswordReset(e: React.FormEvent) {
+  async function handlePasswordReset(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
@@ -136,13 +155,17 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: Props) {
     }
 
     setIsLoading(true);
+    const { error } = await requestPasswordReset(emailInput.trim());
+    setIsLoading(false);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      setSuccessMsg(
-        `"${emailInput}" adresinize güvenli şifre sıfırlama bağlantısı gönderildi! Lütfen gelen kutunuzu kontrol edin. 📩`
-      );
-    }, 800);
+    if (error) {
+      setErrorMsg(translateAuthError(error.message));
+      return;
+    }
+
+    setSuccessMsg(
+      `"${emailInput}" adresinize güvenli şifre sıfırlama bağlantısı gönderildi! Lütfen gelen kutunuzu kontrol edin. 📩`
+    );
   }
 
   return (
