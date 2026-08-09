@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Expense, PaymentCard } from "@/lib/types";
-import { getStoredCards, saveStoredCards } from "@/lib/cardsStorage";
+import { getStoredCards, addPaymentCard, deletePaymentCard } from "@/lib/cardsStorage";
 
 function formatTRY(value: number): string {
   return value.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
@@ -24,12 +24,16 @@ interface Props {
 }
 
 export default function CardWalletWidget({ expenses, selectedCardId, onSelectCard }: Props) {
-  const [cards, setCards] = useState<PaymentCard[]>(() => getStoredCards());
+  const [cards, setCards] = useState<PaymentCard[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [cardName, setCardName] = useState("");
   const [cardType, setCardType] = useState<"credit" | "debit" | "cash">("credit");
   const [cardColor, setCardColor] = useState(GRADIENT_OPTIONS[0].value);
   const [cardLimit, setCardLimit] = useState("");
+
+  useEffect(() => {
+    getStoredCards().then(setCards);
+  }, []);
 
   // Calculate statistics per card for current period expenses
   const cardStats = useMemo(() => {
@@ -53,36 +57,36 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
     return map;
   }, [expenses, cards]);
 
-  function handleAddCard(e: React.FormEvent) {
+  async function handleAddCard(e: React.FormEvent) {
     e.preventDefault();
     if (!cardName.trim()) return;
 
-    const newCard: PaymentCard = {
-      id: `card_${Date.now()}`,
+    const { cards: updated, error } = await addPaymentCard({
       name: cardName.trim(),
       cardType,
       color: cardColor,
       limit: cardLimit ? parseFloat(cardLimit) : undefined,
-    };
+    });
 
-    const updated = [...cards, newCard];
+    if (error) {
+      alert(error);
+      return;
+    }
+
     setCards(updated);
-    saveStoredCards(updated);
-
     setCardName("");
     setCardLimit("");
     setModalOpen(false);
   }
 
-  function handleDeleteCard(id: string) {
+  async function handleDeleteCard(id: string) {
     if (cards.length <= 1) {
       alert("En az 1 adet kart kayıtlı kalmalıdır.");
       return;
     }
     if (confirm("Bu kartı cüzdanınızdan silmek istediğinize emin misiniz?")) {
-      const updated = cards.filter((c) => c.id !== id);
+      const updated = await deletePaymentCard(id);
       setCards(updated);
-      saveStoredCards(updated);
       if (selectedCardId === id) onSelectCard(null);
     }
   }

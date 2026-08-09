@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EXPENSE_CATEGORIES, Expense, PaymentCard } from "@/lib/types";
 import { getStoredCards } from "@/lib/cardsStorage";
 import DateSelect from "./DateSelect";
@@ -14,8 +14,15 @@ export default function ExpenseForm({ onAdd }: Props) {
   const [category, setCategory] = useState<string>(EXPENSE_CATEGORIES[0]);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
-  const [cards] = useState<PaymentCard[]>(() => getStoredCards());
-  const [selectedCardId, setSelectedCardId] = useState<string>(() => (cards.length > 0 ? cards[0].id : ""));
+  const [cards, setCards] = useState<PaymentCard[]>([]);
+  const [selectedCardId, setSelectedCardId] = useState<string>("");
+
+  useEffect(() => {
+    getStoredCards().then((loaded) => {
+      setCards(loaded);
+      if (loaded.length > 0) setSelectedCardId(loaded[0].id);
+    });
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
