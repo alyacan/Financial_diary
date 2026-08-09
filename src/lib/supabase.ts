@@ -33,3 +33,8 @@ export function saveUserProfile(profile: UserProfile): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
 }
+
+export function signOutUser(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(PROFILE_STORAGE_KEY);
+}

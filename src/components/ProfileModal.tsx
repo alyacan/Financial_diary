@@ -8,9 +8,10 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onProfileUpdated: (newProfile: UserProfile) => void;
+  onSignOut: () => void;
 }
 
-export default function ProfileModal({ isOpen, onClose, onProfileUpdated }: Props) {
+export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSignOut }: Props) {
   const [profile] = useState<UserProfile | null>(() => loadUserProfile());
   const [nameInput, setNameInput] = useState(() => profile?.name ?? "Gökçe Altan");
   const [emailInput, setEmailInput] = useState(() => profile?.email ?? "gokce_altan@gmail.com");
@@ -173,19 +174,33 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated }: Prop
         )}
 
         {/* Footer Actions */}
-        <div className="mt-6 flex gap-3">
+        <div className="mt-6 flex flex-col gap-2.5">
+          <div className="flex gap-3">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex-1 rounded-xl bg-zinc-900 py-2.5 text-xs font-bold text-white shadow-md transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-black dark:hover:bg-zinc-200"
+            >
+              {isSaving ? "Kaydediliyor..." : "Profil Değişikliklerini Kaydet"}
+            </button>
+            <button
+              onClick={onClose}
+              className="rounded-xl border border-zinc-300 px-4 py-2.5 text-xs font-semibold text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400"
+            >
+              Kapat
+            </button>
+          </div>
+
           <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="flex-1 rounded-xl bg-zinc-900 py-2.5 text-xs font-bold text-white shadow-md transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-black dark:hover:bg-zinc-200"
+            onClick={() => {
+              if (window.confirm("Hesabınızdan çıkış yapmak istediğinize emin misiniz?")) {
+                onSignOut();
+                onClose();
+              }
+            }}
+            className="w-full rounded-xl border border-red-200 bg-red-50/60 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400"
           >
-            {isSaving ? "Kaydediliyor..." : "Profil Değişikliklerini Kaydet"}
-          </button>
-          <button
-            onClick={onClose}
-            className="rounded-xl border border-zinc-300 px-4 py-2.5 text-xs font-semibold text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400"
-          >
-            Kapat
+            🚪 Oturumu Kapat / Çıkış Yap
           </button>
         </div>
       </div>

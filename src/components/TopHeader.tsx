@@ -4,11 +4,13 @@ import Image from "next/image";
 import { useState } from "react";
 import NotificationDropdown from "./NotificationDropdown";
 import ProfileModal from "./ProfileModal";
-import { UserProfile, loadUserProfile } from "@/lib/supabase";
+import AuthModal from "./AuthModal";
+import { UserProfile, loadUserProfile, signOutUser } from "@/lib/supabase";
 
 export default function TopHeader() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
 
   const [dateInfo] = useState(() => {
@@ -22,6 +24,11 @@ export default function TopHeader() {
     const weekday = now.toLocaleDateString("tr-TR", { weekday: "long" });
     return { dateNumMonthYear, weekday };
   });
+
+  function handleSignOut() {
+    signOutUser();
+    setUserProfile(null);
+  }
 
   return (
     <>
@@ -58,7 +65,13 @@ export default function TopHeader() {
             </button>
             <button
               title="Hesap & Profil Ayarları"
-              onClick={() => setShowProfileModal(true)}
+              onClick={() => {
+                if (userProfile) {
+                  setShowProfileModal(true);
+                } else {
+                  setShowAuthModal(true);
+                }
+              }}
               className="flex h-8 w-8 items-center justify-center rounded-xl text-sm transition-colors hover:bg-zinc-200/70 dark:hover:bg-zinc-800"
             >
               ⚙️
@@ -98,7 +111,7 @@ export default function TopHeader() {
             </button>
           ) : (
             <button
-              onClick={() => setShowProfileModal(true)}
+              onClick={() => setShowAuthModal(true)}
               className="flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-900 shadow-xs transition-all hover:bg-amber-100 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-300"
               title="Giriş Yap veya Yeni Profil Oluştur"
             >
@@ -109,11 +122,19 @@ export default function TopHeader() {
         </div>
       </header>
 
-      {/* Profile & Photo Upload Modal */}
+      {/* Auth Modal for Unauthenticated Users (Empty Registration / Login) */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuthSuccess={(newProfile) => setUserProfile(newProfile)}
+      />
+
+      {/* Profile Modal for Authenticated Settings & Sign Out */}
       <ProfileModal
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
         onProfileUpdated={(updated) => setUserProfile(updated)}
+        onSignOut={handleSignOut}
       />
     </>
   );
