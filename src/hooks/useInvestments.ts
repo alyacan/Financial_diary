@@ -16,7 +16,7 @@ export interface FundCategoryBreakdown {
 }
 
 export function useInvestments() {
-  const [transactions, setTransactions] = useState<Transaction[]>(() => loadTransactions());
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [prices, setPrices] = useState<PriceMap>({});
   const [manualGoldInputs, setManualGoldInputs] = useState<Record<string, string>>(() => {
     const initialGold: Record<string, string> = {};
@@ -26,42 +26,34 @@ export function useInvestments() {
     }
     return initialGold;
   });
-  const [manualFundInputs, setManualFundInputs] = useState<Record<string, string>>(() => {
-    const loaded = loadTransactions();
-    const initialFund: Record<string, string> = {};
-    for (const code of new Set(loaded.filter((t) => t.assetType === "fund").map((t) => t.subType))) {
-      const saved = getManualPrice(priceKey("fund", code));
-      if (saved) initialFund[code] = saved.toString();
-    }
-    return initialFund;
-  });
-  const [manualFundReturnInputs, setManualFundReturnInputs] = useState<Record<string, string>>(() => {
-    const loaded = loadTransactions();
-    const initialFundReturn: Record<string, string> = {};
-    for (const code of new Set(loaded.filter((t) => t.assetType === "fund").map((t) => t.subType))) {
-      const meta = getFundMetadata(code);
-      if (meta.annualReturnPercent !== undefined) initialFundReturn[code] = meta.annualReturnPercent.toString();
-    }
-    return initialFundReturn;
-  });
-  const [manualFundRiskInputs, setManualFundRiskInputs] = useState<Record<string, string>>(() => {
-    const loaded = loadTransactions();
-    const initialFundRisk: Record<string, string> = {};
-    for (const code of new Set(loaded.filter((t) => t.assetType === "fund").map((t) => t.subType))) {
-      const meta = getFundMetadata(code);
-      if (meta.riskLevel !== undefined) initialFundRisk[code] = meta.riskLevel.toString();
-    }
-    return initialFundRisk;
-  });
-  const [fundMetadata, setFundMetadataState] = useState<Record<string, FundMetadata>>(() => {
-    const loaded = loadTransactions();
-    const initialFundMetadata: Record<string, FundMetadata> = {};
-    for (const code of new Set(loaded.filter((t) => t.assetType === "fund").map((t) => t.subType))) {
-      initialFundMetadata[code] = getFundMetadata(code);
-    }
-    return initialFundMetadata;
-  });
+  const [manualFundInputs, setManualFundInputs] = useState<Record<string, string>>({});
+  const [manualFundReturnInputs, setManualFundReturnInputs] = useState<Record<string, string>>({});
+  const [manualFundRiskInputs, setManualFundRiskInputs] = useState<Record<string, string>>({});
+  const [fundMetadata, setFundMetadataState] = useState<Record<string, FundMetadata>>({});
   const [loadingPrices, setLoadingPrices] = useState(false);
+
+  useEffect(() => {
+    loadTransactions().then((loaded) => {
+      setTransactions(loaded);
+
+      const initialFund: Record<string, string> = {};
+      const initialFundReturn: Record<string, string> = {};
+      const initialFundRisk: Record<string, string> = {};
+      const initialFundMetadata: Record<string, FundMetadata> = {};
+      for (const code of new Set(loaded.filter((t) => t.assetType === "fund").map((t) => t.subType))) {
+        const savedPrice = getManualPrice(priceKey("fund", code));
+        if (savedPrice) initialFund[code] = savedPrice.toString();
+        const meta = getFundMetadata(code);
+        if (meta.annualReturnPercent !== undefined) initialFundReturn[code] = meta.annualReturnPercent.toString();
+        if (meta.riskLevel !== undefined) initialFundRisk[code] = meta.riskLevel.toString();
+        initialFundMetadata[code] = meta;
+      }
+      setManualFundInputs(initialFund);
+      setManualFundReturnInputs(initialFundReturn);
+      setManualFundRiskInputs(initialFundRisk);
+      setFundMetadataState(initialFundMetadata);
+    });
+  }, []);
 
   function manualPrices(txs: Transaction[]): PriceMap {
     const result: PriceMap = {};
@@ -100,13 +92,13 @@ export function useInvestments() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactions.length]);
 
-  function handleAdd(t: Transaction) {
-    setTransactions(addTransaction(t));
+  async function handleAdd(t: Transaction) {
+    setTransactions(await addTransaction(t));
   }
 
-  function handleDelete(id: string) {
-    setTransactions(deleteTransaction(id));
-    clearPortfolioSnapshots();
+  async function handleDelete(id: string) {
+    setTransactions(await deleteTransaction(id));
+    await clearPortfolioSnapshots();
   }
 
   function handleManualGoldSave(subTypeId: string) {

@@ -57,14 +57,24 @@ const QUICK_LINKS = [
 export default function Home() {
   const { positions, totalInvested, totalValue, totalProfit, missingPricePositions } = useInvestments();
   const { expenses, totalExpenses, archivedPeriods } = useExpenseData();
-  const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>(() => loadPortfolioSnapshots());
+  const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>([]);
+
+  useEffect(() => {
+    loadPortfolioSnapshots().then(setSnapshots);
+  }, []);
 
   useEffect(() => {
     if (totalValue > 0) {
+      let cancelled = false;
       const handle = requestAnimationFrame(() => {
-        setSnapshots(recordPortfolioSnapshot(totalValue));
+        recordPortfolioSnapshot(totalValue).then((updated) => {
+          if (!cancelled) setSnapshots(updated);
+        });
       });
-      return () => cancelAnimationFrame(handle);
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(handle);
+      };
     }
   }, [totalValue]);
 

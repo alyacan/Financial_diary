@@ -2,39 +2,65 @@ import { ArchivedPeriod, CalendarNote, CategoryBudget, DividendEntry, Expense, P
 import { AutoDividendEvent } from "./dividendCalendar";
 import { supabase } from "./supabase";
 
-const STORAGE_KEY = "financial-diary-transactions";
-const CALENDAR_STORAGE_KEY = "financial-diary-calendar-notes";
-const PORTFOLIO_SNAPSHOTS_STORAGE_KEY = "financial-diary-portfolio-snapshots";
-const DIVIDENDS_STORAGE_KEY = "financial-diary-dividends";
 const DIVIDEND_AUTO_CACHE_KEY = "financial-diary-dividend-auto-cache";
 const MAX_PORTFOLIO_SNAPSHOTS = 90;
 
-export function loadTransactions(): Transaction[] {
-  if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as Transaction[];
-  } catch {
-    return [];
-  }
+interface TransactionRow {
+  id: string;
+  asset_type: string;
+  sub_type: string;
+  date: string;
+  quantity: number;
+  buy_price: number;
+  fund_code: string | null;
+  fund_category: string | null;
+  note: string | null;
 }
 
-export function saveTransactions(transactions: Transaction[]): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+function fromTransactionRow(row: TransactionRow): Transaction {
+  return {
+    id: row.id,
+    assetType: row.asset_type as Transaction["assetType"],
+    subType: row.sub_type,
+    date: row.date,
+    quantity: Number(row.quantity),
+    buyPrice: Number(row.buy_price),
+    fundCode: row.fund_code ?? undefined,
+    fundCategory: row.fund_category ?? undefined,
+    note: row.note ?? undefined,
+  };
 }
 
-export function addTransaction(transaction: Transaction): Transaction[] {
-  const transactions = [...loadTransactions(), transaction];
-  saveTransactions(transactions);
-  return transactions;
+export async function loadTransactions(): Promise<Transaction[]> {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("id, asset_type, sub_type, date, quantity, buy_price, fund_code, fund_category, note")
+    .order("created_at", { ascending: true });
+  if (error || !data) return [];
+  return data.map(fromTransactionRow);
 }
 
-export function deleteTransaction(id: string): Transaction[] {
-  const transactions = loadTransactions().filter((t) => t.id !== id);
-  saveTransactions(transactions);
-  return transactions;
+export async function addTransaction(transaction: Transaction): Promise<Transaction[]> {
+  const userId = await currentUserId();
+  if (!userId) return loadTransactions();
+  await supabase.from("transactions").insert({
+    id: transaction.id,
+    user_id: userId,
+    asset_type: transaction.assetType,
+    sub_type: transaction.subType,
+    date: transaction.date,
+    quantity: transaction.quantity,
+    buy_price: transaction.buyPrice,
+    fund_code: transaction.fundCode ?? null,
+    fund_category: transaction.fundCategory ?? null,
+    note: transaction.note ?? null,
+  });
+  return loadTransactions();
+}
+
+export async function deleteTransaction(id: string): Promise<Transaction[]> {
+  await supabase.from("transactions").delete().eq("id", id);
+  return loadTransactions();
 }
 
 async function currentUserId(): Promise<string | null> {
@@ -112,32 +138,31 @@ export async function addExpenses(newExpenses: Expense[]): Promise<Expense[]> {
   return loadExpenses();
 }
 
-export function loadCalendarNotes(): CalendarNote[] {
-  if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(CALENDAR_STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as CalendarNote[];
-  } catch {
-    return [];
-  }
+interface CalendarNoteRow {
+  id: string;
+  date: string;
+  text: string;
 }
 
-export function saveCalendarNotes(notes: CalendarNote[]): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(CALENDAR_STORAGE_KEY, JSON.stringify(notes));
+export async function loadCalendarNotes(): Promise<CalendarNote[]> {
+  const { data, error } = await supabase
+    .from("calendar_notes")
+    .select("id, date, text")
+    .order("created_at", { ascending: true });
+  if (error || !data) return [];
+  return (data as CalendarNoteRow[]).map((row) => ({ id: row.id, date: row.date, text: row.text }));
 }
 
-export function addCalendarNote(note: CalendarNote): CalendarNote[] {
-  const notes = [...loadCalendarNotes(), note];
-  saveCalendarNotes(notes);
-  return notes;
+export async function addCalendarNote(note: CalendarNote): Promise<CalendarNote[]> {
+  const userId = await currentUserId();
+  if (!userId) return loadCalendarNotes();
+  await supabase.from("calendar_notes").insert({ id: note.id, user_id: userId, date: note.date, text: note.text });
+  return loadCalendarNotes();
 }
 
-export function deleteCalendarNote(id: string): CalendarNote[] {
-  const notes = loadCalendarNotes().filter((n) => n.id !== id);
-  saveCalendarNotes(notes);
-  return notes;
+export async function deleteCalendarNote(id: string): Promise<CalendarNote[]> {
+  await supabase.from("calendar_notes").delete().eq("id", id);
+  return loadCalendarNotes();
 }
 
 interface ArchivedPeriodRow {
@@ -259,36 +284,50 @@ export async function closePeriod(currentExpenses: Expense[]): Promise<{
   return { archivedPeriods: await loadArchivedPeriods(), expenses: [] };
 }
 
-export function loadPortfolioSnapshots(): PortfolioSnapshot[] {
-  if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(PORTFOLIO_SNAPSHOTS_STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as PortfolioSnapshot[];
-  } catch {
-    return [];
-  }
+interface SnapshotRow {
+  date: string;
+  value: number;
+}
+
+export async function loadPortfolioSnapshots(): Promise<PortfolioSnapshot[]> {
+  const { data, error } = await supabase
+    .from("portfolio_snapshots")
+    .select("date, value")
+    .order("date", { ascending: true });
+  if (error || !data) return [];
+  return (data as SnapshotRow[]).map((row) => ({ date: row.date, value: Number(row.value) }));
 }
 
 // Portföy Değeri trend grafiği: geriye dönük veri yoktu, bu yüzden geçmiş
 // üretilmez — bugünden itibaren her ziyarette günün değeri kaydedilir/güncellenir
 // ve grafik zamanla gerçek verilerle birikir.
-export function recordPortfolioSnapshot(value: number): PortfolioSnapshot[] {
-  if (typeof window === "undefined") return [];
+export async function recordPortfolioSnapshot(value: number): Promise<PortfolioSnapshot[]> {
+  const userId = await currentUserId();
+  if (!userId) return loadPortfolioSnapshots();
   const today = new Date().toISOString().slice(0, 10);
-  const existing = loadPortfolioSnapshots().filter((s) => s.date !== today);
-  const updated = [...existing, { date: today, value }]
-    .sort((a, b) => (a.date < b.date ? -1 : 1))
-    .slice(-MAX_PORTFOLIO_SNAPSHOTS);
-  window.localStorage.setItem(PORTFOLIO_SNAPSHOTS_STORAGE_KEY, JSON.stringify(updated));
-  return updated;
+  await supabase
+    .from("portfolio_snapshots")
+    .upsert({ user_id: userId, date: today, value }, { onConflict: "user_id,date" });
+
+  const all = await loadPortfolioSnapshots();
+  if (all.length > MAX_PORTFOLIO_SNAPSHOTS) {
+    const excess = all.slice(0, all.length - MAX_PORTFOLIO_SNAPSHOTS);
+    await supabase
+      .from("portfolio_snapshots")
+      .delete()
+      .eq("user_id", userId)
+      .in("date", excess.map((s) => s.date));
+    return all.slice(all.length - MAX_PORTFOLIO_SNAPSHOTS);
+  }
+  return all;
 }
 
 // Bir işlem/harcama/dönem silindiğinde geçmiş grafiğin artık var olmayan veriye
 // ait eski bir toplamı göstermeye devam etmemesi için trend geçmişi sıfırlanır.
-export function clearPortfolioSnapshots(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(PORTFOLIO_SNAPSHOTS_STORAGE_KEY);
+export async function clearPortfolioSnapshots(): Promise<void> {
+  const userId = await currentUserId();
+  if (!userId) return;
+  await supabase.from("portfolio_snapshots").delete().eq("user_id", userId);
 }
 
 interface BudgetRow {
@@ -316,31 +355,43 @@ export async function deleteCategoryBudget(category: string): Promise<CategoryBu
   return loadCategoryBudgets();
 }
 
-export function loadDividends(): DividendEntry[] {
-  if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(DIVIDENDS_STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as DividendEntry[];
-  } catch {
-    return [];
-  }
+interface DividendRow {
+  id: string;
+  ticker: string;
+  date: string;
+  amount_per_share: number | null;
 }
 
-export function addDividend(entry: DividendEntry): DividendEntry[] {
-  const entries = [...loadDividends(), entry];
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(DIVIDENDS_STORAGE_KEY, JSON.stringify(entries));
-  }
-  return entries;
+export async function loadDividends(): Promise<DividendEntry[]> {
+  const { data, error } = await supabase
+    .from("dividend_entries")
+    .select("id, ticker, date, amount_per_share")
+    .order("created_at", { ascending: true });
+  if (error || !data) return [];
+  return (data as DividendRow[]).map((row) => ({
+    id: row.id,
+    ticker: row.ticker,
+    date: row.date,
+    amountPerShare: row.amount_per_share ?? undefined,
+  }));
 }
 
-export function deleteDividend(id: string): DividendEntry[] {
-  const entries = loadDividends().filter((d) => d.id !== id);
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(DIVIDENDS_STORAGE_KEY, JSON.stringify(entries));
-  }
-  return entries;
+export async function addDividend(entry: DividendEntry): Promise<DividendEntry[]> {
+  const userId = await currentUserId();
+  if (!userId) return loadDividends();
+  await supabase.from("dividend_entries").insert({
+    id: entry.id,
+    user_id: userId,
+    ticker: entry.ticker,
+    date: entry.date,
+    amount_per_share: entry.amountPerShare ?? null,
+  });
+  return loadDividends();
+}
+
+export async function deleteDividend(id: string): Promise<DividendEntry[]> {
+  await supabase.from("dividend_entries").delete().eq("id", id);
+  return loadDividends();
 }
 
 interface DividendAutoCache {
@@ -402,17 +453,33 @@ export function saveEconomicEventsCache(events: unknown[]): void {
 const LEGACY_EXPENSES_KEY = "financial-diary-expenses";
 const LEGACY_ARCHIVED_PERIODS_KEY = "financial-diary-archived-periods";
 const LEGACY_BUDGETS_KEY = "financial-diary-category-budgets";
+const LEGACY_TRANSACTIONS_KEY = "financial-diary-transactions";
+const LEGACY_CALENDAR_NOTES_KEY = "financial-diary-calendar-notes";
+const LEGACY_PORTFOLIO_SNAPSHOTS_KEY = "financial-diary-portfolio-snapshots";
+const LEGACY_DIVIDENDS_KEY = "financial-diary-dividends";
 
 export interface LegacyMigrationResult {
   hadData: boolean;
   expensesMigrated: number;
   budgetsMigrated: number;
   periodsMigrated: number;
+  transactionsMigrated: number;
+  calendarNotesMigrated: number;
+  snapshotsMigrated: number;
+  dividendsMigrated: number;
 }
 
 export function hasLegacyLocalData(): boolean {
   if (typeof window === "undefined") return false;
-  const keys = [LEGACY_EXPENSES_KEY, LEGACY_ARCHIVED_PERIODS_KEY, LEGACY_BUDGETS_KEY];
+  const keys = [
+    LEGACY_EXPENSES_KEY,
+    LEGACY_ARCHIVED_PERIODS_KEY,
+    LEGACY_BUDGETS_KEY,
+    LEGACY_TRANSACTIONS_KEY,
+    LEGACY_CALENDAR_NOTES_KEY,
+    LEGACY_PORTFOLIO_SNAPSHOTS_KEY,
+    LEGACY_DIVIDENDS_KEY,
+  ];
   return keys.some((key) => {
     const raw = window.localStorage.getItem(key);
     if (!raw) return false;
@@ -429,7 +496,16 @@ export function hasLegacyLocalData(): boolean {
 // şu an giriş yapmış hesaba bir kerelik aktarır. Başarılı olursa eski anahtarları siler.
 export async function migrateLegacyLocalData(): Promise<LegacyMigrationResult> {
   const userId = await currentUserId();
-  const empty: LegacyMigrationResult = { hadData: false, expensesMigrated: 0, budgetsMigrated: 0, periodsMigrated: 0 };
+  const empty: LegacyMigrationResult = {
+    hadData: false,
+    expensesMigrated: 0,
+    budgetsMigrated: 0,
+    periodsMigrated: 0,
+    transactionsMigrated: 0,
+    calendarNotesMigrated: 0,
+    snapshotsMigrated: 0,
+    dividendsMigrated: 0,
+  };
   if (typeof window === "undefined" || !userId) return empty;
 
   function readLegacy<T>(key: string): T[] {
@@ -446,8 +522,20 @@ export async function migrateLegacyLocalData(): Promise<LegacyMigrationResult> {
   const legacyExpenses = readLegacy<Expense>(LEGACY_EXPENSES_KEY);
   const legacyBudgets = readLegacy<CategoryBudget>(LEGACY_BUDGETS_KEY);
   const legacyPeriods = readLegacy<ArchivedPeriod>(LEGACY_ARCHIVED_PERIODS_KEY);
+  const legacyTransactions = readLegacy<Transaction>(LEGACY_TRANSACTIONS_KEY);
+  const legacyCalendarNotes = readLegacy<CalendarNote>(LEGACY_CALENDAR_NOTES_KEY);
+  const legacySnapshots = readLegacy<PortfolioSnapshot>(LEGACY_PORTFOLIO_SNAPSHOTS_KEY);
+  const legacyDividends = readLegacy<DividendEntry>(LEGACY_DIVIDENDS_KEY);
 
-  if (legacyExpenses.length === 0 && legacyBudgets.length === 0 && legacyPeriods.length === 0) {
+  if (
+    legacyExpenses.length === 0 &&
+    legacyBudgets.length === 0 &&
+    legacyPeriods.length === 0 &&
+    legacyTransactions.length === 0 &&
+    legacyCalendarNotes.length === 0 &&
+    legacySnapshots.length === 0 &&
+    legacyDividends.length === 0
+  ) {
     return empty;
   }
 
@@ -501,14 +589,64 @@ export async function migrateLegacyLocalData(): Promise<LegacyMigrationResult> {
     }
   }
 
+  if (legacyTransactions.length > 0) {
+    await supabase.from("transactions").insert(
+      legacyTransactions.map((t) => ({
+        id: t.id,
+        user_id: userId,
+        asset_type: t.assetType,
+        sub_type: t.subType,
+        date: t.date,
+        quantity: t.quantity,
+        buy_price: t.buyPrice,
+        fund_code: t.fundCode ?? null,
+        fund_category: t.fundCategory ?? null,
+        note: t.note ?? null,
+      }))
+    );
+  }
+
+  if (legacyCalendarNotes.length > 0) {
+    await supabase.from("calendar_notes").insert(
+      legacyCalendarNotes.map((n) => ({ id: n.id, user_id: userId, date: n.date, text: n.text }))
+    );
+  }
+
+  if (legacySnapshots.length > 0) {
+    await supabase.from("portfolio_snapshots").upsert(
+      legacySnapshots.map((s) => ({ user_id: userId, date: s.date, value: s.value })),
+      { onConflict: "user_id,date" }
+    );
+  }
+
+  if (legacyDividends.length > 0) {
+    await supabase.from("dividend_entries").insert(
+      legacyDividends.map((d) => ({
+        id: d.id,
+        user_id: userId,
+        ticker: d.ticker,
+        date: d.date,
+        amount_per_share: d.amountPerShare ?? null,
+      }))
+    );
+  }
+
   window.localStorage.removeItem(LEGACY_EXPENSES_KEY);
   window.localStorage.removeItem(LEGACY_ARCHIVED_PERIODS_KEY);
   window.localStorage.removeItem(LEGACY_BUDGETS_KEY);
+  window.localStorage.removeItem(LEGACY_TRANSACTIONS_KEY);
+  window.localStorage.removeItem(LEGACY_CALENDAR_NOTES_KEY);
+  window.localStorage.removeItem(LEGACY_PORTFOLIO_SNAPSHOTS_KEY);
+  window.localStorage.removeItem(LEGACY_DIVIDENDS_KEY);
 
   return {
     hadData: true,
     expensesMigrated: legacyExpenses.length,
     budgetsMigrated: legacyBudgets.length,
     periodsMigrated: legacyPeriods.length,
+    transactionsMigrated: legacyTransactions.length,
+    calendarNotesMigrated: legacyCalendarNotes.length,
+    snapshotsMigrated: legacySnapshots.length,
+    dividendsMigrated: legacyDividends.length,
   };
 }

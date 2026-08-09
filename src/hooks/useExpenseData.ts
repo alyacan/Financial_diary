@@ -48,7 +48,7 @@ export function useExpenseData() {
 
   async function handleDeleteExpense(id: string) {
     setExpenses(await deleteExpense(id));
-    clearPortfolioSnapshots();
+    await clearPortfolioSnapshots();
   }
 
   async function handleUpdateExpenseCategory(id: string, category: string) {
@@ -67,7 +67,7 @@ export function useExpenseData() {
 
   async function handleDeleteArchivedPeriod(id: string) {
     setArchivedPeriods(await deleteArchivedPeriod(id));
-    clearPortfolioSnapshots();
+    await clearPortfolioSnapshots();
   }
 
   async function handleUpdateArchivedPeriod(

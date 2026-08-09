@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Montserrat, Newsreader } from "next/font/google";
 import Sidebar from "@/components/Sidebar";
 import TopHeader from "@/components/TopHeader";
+import LegacyDataBanner from "@/components/LegacyDataBanner";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -46,6 +47,9 @@ export default function RootLayout({
             <Sidebar />
             <div className="flex flex-col min-w-0">
               <TopHeader />
+              <div className="px-6 pt-4 sm:px-10">
+                <LegacyDataBanner />
+              </div>
               <main className="flex-1 min-w-0">{children}</main>
             </div>
           </div>

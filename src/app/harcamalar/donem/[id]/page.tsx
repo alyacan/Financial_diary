@@ -21,13 +21,14 @@ function formatDate(isoDate: string): string {
 export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [allPeriods, setAllPeriods] = useState<ArchivedPeriod[]>([]);
-  const [transactions] = useState<Transaction[]>(() => loadTransactions());
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
-    loadArchivedPeriods().then((periods) => {
+    Promise.all([loadArchivedPeriods(), loadTransactions()]).then(([periods, txs]) => {
       setAllPeriods(periods);
+      setTransactions(txs);
       setLoaded(true);
     });
   }, []);

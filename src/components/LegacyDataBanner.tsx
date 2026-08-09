@@ -3,12 +3,8 @@
 import { useState } from "react";
 import { hasLegacyLocalData, migrateLegacyLocalData } from "@/lib/storage";
 
-interface Props {
-  onMigrated: () => void;
-}
-
-export default function LegacyDataBanner({ onMigrated }: Props) {
-  const [visible, setVisible] = useState(() => hasLegacyLocalData());
+export default function LegacyDataBanner() {
+  const [visible] = useState(() => hasLegacyLocalData());
   const [isMigrating, setIsMigrating] = useState(false);
   const [resultMsg, setResultMsg] = useState("");
 
@@ -24,11 +20,17 @@ export default function LegacyDataBanner({ onMigrated }: Props) {
       return;
     }
 
-    setResultMsg(
-      `Aktarıldı: ${result.expensesMigrated} harcama, ${result.budgetsMigrated} bütçe, ${result.periodsMigrated} arşivlenmiş dönem.`
-    );
-    onMigrated();
-    setTimeout(() => setVisible(false), 3000);
+    const parts = [
+      result.expensesMigrated > 0 && `${result.expensesMigrated} harcama`,
+      result.budgetsMigrated > 0 && `${result.budgetsMigrated} bütçe`,
+      result.periodsMigrated > 0 && `${result.periodsMigrated} arşivlenmiş dönem`,
+      result.transactionsMigrated > 0 && `${result.transactionsMigrated} yatırım işlemi`,
+      result.calendarNotesMigrated > 0 && `${result.calendarNotesMigrated} takvim notu`,
+      result.snapshotsMigrated > 0 && `${result.snapshotsMigrated} portföy geçmişi kaydı`,
+      result.dividendsMigrated > 0 && `${result.dividendsMigrated} temettü kaydı`,
+    ].filter(Boolean);
+    setResultMsg(`Aktarıldı: ${parts.join(", ")}.`);
+    setTimeout(() => window.location.reload(), 3000);
   }
 
   return (
@@ -38,7 +40,7 @@ export default function LegacyDataBanner({ onMigrated }: Props) {
           Bu tarayıcıda hesabına aktarılmamış eski veriler var
         </p>
         <p className="text-xs text-amber-800/80 dark:text-amber-400/80">
-          {resultMsg || "Harcama, bütçe ve arşivlenmiş dönem verilerini hesabına taşımak için aktar."}
+          {resultMsg || "Harcama, yatırım, takvim ve bütçe verilerini hesabına taşımak için aktar."}
         </p>
       </div>
       {!resultMsg && (

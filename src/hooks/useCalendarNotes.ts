@@ -1,18 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CalendarNote } from "@/lib/types";
 import { addCalendarNote, deleteCalendarNote, loadCalendarNotes } from "@/lib/storage";
 
 export function useCalendarNotes() {
-  const [calendarNotes, setCalendarNotes] = useState<CalendarNote[]>(() => loadCalendarNotes());
+  const [calendarNotes, setCalendarNotes] = useState<CalendarNote[]>([]);
 
-  function handleAddCalendarNote(n: CalendarNote) {
-    setCalendarNotes(addCalendarNote(n));
+  useEffect(() => {
+    loadCalendarNotes().then(setCalendarNotes);
+  }, []);
+
+  async function handleAddCalendarNote(n: CalendarNote) {
+    setCalendarNotes(await addCalendarNote(n));
   }
 
-  function handleDeleteCalendarNote(id: string) {
-    setCalendarNotes(deleteCalendarNote(id));
+  async function handleDeleteCalendarNote(id: string) {
+    setCalendarNotes(await deleteCalendarNote(id));
   }
 
   return { calendarNotes, handleAddCalendarNote, handleDeleteCalendarNote };
