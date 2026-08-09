@@ -9,6 +9,7 @@ import BudgetGoals from "@/components/BudgetGoals";
 import ArchivedPeriodCard from "@/components/ArchivedPeriodCard";
 import StatementUpload from "@/components/StatementUpload";
 import CardWalletWidget from "@/components/CardWalletWidget";
+import LegacyDataBanner from "@/components/LegacyDataBanner";
 import { useExpenseData } from "@/hooks/useExpenseData";
 
 function formatTRY(value: number): string {
@@ -80,6 +81,8 @@ export default function HarcamalarPage() {
           <span>📁</span> Dönemi Kapat / Klasörle
         </button>
       </header>
+
+      <LegacyDataBanner onMigrated={() => window.location.reload()} />
 
       {/* Real Credit/Debit Card Wallet Widget */}
       <CardWalletWidget

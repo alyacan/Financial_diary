@@ -397,3 +397,118 @@ export function saveEconomicEventsCache(events: unknown[]): void {
   const cache: EconomicEventsCache = { timestamp: Date.now(), events };
   window.localStorage.setItem(ECONOMIC_EVENTS_CACHE_KEY, JSON.stringify(cache));
 }
+
+// Eski (Supabase öncesi) localStorage anahtarları — sadece bir kerelik taşıma için.
+const LEGACY_EXPENSES_KEY = "financial-diary-expenses";
+const LEGACY_ARCHIVED_PERIODS_KEY = "financial-diary-archived-periods";
+const LEGACY_BUDGETS_KEY = "financial-diary-category-budgets";
+
+export interface LegacyMigrationResult {
+  hadData: boolean;
+  expensesMigrated: number;
+  budgetsMigrated: number;
+  periodsMigrated: number;
+}
+
+export function hasLegacyLocalData(): boolean {
+  if (typeof window === "undefined") return false;
+  const keys = [LEGACY_EXPENSES_KEY, LEGACY_ARCHIVED_PERIODS_KEY, LEGACY_BUDGETS_KEY];
+  return keys.some((key) => {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return false;
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) && parsed.length > 0;
+    } catch {
+      return false;
+    }
+  });
+}
+
+// Bu tarayıcıda Supabase'e taşımadan önce kalmış eski harcama/bütçe/dönem verisini,
+// şu an giriş yapmış hesaba bir kerelik aktarır. Başarılı olursa eski anahtarları siler.
+export async function migrateLegacyLocalData(): Promise<LegacyMigrationResult> {
+  const userId = await currentUserId();
+  const empty: LegacyMigrationResult = { hadData: false, expensesMigrated: 0, budgetsMigrated: 0, periodsMigrated: 0 };
+  if (typeof window === "undefined" || !userId) return empty;
+
+  function readLegacy<T>(key: string): T[] {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? (parsed as T[]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  const legacyExpenses = readLegacy<Expense>(LEGACY_EXPENSES_KEY);
+  const legacyBudgets = readLegacy<CategoryBudget>(LEGACY_BUDGETS_KEY);
+  const legacyPeriods = readLegacy<ArchivedPeriod>(LEGACY_ARCHIVED_PERIODS_KEY);
+
+  if (legacyExpenses.length === 0 && legacyBudgets.length === 0 && legacyPeriods.length === 0) {
+    return empty;
+  }
+
+  if (legacyExpenses.length > 0) {
+    await supabase.from("expenses").insert(
+      legacyExpenses.map((e) => ({
+        id: e.id,
+        user_id: userId,
+        date: e.date,
+        category: e.category,
+        amount: e.amount,
+        note: e.note ?? null,
+        card_id: null, // eski kart id'leri artık geçersiz, harcama kart eşleşmesi sıfırlanır
+      }))
+    );
+  }
+
+  for (const b of legacyBudgets) {
+    await supabase
+      .from("category_budgets")
+      .upsert({ user_id: userId, category: b.category, monthly_goal: b.monthlyGoal }, { onConflict: "user_id,category" });
+  }
+
+  if (legacyPeriods.length > 0) {
+    await supabase.from("archived_periods").insert(
+      legacyPeriods.map((p) => ({
+        id: p.id,
+        user_id: userId,
+        name: p.name ?? null,
+        start_date: p.startDate,
+        end_date: p.endDate,
+        created_at: p.createdAt,
+        note: p.note ?? null,
+      }))
+    );
+
+    const archivedExpenseRows = legacyPeriods.flatMap((p) =>
+      p.expenses.map((e) => ({
+        id: crypto.randomUUID(),
+        archived_period_id: p.id,
+        user_id: userId,
+        date: e.date,
+        category: e.category,
+        amount: e.amount,
+        note: e.note ?? null,
+        card_id: null,
+      }))
+    );
+    if (archivedExpenseRows.length > 0) {
+      await supabase.from("archived_period_expenses").insert(archivedExpenseRows);
+    }
+  }
+
+  window.localStorage.removeItem(LEGACY_EXPENSES_KEY);
+  window.localStorage.removeItem(LEGACY_ARCHIVED_PERIODS_KEY);
+  window.localStorage.removeItem(LEGACY_BUDGETS_KEY);
+
+  return {
+    hadData: true,
+    expensesMigrated: legacyExpenses.length,
+    budgetsMigrated: legacyBudgets.length,
+    periodsMigrated: legacyPeriods.length,
+  };
+}
