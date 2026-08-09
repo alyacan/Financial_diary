@@ -36,9 +36,9 @@ export default function RootLayout({
             className="pointer-events-none fixed inset-0 z-0"
             style={{
               background: `
-                radial-gradient(ellipse 800px 600px at 10% 5%, rgba(232, 252, 207, 0.95), transparent 70%),
-                radial-gradient(ellipse 700px 700px at 90% 12%, rgba(150, 224, 114, 0.35), transparent 65%),
-                radial-gradient(ellipse 1000px 700px at 40% 90%, rgba(61, 163, 93, 0.18), transparent 60%)
+                radial-gradient(ellipse 700px 500px at 8% 8%, oklch(0.86 0.08 20 / 0.35), transparent 60%),
+                radial-gradient(ellipse 600px 700px at 92% 15%, oklch(0.88 0.06 30 / 0.25), transparent 65%),
+                radial-gradient(ellipse 900px 600px at 30% 95%, oklch(0.84 0.07 15 / 0.3), transparent 60%)
               `,
             }}
           />

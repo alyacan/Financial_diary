@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #E8FCCF;
-  --foreground: #134611;
+  --background: oklch(0.965 0.014 70);
+  --foreground: oklch(0.2 0.014 50);
 }
 
 @theme inline {
@@ -12,93 +12,87 @@
   --font-serif: var(--font-montserrat);
 }
 
-/* 🌿 5-Color Botanical Green Palette CSS Custom Properties */
+/* Ana Sayfa tasarım paleti — sıcak/terrakota, oklch tabanlı kabuk (sidebar + arkaplan) */
 :root {
-  --c-deep-pine: #134611;
-  --c-vibrant-leaf: #3E8914;
-  --c-emerald-jade: #3DA35D;
-  --c-soft-lime: #96E072;
-  --c-chiffon-mint: #E8FCCF;
-
-  --shell-card: rgba(255, 255, 255, 0.88);
-  --shell-card-solid: #FFFFFF;
-  --shell-border: rgba(150, 224, 114, 0.5);
-  --shell-muted: #2d5e2b;
-  --shell-muted-2: #1e451d;
-  --shell-accent: #3E8914;
-  --shell-accent-strong: #134611;
-  --shell-hero-from: #134611;
-  --shell-hero-to: #1e591b;
-  --shell-hero-fg: #E8FCCF;
-  --shell-positive: #3E8914;
-  --shell-positive-bg: rgba(62, 137, 20, 0.15);
-  --shell-negative: #d93838;
-  --shell-nav-active-fg: #134611;
+  --shell-card: oklch(0.99 0.006 80 / 0.85);
+  --shell-card-solid: oklch(0.99 0.006 80);
+  --shell-border: oklch(0.86 0.02 60 / 0.6);
+  --shell-muted: oklch(0.5 0.02 50);
+  --shell-muted-2: oklch(0.45 0.02 50);
+  --shell-accent: oklch(0.55 0.1 25);
+  --shell-accent-strong: oklch(0.4 0.1 30);
+  --shell-hero-from: oklch(0.3 0.03 40);
+  --shell-hero-to: oklch(0.2 0.02 40);
+  --shell-hero-fg: oklch(0.98 0.01 70);
+  --shell-positive: oklch(0.5 0.13 145);
+  --shell-positive-bg: oklch(0.4 0.1 145 / 0.15);
+  --shell-negative: oklch(0.5 0.15 25);
+  --shell-nav-active-fg: oklch(0.22 0.02 40);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #091a08;
-    --foreground: #eefae6;
-    --shell-card: rgba(19, 70, 17, 0.7);
-    --shell-card-solid: #0d260b;
-    --shell-border: rgba(150, 224, 114, 0.25);
-    --shell-muted: #96e072;
-    --shell-muted-2: #3da35d;
-    --shell-hero-from: #134611;
-    --shell-hero-to: #091a08;
-    --shell-nav-active-fg: #eefae6;
+    --background: oklch(0.2 0.014 50);
+    --foreground: oklch(0.93 0.01 70);
+    --shell-card: oklch(0.27 0.014 50 / 0.85);
+    --shell-card-solid: oklch(0.27 0.014 50);
+    --shell-border: oklch(0.35 0.02 50 / 0.6);
+    --shell-muted: oklch(0.7 0.02 60);
+    --shell-muted-2: oklch(0.75 0.02 60);
+    --shell-hero-from: oklch(0.32 0.03 40);
+    --shell-hero-to: oklch(0.16 0.02 40);
+    --shell-nav-active-fg: oklch(0.95 0.02 60);
   }
 }
 
-/* Dataviz palette */
+/* Dataviz palette (see references/palette.md in the dataviz skill) */
 :root {
-  --viz-surface: #F5FDEB;
-  --viz-text-secondary: #2d5e2b;
-  --viz-muted: #3DA35D;
-  --viz-gridline: #96E072;
-  --viz-sequential: #3E8914;
+  --viz-surface: #fcfcfb;
+  --viz-text-secondary: #52514e;
+  --viz-muted: #898781;
+  --viz-gridline: #e1e0d9;
+  --viz-sequential: #2a78d6;
 }
 
-/* Harcama yoğunluk takvimi */
+/* Harcama yoğunluk takvimi: sequential (tek renk, açık→koyu = az→çok) ramp, 5 kademe.
+   Her kademenin okunabilir metin rengi de birlikte tanımlanır — koyu temada
+   anchor ters döndüğü için (az veri koyu yüzeye yakın, çok veri parlak) metin
+   rengi kademe numarasından değil, bu değişkenlerden okunur. */
 :root {
-  --heat-level-0-bg: #E8FCCF;
-  --heat-level-0-fg: #134611;
-
-  --heat-level-1-bg: #cbf2a0;
-  --heat-level-1-fg: #134611;
-
-  --heat-level-2-bg: #96E072;
-  --heat-level-2-fg: #134611;
-
-  --heat-level-3-bg: #3DA35D;
-  --heat-level-3-fg: #ffffff;
-
-  --heat-level-4-bg: #3E8914;
-  --heat-level-4-fg: #ffffff;
-
-  --heat-level-5-bg: #134611;
-  --heat-level-5-fg: #E8FCCF;
+  --heat-1: #b7d3f6;
+  --heat-fg-1: #171717;
+  --heat-2: #86b6ef;
+  --heat-fg-2: #171717;
+  --heat-3: #3987e5;
+  --heat-fg-3: #fff;
+  --heat-4: #1c5cab;
+  --heat-fg-4: #fff;
+  --heat-5: #0d366b;
+  --heat-fg-5: #fff;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --heat-level-0-bg: #0d260b;
-    --heat-level-0-fg: #96E072;
-
-    --heat-level-1-bg: #134611;
-    --heat-level-1-fg: #E8FCCF;
-
-    --heat-level-2-bg: #3E8914;
-    --heat-level-2-fg: #ffffff;
-
-    --heat-level-3-bg: #3DA35D;
-    --heat-level-3-fg: #ffffff;
-
-    --heat-level-4-bg: #96E072;
-    --heat-level-4-fg: #134611;
-
-    --heat-level-5-bg: #E8FCCF;
-    --heat-level-5-fg: #134611;
+    --viz-surface: #1a1a19;
+    --viz-text-secondary: #c3c2b7;
+    --viz-muted: #898781;
+    --viz-gridline: #2c2c2a;
+    --viz-sequential: #3987e5;
+    --heat-1: #184f95;
+    --heat-fg-1: #fff;
+    --heat-2: #2a78d6;
+    --heat-fg-2: #fff;
+    --heat-3: #5598e7;
+    --heat-fg-3: #fff;
+    --heat-4: #86b6ef;
+    --heat-fg-4: #171717;
+    --heat-5: #b7d3f6;
+    --heat-fg-5: #171717;
   }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-montserrat), sans-serif;
 }
