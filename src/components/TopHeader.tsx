@@ -9,7 +9,7 @@ import { UserProfile, loadUserProfile } from "@/lib/supabase";
 export default function TopHeader() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [userProfile, setUserProfile] = useState<UserProfile>(() => loadUserProfile());
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
 
   const [dateInfo] = useState(() => {
     if (typeof window === "undefined") return { dateNumMonthYear: "", weekday: "" };
@@ -71,30 +71,41 @@ export default function TopHeader() {
             />
           </div>
 
-          {/* Prominent Profile Avatar & Badge — Clickable for Profile Modal */}
-          <button
-            onClick={() => setShowProfileModal(true)}
-            className="flex items-center gap-3 rounded-full border border-zinc-200/90 bg-white/90 p-1 pr-4 shadow-xs transition-all hover:border-amber-400 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
-            title="Profilini Düzenle / Fotoğraf Yükle"
-          >
-            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border-2 border-amber-500/30 shadow-2xs">
-              <Image
-                src={userProfile.avatarUrl}
-                alt={`${userProfile.name} Profil Fotoğrafı`}
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-                {userProfile.name}
-              </span>
-              <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                {userProfile.email}
-              </span>
-            </div>
-          </button>
+          {/* Prominent Profile Avatar & Badge or Giriş Yap / Profil Oluştur Button */}
+          {userProfile ? (
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="flex items-center gap-3 rounded-full border border-zinc-200/90 bg-white/90 p-1 pr-4 shadow-xs transition-all hover:border-amber-400 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+              title="Profilini Düzenle / Fotoğraf Yükle"
+            >
+              <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border-2 border-amber-500/30 shadow-2xs">
+                <Image
+                  src={userProfile.avatarUrl}
+                  alt={`${userProfile.name} Profil Fotoğrafı`}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                  {userProfile.name}
+                </span>
+                <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                  {userProfile.email}
+                </span>
+              </div>
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-900 shadow-xs transition-all hover:bg-amber-100 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-300"
+              title="Giriş Yap veya Yeni Profil Oluştur"
+            >
+              <span>👤</span>
+              <span>Giriş Yap / Profil Oluştur</span>
+            </button>
+          )}
         </div>
       </header>
 

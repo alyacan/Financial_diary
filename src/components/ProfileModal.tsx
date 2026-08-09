@@ -11,10 +11,10 @@ interface Props {
 }
 
 export default function ProfileModal({ isOpen, onClose, onProfileUpdated }: Props) {
-  const [profile] = useState<UserProfile>(() => loadUserProfile());
-  const [nameInput, setNameInput] = useState(() => profile.name);
-  const [emailInput, setEmailInput] = useState(() => profile.email);
-  const [avatarPreview, setAvatarPreview] = useState(() => profile.avatarUrl);
+  const [profile] = useState<UserProfile | null>(() => loadUserProfile());
+  const [nameInput, setNameInput] = useState(() => profile?.name ?? "Gökçe Altan");
+  const [emailInput, setEmailInput] = useState(() => profile?.email ?? "gokce_altan@gmail.com");
+  const [avatarPreview, setAvatarPreview] = useState(() => profile?.avatarUrl ?? "/avatar.png");
   const [isSaving, setIsSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 

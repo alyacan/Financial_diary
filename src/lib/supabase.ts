@@ -14,18 +14,18 @@ export interface UserProfile {
 
 const PROFILE_STORAGE_KEY = "financial_diary_user_profile_v1";
 
-export function loadUserProfile(): UserProfile {
+export function loadUserProfile(): UserProfile | null {
   if (typeof window === "undefined") {
-    return { name: "Gökçe Altan", email: "gokce_altan@gmail.com", avatarUrl: "/avatar.png" };
+    return null;
   }
   const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
   if (!raw) {
-    return { name: "Gökçe Altan", email: "gokce_altan@gmail.com", avatarUrl: "/avatar.png" };
+    return null;
   }
   try {
     return JSON.parse(raw);
   } catch {
-    return { name: "Gökçe Altan", email: "gokce_altan@gmail.com", avatarUrl: "/avatar.png" };
+    return null;
   }
 }
 
