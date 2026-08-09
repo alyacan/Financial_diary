@@ -1,8 +1,8 @@
 "use client";
 
 import { ChangeEvent, useRef, useState } from "react";
-import Image from "next/image";
 import { UserProfile, loadUserProfile, saveUserProfile } from "@/lib/supabase";
+import ProfileAvatar from "./ProfileAvatar";
 
 interface Props {
   isOpen: boolean;
@@ -15,7 +15,7 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
   const [profile] = useState<UserProfile | null>(() => loadUserProfile());
   const [nameInput, setNameInput] = useState(() => profile?.name ?? "Gökçe Altan");
   const [emailInput, setEmailInput] = useState(() => profile?.email ?? "gokce_altan@gmail.com");
-  const [avatarPreview, setAvatarPreview] = useState(() => profile?.avatarUrl ?? "/avatar.png");
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(() => profile?.avatarUrl ?? null);
   const [isSaving, setIsSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
@@ -60,24 +60,6 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
     }, 1200);
   }
 
-  function handleExportData() {
-    if (typeof window === "undefined") return;
-    const backup: Record<string, string | null> = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith("financial_diary")) {
-        backup[key] = localStorage.getItem(key);
-      }
-    }
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `finansal-gunluk-yedek-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
       <div className="relative w-full max-w-lg rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900 sm:p-8">
@@ -93,14 +75,16 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
           Hesap & Profil Ayarları 👤
         </h2>
         <p className="mt-1 text-xs text-zinc-500">
-          Kendi profil fotoğrafını yükleyebilir, adını düzenleyebilir ve verilerini bulut ile senkronize edebilirsin.
+          Kendi profil fotoğrafını yükleyebilir ve adını düzenleyebilirsin.
         </p>
 
         {/* Profile Photo Upload Section */}
         <div className="mt-6 flex flex-col items-center gap-3 border-b border-zinc-100 pb-6 dark:border-zinc-800">
-          <div className="relative h-24 w-24 overflow-hidden rounded-full border-4 border-amber-500/30 shadow-md">
-            <Image src={avatarPreview} alt="Profil Fotoğrafı" fill className="object-cover" priority />
-          </div>
+          <ProfileAvatar
+            avatarUrl={avatarPreview}
+            name={nameInput}
+            className="h-24 w-24 border-4 border-amber-500/30 shadow-md"
+          />
 
           <input
             type="file"
@@ -117,9 +101,9 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
             >
               📷 Fotoğraf Seç / Yükle
             </button>
-            {avatarPreview !== "/avatar.png" && (
+            {avatarPreview !== null && (
               <button
-                onClick={() => setAvatarPreview("/avatar.png")}
+                onClick={() => setAvatarPreview(null)}
                 className="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400"
               >
                 Sıfırla
@@ -151,20 +135,6 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
               className="rounded-xl border border-zinc-300 bg-white p-2.5 text-sm font-medium text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
             />
           </label>
-        </div>
-
-        {/* Data Backup & Cloud Actions */}
-        <div className="mt-6 flex items-center justify-between rounded-2xl border border-zinc-200/80 bg-zinc-50/80 p-3.5 dark:border-zinc-800 dark:bg-zinc-950/50">
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Veri Yedekleme</span>
-            <span className="text-[11px] text-zinc-500">Tüm kart ve harcamalarını JSON olarak indir</span>
-          </div>
-          <button
-            onClick={handleExportData}
-            className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-2xs hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
-          >
-            💾 JSON İndir
-          </button>
         </div>
 
         {successMsg && (

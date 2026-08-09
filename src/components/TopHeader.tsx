@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import NotificationDropdown from "./NotificationDropdown";
 import ProfileModal from "./ProfileModal";
 import AuthModal from "./AuthModal";
+import ProfileAvatar from "./ProfileAvatar";
 import { UserProfile, loadUserProfile, saveUserProfile, signOutUser, supabase, profileFromUser } from "@/lib/supabase";
 
 export default function TopHeader() {
@@ -117,15 +117,11 @@ export default function TopHeader() {
               className="flex items-center gap-3 rounded-full border border-zinc-200/90 bg-white/90 p-1 pr-4 shadow-xs transition-all hover:border-amber-400 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
               title="Profilini Düzenle / Fotoğraf Yükle"
             >
-              <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border-2 border-amber-500/30 shadow-2xs">
-                <Image
-                  src={userProfile.avatarUrl}
-                  alt={`${userProfile.name} Profil Fotoğrafı`}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
+              <ProfileAvatar
+                avatarUrl={userProfile.avatarUrl}
+                name={userProfile.name}
+                className="h-11 w-11 border-2 border-amber-500/30 shadow-2xs"
+              />
               <div className="flex flex-col text-left">
                 <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
                   {userProfile.name}

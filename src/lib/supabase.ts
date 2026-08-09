@@ -8,7 +8,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export interface UserProfile {
   name: string;
   email: string;
-  avatarUrl: string;
+  avatarUrl: string | null;
 }
 
 const PROFILE_STORAGE_KEY = "financial_diary_user_profile_v1";
@@ -38,7 +38,7 @@ export function profileFromUser(user: User): UserProfile {
   return {
     name: (user.user_metadata?.name as string | undefined)?.trim() || existing?.name || user.email?.split("@")[0] || "Kullanıcı",
     email: user.email ?? existing?.email ?? "",
-    avatarUrl: existing?.avatarUrl ?? "/avatar.png",
+    avatarUrl: existing?.avatarUrl ?? null,
   };
 }
 
