@@ -1,12 +1,10 @@
 import { ArchivedPeriod, CalendarNote, CategoryBudget, DividendEntry, Expense, PortfolioSnapshot, Transaction } from "./types";
 import { AutoDividendEvent } from "./dividendCalendar";
+import { supabase } from "./supabase";
 
 const STORAGE_KEY = "financial-diary-transactions";
-const EXPENSES_STORAGE_KEY = "financial-diary-expenses";
 const CALENDAR_STORAGE_KEY = "financial-diary-calendar-notes";
-const ARCHIVED_PERIODS_STORAGE_KEY = "financial-diary-archived-periods";
 const PORTFOLIO_SNAPSHOTS_STORAGE_KEY = "financial-diary-portfolio-snapshots";
-const BUDGETS_STORAGE_KEY = "financial-diary-category-budgets";
 const DIVIDENDS_STORAGE_KEY = "financial-diary-dividends";
 const DIVIDEND_AUTO_CACHE_KEY = "financial-diary-dividend-auto-cache";
 const MAX_PORTFOLIO_SNAPSHOTS = 90;
@@ -39,44 +37,79 @@ export function deleteTransaction(id: string): Transaction[] {
   return transactions;
 }
 
-export function loadExpenses(): Expense[] {
-  if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(EXPENSES_STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as Expense[];
-  } catch {
-    return [];
-  }
+async function currentUserId(): Promise<string | null> {
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id ?? null;
 }
 
-export function saveExpenses(expenses: Expense[]): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(expenses));
+interface ExpenseRow {
+  id: string;
+  date: string;
+  category: string;
+  amount: number;
+  note: string | null;
+  card_id: string | null;
 }
 
-export function addExpense(expense: Expense): Expense[] {
-  const expenses = [...loadExpenses(), expense];
-  saveExpenses(expenses);
-  return expenses;
+function fromExpenseRow(row: ExpenseRow): Expense {
+  return {
+    id: row.id,
+    date: row.date,
+    category: row.category,
+    amount: Number(row.amount),
+    note: row.note ?? undefined,
+    cardId: row.card_id ?? undefined,
+  };
 }
 
-export function deleteExpense(id: string): Expense[] {
-  const expenses = loadExpenses().filter((e) => e.id !== id);
-  saveExpenses(expenses);
-  return expenses;
+export async function loadExpenses(): Promise<Expense[]> {
+  const { data, error } = await supabase
+    .from("expenses")
+    .select("id, date, category, amount, note, card_id")
+    .order("created_at", { ascending: true });
+  if (error || !data) return [];
+  return data.map(fromExpenseRow);
 }
 
-export function updateExpenseCategory(id: string, category: string): Expense[] {
-  const expenses = loadExpenses().map((e) => (e.id === id ? { ...e, category } : e));
-  saveExpenses(expenses);
-  return expenses;
+export async function addExpense(expense: Expense): Promise<Expense[]> {
+  const userId = await currentUserId();
+  if (!userId) return loadExpenses();
+  await supabase.from("expenses").insert({
+    id: expense.id,
+    user_id: userId,
+    date: expense.date,
+    category: expense.category,
+    amount: expense.amount,
+    note: expense.note ?? null,
+    card_id: expense.cardId ?? null,
+  });
+  return loadExpenses();
 }
 
-export function addExpenses(newExpenses: Expense[]): Expense[] {
-  const expenses = [...loadExpenses(), ...newExpenses];
-  saveExpenses(expenses);
-  return expenses;
+export async function deleteExpense(id: string): Promise<Expense[]> {
+  await supabase.from("expenses").delete().eq("id", id);
+  return loadExpenses();
+}
+
+export async function updateExpenseCategory(id: string, category: string): Promise<Expense[]> {
+  await supabase.from("expenses").update({ category }).eq("id", id);
+  return loadExpenses();
+}
+
+export async function addExpenses(newExpenses: Expense[]): Promise<Expense[]> {
+  const userId = await currentUserId();
+  if (!userId || newExpenses.length === 0) return loadExpenses();
+  const rows = newExpenses.map((e) => ({
+    id: e.id,
+    user_id: userId,
+    date: e.date,
+    category: e.category,
+    amount: e.amount,
+    note: e.note ?? null,
+    card_id: e.cardId ?? null,
+  }));
+  await supabase.from("expenses").insert(rows);
+  return loadExpenses();
 }
 
 export function loadCalendarNotes(): CalendarNote[] {
@@ -107,35 +140,66 @@ export function deleteCalendarNote(id: string): CalendarNote[] {
   return notes;
 }
 
-export function loadArchivedPeriods(): ArchivedPeriod[] {
-  if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(ARCHIVED_PERIODS_STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as ArchivedPeriod[];
-  } catch {
-    return [];
+interface ArchivedPeriodRow {
+  id: string;
+  name: string | null;
+  start_date: string;
+  end_date: string;
+  created_at: string;
+  note: string | null;
+}
+
+interface ArchivedPeriodExpenseRow extends ExpenseRow {
+  archived_period_id: string;
+}
+
+export async function loadArchivedPeriods(): Promise<ArchivedPeriod[]> {
+  const { data: periods, error } = await supabase
+    .from("archived_periods")
+    .select("id, name, start_date, end_date, created_at, note")
+    .order("created_at", { ascending: true });
+  if (error || !periods || periods.length === 0) return [];
+
+  const ids = (periods as ArchivedPeriodRow[]).map((p) => p.id);
+  const { data: expenseRows } = await supabase
+    .from("archived_period_expenses")
+    .select("id, archived_period_id, date, category, amount, note, card_id")
+    .in("archived_period_id", ids);
+
+  const grouped = new Map<string, Expense[]>();
+  for (const row of (expenseRows as ArchivedPeriodExpenseRow[] | null) ?? []) {
+    const list = grouped.get(row.archived_period_id) ?? [];
+    list.push(fromExpenseRow(row));
+    grouped.set(row.archived_period_id, list);
   }
+
+  return (periods as ArchivedPeriodRow[]).map((p) => ({
+    id: p.id,
+    name: p.name ?? undefined,
+    startDate: p.start_date,
+    endDate: p.end_date,
+    createdAt: p.created_at,
+    note: p.note ?? undefined,
+    expenses: grouped.get(p.id) ?? [],
+  }));
 }
 
-export function saveArchivedPeriods(periods: ArchivedPeriod[]): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(ARCHIVED_PERIODS_STORAGE_KEY, JSON.stringify(periods));
+export async function deleteArchivedPeriod(id: string): Promise<ArchivedPeriod[]> {
+  await supabase.from("archived_periods").delete().eq("id", id);
+  return loadArchivedPeriods();
 }
 
-export function deleteArchivedPeriod(id: string): ArchivedPeriod[] {
-  const updated = loadArchivedPeriods().filter((p) => p.id !== id);
-  saveArchivedPeriods(updated);
-  return updated;
-}
-
-export function updateArchivedPeriod(
+export async function updateArchivedPeriod(
   id: string,
   updates: Partial<Pick<ArchivedPeriod, "name" | "note" | "startDate" | "endDate">>
-): ArchivedPeriod[] {
-  const updated = loadArchivedPeriods().map((p) => (p.id === id ? { ...p, ...updates } : p));
-  saveArchivedPeriods(updated);
-  return updated;
+): Promise<ArchivedPeriod[]> {
+  const patch: Record<string, unknown> = {};
+  if ("name" in updates) patch.name = updates.name ?? null;
+  if ("note" in updates) patch.note = updates.note ?? null;
+  if ("startDate" in updates) patch.start_date = updates.startDate;
+  if ("endDate" in updates) patch.end_date = updates.endDate;
+  await supabase.from("archived_periods").update(patch).eq("id", id);
+  return loadArchivedPeriods();
 }
 
 // Dönemi Kapat: aktif harcamaları silmeden arşivler, aktif listeyi boşaltır.
@@ -143,11 +207,14 @@ export function updateArchivedPeriod(
 // yoksa aktif harcamaların en erkeni); bitiş tarihi = bugün. Aynı gün içinde
 // art arda birden fazla dönem kapatılırsa (ör. geçmişe dönük klasörleme)
 // başlangıç bitişi geçemez — bu durumda tek günlük bir dönem oluşur.
-export function closePeriod(currentExpenses: Expense[]): {
+export async function closePeriod(currentExpenses: Expense[]): Promise<{
   archivedPeriods: ArchivedPeriod[];
   expenses: Expense[];
-} {
-  const archivedPeriods = loadArchivedPeriods();
+}> {
+  const userId = await currentUserId();
+  if (!userId) return { archivedPeriods: await loadArchivedPeriods(), expenses: currentExpenses };
+
+  const archivedPeriods = await loadArchivedPeriods();
   const endDate = new Date().toISOString().slice(0, 10);
 
   const lastPeriod = archivedPeriods[archivedPeriods.length - 1];
@@ -164,19 +231,32 @@ export function closePeriod(currentExpenses: Expense[]): {
     startDate = endDate;
   }
 
-  const newPeriod: ArchivedPeriod = {
-    id: crypto.randomUUID(),
-    startDate,
-    endDate,
-    createdAt: new Date().toISOString(),
-    expenses: currentExpenses,
-  };
+  const periodId = crypto.randomUUID();
+  await supabase.from("archived_periods").insert({
+    id: periodId,
+    user_id: userId,
+    start_date: startDate,
+    end_date: endDate,
+    created_at: new Date().toISOString(),
+  });
 
-  const updatedPeriods = [...archivedPeriods, newPeriod];
-  saveArchivedPeriods(updatedPeriods);
-  saveExpenses([]);
+  if (currentExpenses.length > 0) {
+    await supabase.from("archived_period_expenses").insert(
+      currentExpenses.map((e) => ({
+        id: crypto.randomUUID(),
+        archived_period_id: periodId,
+        user_id: userId,
+        date: e.date,
+        category: e.category,
+        amount: e.amount,
+        note: e.note ?? null,
+        card_id: e.cardId ?? null,
+      }))
+    );
+    await supabase.from("expenses").delete().eq("user_id", userId);
+  }
 
-  return { archivedPeriods: updatedPeriods, expenses: [] };
+  return { archivedPeriods: await loadArchivedPeriods(), expenses: [] };
 }
 
 export function loadPortfolioSnapshots(): PortfolioSnapshot[] {
@@ -211,32 +291,29 @@ export function clearPortfolioSnapshots(): void {
   window.localStorage.removeItem(PORTFOLIO_SNAPSHOTS_STORAGE_KEY);
 }
 
-export function loadCategoryBudgets(): CategoryBudget[] {
-  if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(BUDGETS_STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as CategoryBudget[];
-  } catch {
-    return [];
-  }
+interface BudgetRow {
+  category: string;
+  monthly_goal: number;
 }
 
-export function saveCategoryBudget(category: string, monthlyGoal: number): CategoryBudget[] {
-  const budgets = loadCategoryBudgets().filter((b) => b.category !== category);
-  const updated = [...budgets, { category, monthlyGoal }];
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(BUDGETS_STORAGE_KEY, JSON.stringify(updated));
-  }
-  return updated;
+export async function loadCategoryBudgets(): Promise<CategoryBudget[]> {
+  const { data, error } = await supabase.from("category_budgets").select("category, monthly_goal");
+  if (error || !data) return [];
+  return (data as BudgetRow[]).map((row) => ({ category: row.category, monthlyGoal: Number(row.monthly_goal) }));
 }
 
-export function deleteCategoryBudget(category: string): CategoryBudget[] {
-  const updated = loadCategoryBudgets().filter((b) => b.category !== category);
-  if (typeof window !== "undefined") {
-    window.localStorage.setItem(BUDGETS_STORAGE_KEY, JSON.stringify(updated));
-  }
-  return updated;
+export async function saveCategoryBudget(category: string, monthlyGoal: number): Promise<CategoryBudget[]> {
+  const userId = await currentUserId();
+  if (!userId) return loadCategoryBudgets();
+  await supabase
+    .from("category_budgets")
+    .upsert({ user_id: userId, category, monthly_goal: monthlyGoal }, { onConflict: "user_id,category" });
+  return loadCategoryBudgets();
+}
+
+export async function deleteCategoryBudget(category: string): Promise<CategoryBudget[]> {
+  await supabase.from("category_budgets").delete().eq("category", category);
+  return loadCategoryBudgets();
 }
 
 export function loadDividends(): DividendEntry[] {

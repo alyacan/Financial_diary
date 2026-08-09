@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArchivedPeriod, ASSET_LABELS, Transaction } from "@/lib/types";
 import { deleteArchivedPeriod, loadArchivedPeriods, loadTransactions, updateArchivedPeriod } from "@/lib/storage";
@@ -20,10 +20,17 @@ function formatDate(isoDate: string): string {
 
 export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [allPeriods, setAllPeriods] = useState<ArchivedPeriod[]>(() => loadArchivedPeriods());
+  const [allPeriods, setAllPeriods] = useState<ArchivedPeriod[]>([]);
   const [transactions] = useState<Transaction[]>(() => loadTransactions());
-  const [loaded] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    loadArchivedPeriods().then((periods) => {
+      setAllPeriods(periods);
+      setLoaded(true);
+    });
+  }, []);
   const [nameInput, setNameInput] = useState("");
   const [startInput, setStartInput] = useState("");
   const [endInput, setEndInput] = useState("");
@@ -46,14 +53,14 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
     setEditing(true);
   }
 
-  function saveEdit() {
+  async function saveEdit() {
     if (!period) return;
     if (startInput > endInput) {
       window.alert("Başlangıç tarihi, bitiş tarihinden sonra olamaz.");
       return;
     }
     setAllPeriods(
-      updateArchivedPeriod(period.id, {
+      await updateArchivedPeriod(period.id, {
         name: nameInput.trim() ? nameInput.trim() : undefined,
         startDate: startInput,
         endDate: endInput,
@@ -62,18 +69,18 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
     setEditing(false);
   }
 
-  function saveNote() {
+  async function saveNote() {
     if (!period) return;
-    setAllPeriods(updateArchivedPeriod(period.id, { note: noteInput.trim() ? noteInput.trim() : undefined }));
+    setAllPeriods(await updateArchivedPeriod(period.id, { note: noteInput.trim() ? noteInput.trim() : undefined }));
   }
 
-  function handleDeletePeriod() {
+  async function handleDeletePeriod() {
     if (!period) return;
     const confirmed = window.confirm(
       "Bu arşivlenmiş dönemi tamamen silmek istediğine emin misin? Bu işlem geri alınamaz."
     );
     if (confirmed) {
-      deleteArchivedPeriod(period.id);
+      await deleteArchivedPeriod(period.id);
       window.location.href = "/harcamalar";
     }
   }
