@@ -2,77 +2,134 @@
 
 import { useState } from "react";
 
+const MONTHS_TURKISH = [
+  "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
+  "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
+];
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate();
+}
+
 interface Props {
   value: string; // YYYY-MM-DD or ""
   onChange: (isoDate: string) => void;
   required?: boolean;
 }
 
-export default function DateSelect({ value, onChange, required }: Props) {
-  const todayISO = new Date().toISOString().slice(0, 10);
-  const [internalDate, setInternalDate] = useState("");
+function parseIso(iso: string) {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
 
-  const selectedDate = value || internalDate || todayISO;
+  if (!iso) return { year: currentYear, month: currentMonth, day: currentDay };
+  const parts = iso.split("-").map(Number);
+  if (parts.length !== 3 || isNaN(parts[0])) {
+    return { year: currentYear, month: currentMonth, day: currentDay };
+  }
+  return { year: parts[0], month: parts[1], day: parts[2] };
+}
 
-  function handleDateChange(newIso: string) {
-    if (newIso > todayISO) {
-      alert("Gelecek bir tarih için harcama ekleyemezsiniz. Tarih bugüne sabitlendi.");
-      setInternalDate(todayISO);
-      onChange(todayISO);
-      return;
+export default function DateSelect({ value, onChange }: Props) {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
+
+  const [dateState, setDateState] = useState(() => parseIso(value));
+
+  // Sync state if value prop changes
+  const effectiveState = value ? parseIso(value) : dateState;
+  const { year, month, day } = effectiveState;
+
+  // Generate Year options (last 7 years up to current year)
+  const years = Array.from({ length: 8 }, (_, i) => currentYear - 7 + i);
+
+  // Max day available for selected year and month
+  const maxDays = daysInMonth(year, month);
+
+  // Emit change to parent
+  function updateDate(newDay: number, newMonth: number, newYear: number) {
+    // Prevent future dates
+    let targetYear = newYear;
+    let targetMonth = newMonth;
+    let targetDay = newDay;
+
+    if (targetYear > currentYear) targetYear = currentYear;
+    if (targetYear === currentYear && targetMonth > currentMonth) targetMonth = currentMonth;
+
+    const maxAllowedDay = daysInMonth(targetYear, targetMonth);
+    if (targetDay > maxAllowedDay) targetDay = maxAllowedDay;
+
+    if (targetYear === currentYear && targetMonth === currentMonth && targetDay > currentDay) {
+      targetDay = currentDay;
     }
-    setInternalDate(newIso);
-    onChange(newIso);
+
+    const next = { year: targetYear, month: targetMonth, day: targetDay };
+    setDateState(next);
+
+    const iso = `${targetYear}-${String(targetMonth).padStart(2, "0")}-${String(targetDay).padStart(2, "0")}`;
+    onChange(iso);
   }
 
-  function getFormattedTurkishDate(iso: string): string {
-    if (!iso) return "";
-    try {
-      const parts = iso.split("-").map(Number);
-      if (parts.length !== 3) return "";
-      const d = new Date(parts[0], parts[1] - 1, parts[2]);
-      const dateStr = d.toLocaleDateString("tr-TR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-      const dayName = d.toLocaleDateString("tr-TR", { weekday: "long" });
-      return `${dateStr}, ${dayName}`;
-    } catch {
-      return iso;
-    }
+  function handleSetToday() {
+    updateDate(currentDay, currentMonth, currentYear);
   }
 
   return (
-    <div className="flex flex-col gap-1.5 w-full">
-      <div className="flex items-center gap-2">
-        <input
-          type="date"
-          value={selectedDate}
-          max={todayISO}
-          required={required}
-          onChange={(e) => handleDateChange(e.target.value)}
-          className="flex-1 rounded-xl border border-zinc-300 bg-white p-2.5 text-xs font-semibold text-zinc-900 shadow-2xs transition-colors dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-        />
+    <div className="flex w-full items-center gap-1.5">
+      {/* 1. GÜN */}
+      <select
+        aria-label="Gün"
+        value={day}
+        onChange={(e) => updateDate(Number(e.target.value), month, year)}
+        className="w-20 rounded-xl border border-zinc-300 bg-white p-2.5 text-xs font-semibold text-zinc-900 shadow-2xs transition-colors dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+      >
+        {Array.from({ length: maxDays }, (_, i) => i + 1).map((d) => (
+          <option key={d} value={d}>
+            {d}
+          </option>
+        ))}
+      </select>
 
-        <button
-          type="button"
-          onClick={() => handleDateChange(todayISO)}
-          className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs font-bold text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-300"
-          title="Bugünün tarihini seç"
-        >
-          📍 Bugün
-        </button>
-      </div>
+      {/* 2. AY */}
+      <select
+        aria-label="Ay"
+        value={month}
+        onChange={(e) => updateDate(day, Number(e.target.value), year)}
+        className="flex-1 min-w-0 rounded-xl border border-zinc-300 bg-white p-2.5 text-xs font-semibold text-zinc-900 shadow-2xs transition-colors dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+      >
+        {MONTHS_TURKISH.map((m, i) => (
+          <option key={m} value={i + 1}>
+            {m}
+          </option>
+        ))}
+      </select>
 
-      {selectedDate && (
-        <div className="flex items-center gap-1.5 rounded-lg bg-zinc-100 px-2.5 py-1 text-[11px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-          <span>📅 Seçilen Tarih:</span>
-          <span className="font-bold text-emerald-700 dark:text-emerald-400">
-            {getFormattedTurkishDate(selectedDate)}
-          </span>
-        </div>
-      )}
+      {/* 3. YIL */}
+      <select
+        aria-label="Yıl"
+        value={year}
+        onChange={(e) => updateDate(day, month, Number(e.target.value))}
+        className="w-24 rounded-xl border border-zinc-300 bg-white p-2.5 text-xs font-semibold text-zinc-900 shadow-2xs transition-colors dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+      >
+        {years.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
+      </select>
+
+      {/* 4. BUGÜN BUTONU */}
+      <button
+        type="button"
+        onClick={handleSetToday}
+        className="shrink-0 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs font-bold text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-300"
+        title="Bugünün tarihini seç"
+      >
+        📍 Bugün
+      </button>
     </div>
   );
 }
