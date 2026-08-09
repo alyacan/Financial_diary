@@ -8,6 +8,7 @@ import { computePeriodStats, transactionsInPeriod } from "@/lib/periodStats";
 import ExpenseChart from "@/components/ExpenseChart";
 import ExpenseTable from "@/components/ExpenseTable";
 import AiAnalysisPackage from "@/components/AiAnalysisPackage";
+import ErrorBanner from "@/components/ErrorBanner";
 
 function formatTRY(value: number): string {
   return value.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
@@ -24,6 +25,7 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([loadArchivedPeriods(), loadTransactions()]).then(([periods, txs]) => {
@@ -60,19 +62,27 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
       window.alert("Başlangıç tarihi, bitiş tarihinden sonra olamaz.");
       return;
     }
-    setAllPeriods(
-      await updateArchivedPeriod(period.id, {
-        name: nameInput.trim() ? nameInput.trim() : undefined,
-        startDate: startInput,
-        endDate: endInput,
-      })
-    );
-    setEditing(false);
+    try {
+      setAllPeriods(
+        await updateArchivedPeriod(period.id, {
+          name: nameInput.trim() ? nameInput.trim() : undefined,
+          startDate: startInput,
+          endDate: endInput,
+        })
+      );
+      setEditing(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Dönem güncellenemedi.");
+    }
   }
 
   async function saveNote() {
     if (!period) return;
-    setAllPeriods(await updateArchivedPeriod(period.id, { note: noteInput.trim() ? noteInput.trim() : undefined }));
+    try {
+      setAllPeriods(await updateArchivedPeriod(period.id, { note: noteInput.trim() ? noteInput.trim() : undefined }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Not kaydedilemedi.");
+    }
   }
 
   async function handleDeletePeriod() {
@@ -81,8 +91,12 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
       "Bu arşivlenmiş dönemi tamamen silmek istediğine emin misin? Bu işlem geri alınamaz."
     );
     if (confirmed) {
-      await deleteArchivedPeriod(period.id);
-      window.location.href = "/harcamalar";
+      try {
+        await deleteArchivedPeriod(period.id);
+        window.location.href = "/harcamalar";
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Dönem silinemedi.");
+      }
     }
   }
 
@@ -104,6 +118,8 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6 sm:p-10">
+      <ErrorBanner message={error} onDismiss={() => setError(null)} />
+
       {/* Navigation & Header Actions */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-200 pb-4 dark:border-zinc-800">
         <Link

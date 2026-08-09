@@ -6,18 +6,27 @@ import { addCalendarNote, deleteCalendarNote, loadCalendarNotes } from "@/lib/st
 
 export function useCalendarNotes() {
   const [calendarNotes, setCalendarNotes] = useState<CalendarNote[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadCalendarNotes().then(setCalendarNotes);
   }, []);
 
   async function handleAddCalendarNote(n: CalendarNote) {
-    setCalendarNotes(await addCalendarNote(n));
+    try {
+      setCalendarNotes(await addCalendarNote(n));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Not eklenemedi.");
+    }
   }
 
   async function handleDeleteCalendarNote(id: string) {
-    setCalendarNotes(await deleteCalendarNote(id));
+    try {
+      setCalendarNotes(await deleteCalendarNote(id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Not silinemedi.");
+    }
   }
 
-  return { calendarNotes, handleAddCalendarNote, handleDeleteCalendarNote };
+  return { calendarNotes, handleAddCalendarNote, handleDeleteCalendarNote, error, clearError: () => setError(null) };
 }

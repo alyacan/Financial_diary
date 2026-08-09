@@ -9,6 +9,7 @@ import BudgetGoals from "@/components/BudgetGoals";
 import ArchivedPeriodCard from "@/components/ArchivedPeriodCard";
 import StatementUpload from "@/components/StatementUpload";
 import CardWalletWidget from "@/components/CardWalletWidget";
+import ErrorBanner from "@/components/ErrorBanner";
 import { useExpenseData } from "@/hooks/useExpenseData";
 
 function formatTRY(value: number): string {
@@ -40,6 +41,8 @@ export default function HarcamalarPage() {
     budgetProgress,
     handleSaveBudget,
     handleDeleteBudget,
+    error,
+    clearError,
   } = useExpenseData();
 
   const [activeTab, setActiveTab] = useState<TabType>("overview");
@@ -80,6 +83,8 @@ export default function HarcamalarPage() {
           <span>📁</span> Dönemi Kapat / Klasörle
         </button>
       </header>
+
+      <ErrorBanner message={error} onDismiss={clearError} />
 
       {/* Real Credit/Debit Card Wallet Widget */}
       <CardWalletWidget

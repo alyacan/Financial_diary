@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import { Transaction, GOLD_SUBTYPES } from "@/lib/types";
 import { addTransaction, deleteTransaction, loadTransactions, clearPortfolioSnapshots } from "@/lib/storage";
-import { fetchLivePrices, getManualPrice, setManualPrice, getFundMetadata, setFundMetadata, FundMetadata } from "@/lib/prices";
+import {
+  fetchLivePrices,
+  loadManualPrices,
+  setManualPrice,
+  loadFundMetadataMap,
+  setFundMetadata,
+  FundMetadata,
+} from "@/lib/prices";
 import { calculatePositions, calculateTransactionProfits, priceKey, PriceMap } from "@/lib/calculations";
 
 // Ons altından otomatik çekilen "gram" dışındaki fiziki altın türleri: kuyumcu primi/likidite
@@ -18,50 +25,53 @@ export interface FundCategoryBreakdown {
 export function useInvestments() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [prices, setPrices] = useState<PriceMap>({});
-  const [manualGoldInputs, setManualGoldInputs] = useState<Record<string, string>>(() => {
-    const initialGold: Record<string, string> = {};
-    for (const g of MANUAL_GOLD_SUBTYPES) {
-      const saved = getManualPrice(priceKey("gold", g.id));
-      if (saved) initialGold[g.id] = saved.toString();
-    }
-    return initialGold;
-  });
+  const [manualPricesMap, setManualPricesMap] = useState<Record<string, number>>({});
+  const [manualGoldInputs, setManualGoldInputs] = useState<Record<string, string>>({});
   const [manualFundInputs, setManualFundInputs] = useState<Record<string, string>>({});
   const [manualFundReturnInputs, setManualFundReturnInputs] = useState<Record<string, string>>({});
   const [manualFundRiskInputs, setManualFundRiskInputs] = useState<Record<string, string>>({});
   const [fundMetadata, setFundMetadataState] = useState<Record<string, FundMetadata>>({});
   const [loadingPrices, setLoadingPrices] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadTransactions().then((loaded) => {
-      setTransactions(loaded);
+    Promise.all([loadTransactions(), loadManualPrices(), loadFundMetadataMap()]).then(
+      ([loaded, manualPricesLoaded, fundMetadataLoaded]) => {
+        setTransactions(loaded);
+        setManualPricesMap(manualPricesLoaded);
+        setFundMetadataState(fundMetadataLoaded);
 
-      const initialFund: Record<string, string> = {};
-      const initialFundReturn: Record<string, string> = {};
-      const initialFundRisk: Record<string, string> = {};
-      const initialFundMetadata: Record<string, FundMetadata> = {};
-      for (const code of new Set(loaded.filter((t) => t.assetType === "fund").map((t) => t.subType))) {
-        const savedPrice = getManualPrice(priceKey("fund", code));
-        if (savedPrice) initialFund[code] = savedPrice.toString();
-        const meta = getFundMetadata(code);
-        if (meta.annualReturnPercent !== undefined) initialFundReturn[code] = meta.annualReturnPercent.toString();
-        if (meta.riskLevel !== undefined) initialFundRisk[code] = meta.riskLevel.toString();
-        initialFundMetadata[code] = meta;
+        const initialGold: Record<string, string> = {};
+        for (const g of MANUAL_GOLD_SUBTYPES) {
+          const saved = manualPricesLoaded[priceKey("gold", g.id)];
+          if (saved) initialGold[g.id] = saved.toString();
+        }
+        setManualGoldInputs(initialGold);
+
+        const initialFund: Record<string, string> = {};
+        const initialFundReturn: Record<string, string> = {};
+        const initialFundRisk: Record<string, string> = {};
+        for (const code of new Set(loaded.filter((t) => t.assetType === "fund").map((t) => t.subType))) {
+          const savedPrice = manualPricesLoaded[priceKey("fund", code)];
+          if (savedPrice) initialFund[code] = savedPrice.toString();
+          const meta = fundMetadataLoaded[code];
+          if (meta?.annualReturnPercent !== undefined) initialFundReturn[code] = meta.annualReturnPercent.toString();
+          if (meta?.riskLevel !== undefined) initialFundRisk[code] = meta.riskLevel.toString();
+        }
+        setManualFundInputs(initialFund);
+        setManualFundReturnInputs(initialFundReturn);
+        setManualFundRiskInputs(initialFundRisk);
       }
-      setManualFundInputs(initialFund);
-      setManualFundReturnInputs(initialFundReturn);
-      setManualFundRiskInputs(initialFundRisk);
-      setFundMetadataState(initialFundMetadata);
-    });
+    );
   }, []);
 
   function manualPrices(txs: Transaction[]): PriceMap {
     const result: PriceMap = {};
     for (const g of MANUAL_GOLD_SUBTYPES) {
-      result[priceKey("gold", g.id)] = getManualPrice(priceKey("gold", g.id));
+      result[priceKey("gold", g.id)] = manualPricesMap[priceKey("gold", g.id)] ?? 0;
     }
     for (const code of new Set(txs.filter((t) => t.assetType === "fund").map((t) => t.subType))) {
-      result[priceKey("fund", code)] = getManualPrice(priceKey("fund", code));
+      result[priceKey("fund", code)] = manualPricesMap[priceKey("fund", code)] ?? 0;
     }
     return result;
   }
@@ -90,40 +100,62 @@ export function useInvestments() {
       isMounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactions.length]);
+  }, [transactions.length, manualPricesMap]);
 
   async function handleAdd(t: Transaction) {
-    setTransactions(await addTransaction(t));
+    try {
+      setTransactions(await addTransaction(t));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "İşlem eklenemedi.");
+    }
   }
 
   async function handleDelete(id: string) {
-    setTransactions(await deleteTransaction(id));
-    await clearPortfolioSnapshots();
+    try {
+      setTransactions(await deleteTransaction(id));
+      await clearPortfolioSnapshots();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "İşlem silinemedi.");
+    }
   }
 
-  function handleManualGoldSave(subTypeId: string) {
+  async function handleManualGoldSave(subTypeId: string) {
     const value = parseFloat(manualGoldInputs[subTypeId] ?? "");
     if (!value) return;
-    setManualPrice(priceKey("gold", subTypeId), value);
-    setPrices((prev) => ({ ...prev, [priceKey("gold", subTypeId)]: value }));
+    try {
+      await setManualPrice(priceKey("gold", subTypeId), value);
+      setManualPricesMap((prev) => ({ ...prev, [priceKey("gold", subTypeId)]: value }));
+      setPrices((prev) => ({ ...prev, [priceKey("gold", subTypeId)]: value }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Fiyat kaydedilemedi.");
+    }
   }
 
-  function handleManualFundSave(fundCode: string) {
+  async function handleManualFundSave(fundCode: string) {
     const value = parseFloat(manualFundInputs[fundCode] ?? "");
     if (!value) return;
-    setManualPrice(priceKey("fund", fundCode), value);
-    setPrices((prev) => ({ ...prev, [priceKey("fund", fundCode)]: value }));
+    try {
+      await setManualPrice(priceKey("fund", fundCode), value);
+      setManualPricesMap((prev) => ({ ...prev, [priceKey("fund", fundCode)]: value }));
+      setPrices((prev) => ({ ...prev, [priceKey("fund", fundCode)]: value }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Fiyat kaydedilemedi.");
+    }
   }
 
-  function handleManualFundMetadataSave(fundCode: string) {
+  async function handleManualFundMetadataSave(fundCode: string) {
     const returnRaw = manualFundReturnInputs[fundCode] ?? "";
     const riskRaw = manualFundRiskInputs[fundCode] ?? "";
     const metadata: FundMetadata = {
       annualReturnPercent: returnRaw !== "" ? parseFloat(returnRaw) : undefined,
       riskLevel: riskRaw !== "" ? parseInt(riskRaw, 10) : undefined,
     };
-    setFundMetadata(fundCode, metadata);
-    setFundMetadataState((prev) => ({ ...prev, [fundCode]: metadata }));
+    try {
+      await setFundMetadata(fundCode, metadata);
+      setFundMetadataState((prev) => ({ ...prev, [fundCode]: metadata }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Fon bilgisi kaydedilemedi.");
+    }
   }
 
   const positions = calculatePositions(transactions, prices);
@@ -178,5 +210,7 @@ export function useInvestments() {
     missingPricePositions,
     fundCategoryBreakdown,
     totalFundInvested,
+    error,
+    clearError: () => setError(null),
   };
 }

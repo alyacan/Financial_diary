@@ -42,8 +42,8 @@ export async function loadTransactions(): Promise<Transaction[]> {
 
 export async function addTransaction(transaction: Transaction): Promise<Transaction[]> {
   const userId = await currentUserId();
-  if (!userId) return loadTransactions();
-  await supabase.from("transactions").insert({
+  if (!userId) throw new Error("İşlem eklemek için giriş yapmalısın.");
+  const { error } = await supabase.from("transactions").insert({
     id: transaction.id,
     user_id: userId,
     asset_type: transaction.assetType,
@@ -55,11 +55,13 @@ export async function addTransaction(transaction: Transaction): Promise<Transact
     fund_category: transaction.fundCategory ?? null,
     note: transaction.note ?? null,
   });
+  if (error) throw new Error(error.message);
   return loadTransactions();
 }
 
 export async function deleteTransaction(id: string): Promise<Transaction[]> {
-  await supabase.from("transactions").delete().eq("id", id);
+  const { error } = await supabase.from("transactions").delete().eq("id", id);
+  if (error) throw new Error(error.message);
   return loadTransactions();
 }
 
@@ -99,8 +101,8 @@ export async function loadExpenses(): Promise<Expense[]> {
 
 export async function addExpense(expense: Expense): Promise<Expense[]> {
   const userId = await currentUserId();
-  if (!userId) return loadExpenses();
-  await supabase.from("expenses").insert({
+  if (!userId) throw new Error("Harcama eklemek için giriş yapmalısın.");
+  const { error } = await supabase.from("expenses").insert({
     id: expense.id,
     user_id: userId,
     date: expense.date,
@@ -109,22 +111,26 @@ export async function addExpense(expense: Expense): Promise<Expense[]> {
     note: expense.note ?? null,
     card_id: expense.cardId ?? null,
   });
+  if (error) throw new Error(error.message);
   return loadExpenses();
 }
 
 export async function deleteExpense(id: string): Promise<Expense[]> {
-  await supabase.from("expenses").delete().eq("id", id);
+  const { error } = await supabase.from("expenses").delete().eq("id", id);
+  if (error) throw new Error(error.message);
   return loadExpenses();
 }
 
 export async function updateExpenseCategory(id: string, category: string): Promise<Expense[]> {
-  await supabase.from("expenses").update({ category }).eq("id", id);
+  const { error } = await supabase.from("expenses").update({ category }).eq("id", id);
+  if (error) throw new Error(error.message);
   return loadExpenses();
 }
 
 export async function addExpenses(newExpenses: Expense[]): Promise<Expense[]> {
   const userId = await currentUserId();
-  if (!userId || newExpenses.length === 0) return loadExpenses();
+  if (!userId) throw new Error("Harcama eklemek için giriş yapmalısın.");
+  if (newExpenses.length === 0) return loadExpenses();
   const rows = newExpenses.map((e) => ({
     id: e.id,
     user_id: userId,
@@ -134,7 +140,8 @@ export async function addExpenses(newExpenses: Expense[]): Promise<Expense[]> {
     note: e.note ?? null,
     card_id: e.cardId ?? null,
   }));
-  await supabase.from("expenses").insert(rows);
+  const { error } = await supabase.from("expenses").insert(rows);
+  if (error) throw new Error(error.message);
   return loadExpenses();
 }
 
@@ -155,13 +162,17 @@ export async function loadCalendarNotes(): Promise<CalendarNote[]> {
 
 export async function addCalendarNote(note: CalendarNote): Promise<CalendarNote[]> {
   const userId = await currentUserId();
-  if (!userId) return loadCalendarNotes();
-  await supabase.from("calendar_notes").insert({ id: note.id, user_id: userId, date: note.date, text: note.text });
+  if (!userId) throw new Error("Not eklemek için giriş yapmalısın.");
+  const { error } = await supabase
+    .from("calendar_notes")
+    .insert({ id: note.id, user_id: userId, date: note.date, text: note.text });
+  if (error) throw new Error(error.message);
   return loadCalendarNotes();
 }
 
 export async function deleteCalendarNote(id: string): Promise<CalendarNote[]> {
-  await supabase.from("calendar_notes").delete().eq("id", id);
+  const { error } = await supabase.from("calendar_notes").delete().eq("id", id);
+  if (error) throw new Error(error.message);
   return loadCalendarNotes();
 }
 
@@ -210,7 +221,8 @@ export async function loadArchivedPeriods(): Promise<ArchivedPeriod[]> {
 }
 
 export async function deleteArchivedPeriod(id: string): Promise<ArchivedPeriod[]> {
-  await supabase.from("archived_periods").delete().eq("id", id);
+  const { error } = await supabase.from("archived_periods").delete().eq("id", id);
+  if (error) throw new Error(error.message);
   return loadArchivedPeriods();
 }
 
@@ -223,7 +235,8 @@ export async function updateArchivedPeriod(
   if ("note" in updates) patch.note = updates.note ?? null;
   if ("startDate" in updates) patch.start_date = updates.startDate;
   if ("endDate" in updates) patch.end_date = updates.endDate;
-  await supabase.from("archived_periods").update(patch).eq("id", id);
+  const { error } = await supabase.from("archived_periods").update(patch).eq("id", id);
+  if (error) throw new Error(error.message);
   return loadArchivedPeriods();
 }
 
@@ -237,7 +250,7 @@ export async function closePeriod(currentExpenses: Expense[]): Promise<{
   expenses: Expense[];
 }> {
   const userId = await currentUserId();
-  if (!userId) return { archivedPeriods: await loadArchivedPeriods(), expenses: currentExpenses };
+  if (!userId) throw new Error("Dönem kapatmak için giriş yapmalısın.");
 
   const archivedPeriods = await loadArchivedPeriods();
   const endDate = new Date().toISOString().slice(0, 10);
@@ -257,16 +270,17 @@ export async function closePeriod(currentExpenses: Expense[]): Promise<{
   }
 
   const periodId = crypto.randomUUID();
-  await supabase.from("archived_periods").insert({
+  const { error: periodError } = await supabase.from("archived_periods").insert({
     id: periodId,
     user_id: userId,
     start_date: startDate,
     end_date: endDate,
     created_at: new Date().toISOString(),
   });
+  if (periodError) throw new Error(periodError.message);
 
   if (currentExpenses.length > 0) {
-    await supabase.from("archived_period_expenses").insert(
+    const { error: expensesError } = await supabase.from("archived_period_expenses").insert(
       currentExpenses.map((e) => ({
         id: crypto.randomUUID(),
         archived_period_id: periodId,
@@ -278,7 +292,9 @@ export async function closePeriod(currentExpenses: Expense[]): Promise<{
         card_id: e.cardId ?? null,
       }))
     );
-    await supabase.from("expenses").delete().eq("user_id", userId);
+    if (expensesError) throw new Error(expensesError.message);
+    const { error: clearError } = await supabase.from("expenses").delete().eq("user_id", userId);
+    if (clearError) throw new Error(clearError.message);
   }
 
   return { archivedPeriods: await loadArchivedPeriods(), expenses: [] };
@@ -305,18 +321,20 @@ export async function recordPortfolioSnapshot(value: number): Promise<PortfolioS
   const userId = await currentUserId();
   if (!userId) return loadPortfolioSnapshots();
   const today = new Date().toISOString().slice(0, 10);
-  await supabase
+  const { error } = await supabase
     .from("portfolio_snapshots")
     .upsert({ user_id: userId, date: today, value }, { onConflict: "user_id,date" });
+  if (error) throw new Error(error.message);
 
   const all = await loadPortfolioSnapshots();
   if (all.length > MAX_PORTFOLIO_SNAPSHOTS) {
     const excess = all.slice(0, all.length - MAX_PORTFOLIO_SNAPSHOTS);
-    await supabase
+    const { error: pruneError } = await supabase
       .from("portfolio_snapshots")
       .delete()
       .eq("user_id", userId)
       .in("date", excess.map((s) => s.date));
+    if (pruneError) throw new Error(pruneError.message);
     return all.slice(all.length - MAX_PORTFOLIO_SNAPSHOTS);
   }
   return all;
@@ -343,15 +361,17 @@ export async function loadCategoryBudgets(): Promise<CategoryBudget[]> {
 
 export async function saveCategoryBudget(category: string, monthlyGoal: number): Promise<CategoryBudget[]> {
   const userId = await currentUserId();
-  if (!userId) return loadCategoryBudgets();
-  await supabase
+  if (!userId) throw new Error("Bütçe kaydetmek için giriş yapmalısın.");
+  const { error } = await supabase
     .from("category_budgets")
     .upsert({ user_id: userId, category, monthly_goal: monthlyGoal }, { onConflict: "user_id,category" });
+  if (error) throw new Error(error.message);
   return loadCategoryBudgets();
 }
 
 export async function deleteCategoryBudget(category: string): Promise<CategoryBudget[]> {
-  await supabase.from("category_budgets").delete().eq("category", category);
+  const { error } = await supabase.from("category_budgets").delete().eq("category", category);
+  if (error) throw new Error(error.message);
   return loadCategoryBudgets();
 }
 
@@ -378,19 +398,21 @@ export async function loadDividends(): Promise<DividendEntry[]> {
 
 export async function addDividend(entry: DividendEntry): Promise<DividendEntry[]> {
   const userId = await currentUserId();
-  if (!userId) return loadDividends();
-  await supabase.from("dividend_entries").insert({
+  if (!userId) throw new Error("Temettü kaydı eklemek için giriş yapmalısın.");
+  const { error } = await supabase.from("dividend_entries").insert({
     id: entry.id,
     user_id: userId,
     ticker: entry.ticker,
     date: entry.date,
     amount_per_share: entry.amountPerShare ?? null,
   });
+  if (error) throw new Error(error.message);
   return loadDividends();
 }
 
 export async function deleteDividend(id: string): Promise<DividendEntry[]> {
-  await supabase.from("dividend_entries").delete().eq("id", id);
+  const { error } = await supabase.from("dividend_entries").delete().eq("id", id);
+  if (error) throw new Error(error.message);
   return loadDividends();
 }
 

@@ -75,6 +75,7 @@ export async function addPaymentCard(card: Omit<PaymentCard, "id">): Promise<{ c
 }
 
 export async function deletePaymentCard(id: string): Promise<PaymentCard[]> {
-  await supabase.from("payment_cards").delete().eq("id", id);
+  const { error } = await supabase.from("payment_cards").delete().eq("id", id);
+  if (error) throw new Error(error.message);
   return getStoredCards();
 }

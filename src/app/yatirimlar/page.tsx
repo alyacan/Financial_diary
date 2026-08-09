@@ -4,6 +4,7 @@ import { useState } from "react";
 import TransactionForm from "@/components/TransactionForm";
 import PortfolioChart from "@/components/PortfolioChart";
 import TransactionTable from "@/components/TransactionTable";
+import ErrorBanner from "@/components/ErrorBanner";
 import { useInvestments } from "@/hooks/useInvestments";
 import { ASSET_LABELS, CRYPTO_OPTIONS, FOREX_OPTIONS, tefasUrl } from "@/lib/types";
 import { priceKey } from "@/lib/calculations";
@@ -46,6 +47,8 @@ export default function YatirimlarPage() {
     missingPricePositions,
     fundCategoryBreakdown,
     totalFundInvested,
+    error,
+    clearError,
   } = useInvestments();
 
   const [activeTab, setActiveTab] = useState<TabType>("overview");
@@ -66,6 +69,8 @@ export default function YatirimlarPage() {
           <span>{loadingPrices ? "Fiyatlar Güncelleniyor..." : "Canlı Fiyatları Yenile"}</span>
         </button>
       </header>
+
+      <ErrorBanner message={error} onDismiss={clearError} />
 
       {/* Missing Prices Notification Banner */}
       {missingPricePositions.length > 0 && (

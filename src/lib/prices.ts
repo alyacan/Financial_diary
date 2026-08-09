@@ -1,5 +1,4 @@
-const MANUAL_PRICES_KEY = "financial-diary-manual-prices";
-const FUND_METADATA_KEY = "financial-diary-fund-metadata";
+import { supabase } from "./supabase";
 
 // TEFAS canlı veri çekmeye karşı korumalı olduğu için (bkz. README), fon fiyatı gibi
 // yıllık getiri/risk seviyesi de kullanıcı tarafından TEFAS sayfasına bakılarak elle girilir.
@@ -14,46 +13,66 @@ export async function fetchLivePrices(): Promise<Record<string, number>> {
   return res.json();
 }
 
-function loadManualPrices(): Record<string, number> {
-  if (typeof window === "undefined") return {};
-  const raw = window.localStorage.getItem(MANUAL_PRICES_KEY);
-  if (!raw) return {};
-  try {
-    return JSON.parse(raw) as Record<string, number>;
-  } catch {
-    return {};
+async function currentUserId(): Promise<string | null> {
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id ?? null;
+}
+
+export async function loadManualPrices(): Promise<Record<string, number>> {
+  const { data, error } = await supabase.from("manual_prices").select("price_key, price");
+  if (error || !data) return {};
+  const result: Record<string, number> = {};
+  for (const row of data as { price_key: string; price: number }[]) {
+    result[row.price_key] = Number(row.price);
   }
+  return result;
 }
 
-export function getManualPrice(key: string): number {
-  return loadManualPrices()[key] ?? 0;
+export async function getManualPrice(key: string): Promise<number> {
+  const all = await loadManualPrices();
+  return all[key] ?? 0;
 }
 
-export function setManualPrice(key: string, price: number): void {
-  if (typeof window === "undefined") return;
-  const prices = loadManualPrices();
-  prices[key] = price;
-  window.localStorage.setItem(MANUAL_PRICES_KEY, JSON.stringify(prices));
+export async function setManualPrice(key: string, price: number): Promise<void> {
+  const userId = await currentUserId();
+  if (!userId) throw new Error("Fiyat kaydetmek için giriş yapmalısın.");
+  const { error } = await supabase
+    .from("manual_prices")
+    .upsert({ user_id: userId, price_key: key, price }, { onConflict: "user_id,price_key" });
+  if (error) throw new Error(error.message);
 }
 
-function loadFundMetadataMap(): Record<string, FundMetadata> {
-  if (typeof window === "undefined") return {};
-  const raw = window.localStorage.getItem(FUND_METADATA_KEY);
-  if (!raw) return {};
-  try {
-    return JSON.parse(raw) as Record<string, FundMetadata>;
-  } catch {
-    return {};
+export async function loadFundMetadataMap(): Promise<Record<string, FundMetadata>> {
+  const { data, error } = await supabase
+    .from("fund_metadata")
+    .select("fund_code, annual_return_percent, risk_level");
+  if (error || !data) return {};
+  const result: Record<string, FundMetadata> = {};
+  for (const row of data as { fund_code: string; annual_return_percent: number | null; risk_level: number | null }[]) {
+    result[row.fund_code] = {
+      annualReturnPercent: row.annual_return_percent ?? undefined,
+      riskLevel: row.risk_level ?? undefined,
+    };
   }
+  return result;
 }
 
-export function getFundMetadata(fundCode: string): FundMetadata {
-  return loadFundMetadataMap()[fundCode] ?? {};
+export async function getFundMetadata(fundCode: string): Promise<FundMetadata> {
+  const all = await loadFundMetadataMap();
+  return all[fundCode] ?? {};
 }
 
-export function setFundMetadata(fundCode: string, metadata: FundMetadata): void {
-  if (typeof window === "undefined") return;
-  const all = loadFundMetadataMap();
-  all[fundCode] = metadata;
-  window.localStorage.setItem(FUND_METADATA_KEY, JSON.stringify(all));
+export async function setFundMetadata(fundCode: string, metadata: FundMetadata): Promise<void> {
+  const userId = await currentUserId();
+  if (!userId) throw new Error("Fon bilgisi kaydetmek için giriş yapmalısın.");
+  const { error } = await supabase.from("fund_metadata").upsert(
+    {
+      user_id: userId,
+      fund_code: fundCode,
+      annual_return_percent: metadata.annualReturnPercent ?? null,
+      risk_level: metadata.riskLevel ?? null,
+    },
+    { onConflict: "user_id,fund_code" }
+  );
+  if (error) throw new Error(error.message);
 }

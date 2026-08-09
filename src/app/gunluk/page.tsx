@@ -3,6 +3,7 @@
 import { useState } from "react";
 import FinancialJournal from "@/components/FinancialJournal";
 import FinancialCalendar from "@/components/FinancialCalendar";
+import ErrorBanner from "@/components/ErrorBanner";
 import { useInvestments } from "@/hooks/useInvestments";
 import { useCalendarNotes } from "@/hooks/useCalendarNotes";
 import { useDividends } from "@/hooks/useDividends";
@@ -11,8 +12,15 @@ type TabType = "calendar" | "journal";
 
 export default function GunlukPage() {
   const { transactions } = useInvestments();
-  const { calendarNotes, handleAddCalendarNote, handleDeleteCalendarNote } = useCalendarNotes();
-  const { dividends, handleAddDividend, handleDeleteDividend } = useDividends();
+  const {
+    calendarNotes,
+    handleAddCalendarNote,
+    handleDeleteCalendarNote,
+    error: calendarError,
+    clearError: clearCalendarError,
+  } = useCalendarNotes();
+  const { dividends, handleAddDividend, handleDeleteDividend, error: dividendError, clearError: clearDividendError } =
+    useDividends();
   const [activeTab, setActiveTab] = useState<TabType>("calendar");
 
   const stockTickers = Array.from(
@@ -29,6 +37,9 @@ export default function GunlukPage() {
           Önemli ekonomik tarihler, temettü takvimi ve yatırım kararlarının gerekçeleri tek ekranda.
         </p>
       </header>
+
+      <ErrorBanner message={calendarError} onDismiss={clearCalendarError} />
+      <ErrorBanner message={dividendError} onDismiss={clearDividendError} />
 
       {/* KPI Stats Bar */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">

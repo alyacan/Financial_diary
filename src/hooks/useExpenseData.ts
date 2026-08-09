@@ -24,6 +24,7 @@ export function useExpenseData() {
   const [archivedPeriods, setArchivedPeriods] = useState<ArchivedPeriod[]>([]);
   const [budgets, setBudgets] = useState<CategoryBudget[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([loadExpenses(), loadArchivedPeriods(), loadCategoryBudgets()]).then(([e, a, b]) => {
@@ -34,47 +35,87 @@ export function useExpenseData() {
     });
   }, []);
 
+  function fail(err: unknown, fallback: string) {
+    setError(err instanceof Error ? err.message : fallback);
+  }
+
   async function handleSaveBudget(category: string, monthlyGoal: number) {
-    setBudgets(await saveCategoryBudget(category, monthlyGoal));
+    try {
+      setBudgets(await saveCategoryBudget(category, monthlyGoal));
+    } catch (err) {
+      fail(err, "Bütçe kaydedilemedi.");
+    }
   }
 
   async function handleDeleteBudget(category: string) {
-    setBudgets(await deleteCategoryBudget(category));
+    try {
+      setBudgets(await deleteCategoryBudget(category));
+    } catch (err) {
+      fail(err, "Bütçe silinemedi.");
+    }
   }
 
   async function handleAddExpense(e: Expense) {
-    setExpenses(await addExpense(e));
+    try {
+      setExpenses(await addExpense(e));
+    } catch (err) {
+      fail(err, "Harcama eklenemedi.");
+    }
   }
 
   async function handleDeleteExpense(id: string) {
-    setExpenses(await deleteExpense(id));
-    await clearPortfolioSnapshots();
+    try {
+      setExpenses(await deleteExpense(id));
+      await clearPortfolioSnapshots();
+    } catch (err) {
+      fail(err, "Harcama silinemedi.");
+    }
   }
 
   async function handleUpdateExpenseCategory(id: string, category: string) {
-    setExpenses(await updateExpenseCategory(id, category));
+    try {
+      setExpenses(await updateExpenseCategory(id, category));
+    } catch (err) {
+      fail(err, "Kategori güncellenemedi.");
+    }
   }
 
   async function handleImportExpenses(newExpenses: Expense[]) {
-    setExpenses(await addExpenses(newExpenses));
+    try {
+      setExpenses(await addExpenses(newExpenses));
+    } catch (err) {
+      fail(err, "Ekstre içe aktarılamadı.");
+    }
   }
 
   async function handleClosePeriod() {
-    const result = await closePeriod(expenses);
-    setArchivedPeriods(result.archivedPeriods);
-    setExpenses(result.expenses);
+    try {
+      const result = await closePeriod(expenses);
+      setArchivedPeriods(result.archivedPeriods);
+      setExpenses(result.expenses);
+    } catch (err) {
+      fail(err, "Dönem kapatılamadı.");
+    }
   }
 
   async function handleDeleteArchivedPeriod(id: string) {
-    setArchivedPeriods(await deleteArchivedPeriod(id));
-    await clearPortfolioSnapshots();
+    try {
+      setArchivedPeriods(await deleteArchivedPeriod(id));
+      await clearPortfolioSnapshots();
+    } catch (err) {
+      fail(err, "Dönem silinemedi.");
+    }
   }
 
   async function handleUpdateArchivedPeriod(
     id: string,
     updates: Partial<Pick<ArchivedPeriod, "name" | "note" | "startDate" | "endDate">>
   ) {
-    setArchivedPeriods(await updateArchivedPeriod(id, updates));
+    try {
+      setArchivedPeriods(await updateArchivedPeriod(id, updates));
+    } catch (err) {
+      fail(err, "Dönem güncellenemedi.");
+    }
   }
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -98,5 +139,7 @@ export function useExpenseData() {
     handleSaveBudget,
     handleDeleteBudget,
     isLoading,
+    error,
+    clearError: () => setError(null),
   };
 }

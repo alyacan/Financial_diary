@@ -85,9 +85,13 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
       return;
     }
     if (confirm("Bu kartı cüzdanınızdan silmek istediğinize emin misiniz?")) {
-      const updated = await deletePaymentCard(id);
-      setCards(updated);
-      if (selectedCardId === id) onSelectCard(null);
+      try {
+        const updated = await deletePaymentCard(id);
+        setCards(updated);
+        if (selectedCardId === id) onSelectCard(null);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Kart silinemedi.");
+      }
     }
   }
 
