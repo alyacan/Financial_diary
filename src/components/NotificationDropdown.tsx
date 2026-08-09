@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 interface Props {
@@ -10,6 +10,12 @@ interface Props {
 
 export default function NotificationDropdown({ isOpen, onClose }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [pushStatus, setPushStatus] = useState<"default" | "granted" | "denied">(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      return Notification.permission;
+    }
+    return "default";
+  });
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -27,6 +33,24 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
 
   if (!isOpen) return null;
 
+  async function handleRequestPushPermission() {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      alert("Tarayıcınız Web Push bildirimlerini desteklemiyor.");
+      return;
+    }
+    try {
+      const permission = await Notification.requestPermission();
+      setPushStatus(permission);
+      if (permission === "granted") {
+        new Notification("Finansal Günlük 🔔", {
+          body: "Web anlık bildirimler başarıyla aktifleştirildi! Bütçe ve piyasa uyarıları artık ekranınızda.",
+        });
+      }
+    } catch {
+      alert("Bildirim izni alınırken bir hata oluştu.");
+    }
+  }
+
   return (
     <div
       ref={containerRef}
@@ -40,6 +64,38 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
         <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
           2 Yeni Hatırlatma
         </span>
+      </div>
+
+      {/* Web Push Notification Permission Bar */}
+      <div className="mt-3 rounded-xl border border-blue-200/80 bg-blue-50/50 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/30">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs">📣</span>
+            <span className="text-xs font-bold text-blue-950 dark:text-blue-200">
+              Web Push Bildirimleri
+            </span>
+          </div>
+
+          {pushStatus === "granted" ? (
+            <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+              🟢 Aktif
+            </span>
+          ) : pushStatus === "denied" ? (
+            <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-700 dark:text-red-300">
+              🔴 Engellendi
+            </span>
+          ) : (
+            <button
+              onClick={handleRequestPushPermission}
+              className="rounded-lg bg-blue-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-2xs hover:bg-blue-700 transition-colors"
+            >
+              İzin Ver
+            </button>
+          )}
+        </div>
+        <p className="mt-1 text-[10px] text-blue-900/80 dark:text-blue-300/80">
+          Harici API harcamadan tarayıcınızın kendi bildirim motoruyla anlık uyarı alabilirsiniz.
+        </p>
       </div>
 
       <div className="mt-3 flex flex-col gap-2.5">

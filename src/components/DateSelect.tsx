@@ -2,21 +2,6 @@
 
 import { useState } from "react";
 
-const MONTHS = [
-  "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
-  "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
-];
-
-function daysInMonth(year: number, month: number): number {
-  return new Date(year, month, 0).getDate();
-}
-
-function parseValue(value: string): { day?: number; month?: number; year?: number } {
-  if (!value) return {};
-  const [year, month, day] = value.split("-").map(Number);
-  return { day, month, year };
-}
-
 interface Props {
   value: string; // YYYY-MM-DD or ""
   onChange: (isoDate: string) => void;
@@ -24,67 +9,70 @@ interface Props {
 }
 
 export default function DateSelect({ value, onChange, required }: Props) {
-  const [prevValue, setPrevValue] = useState(value);
-  const [parts, setParts] = useState(() => parseValue(value));
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const [internalDate, setInternalDate] = useState("");
 
-  if (value !== prevValue) {
-    setPrevValue(value);
-    setParts(parseValue(value));
+  const selectedDate = value || internalDate || todayISO;
+
+  function handleDateChange(newIso: string) {
+    if (newIso > todayISO) {
+      alert("Gelecek bir tarih için harcama ekleyemezsiniz. Tarih bugüne sabitlendi.");
+      setInternalDate(todayISO);
+      onChange(todayISO);
+      return;
+    }
+    setInternalDate(newIso);
+    onChange(newIso);
   }
 
-  const { day, month, year } = parts;
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 10 }, (_, i) => currentYear - 7 + i);
-  const maxDay = year && month ? daysInMonth(year, month) : 31;
-
-  function update(next: { day?: number; month?: number; year?: number }) {
-    const merged = { ...parts, ...next };
-    setParts(merged);
-    if (merged.day && merged.month && merged.year) {
-      const clampedDay = Math.min(merged.day, daysInMonth(merged.year, merged.month));
-      const iso = `${merged.year}-${String(merged.month).padStart(2, "0")}-${String(clampedDay).padStart(2, "0")}`;
-      onChange(iso);
+  function getFormattedTurkishDate(iso: string): string {
+    if (!iso) return "";
+    try {
+      const parts = iso.split("-").map(Number);
+      if (parts.length !== 3) return "";
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      const dateStr = d.toLocaleDateString("tr-TR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+      const dayName = d.toLocaleDateString("tr-TR", { weekday: "long" });
+      return `${dateStr}, ${dayName}`;
+    } catch {
+      return iso;
     }
   }
 
   return (
-    <div className="flex w-full min-w-0 gap-1.5">
-      <select
-        aria-label="Gün"
-        required={required}
-        value={day ?? ""}
-        onChange={(e) => update({ day: Number(e.target.value) })}
-        className="flex-1 min-w-0 rounded-xl border border-zinc-300 bg-white p-2 text-xs transition-colors dark:border-zinc-700 dark:bg-zinc-900"
-      >
-        <option value="" disabled>Gün</option>
-        {Array.from({ length: maxDay }, (_, i) => i + 1).map((d) => (
-          <option key={d} value={d}>{d}</option>
-        ))}
-      </select>
-      <select
-        aria-label="Ay"
-        required={required}
-        value={month ?? ""}
-        onChange={(e) => update({ month: Number(e.target.value) })}
-        className="flex-1 min-w-0 rounded-xl border border-zinc-300 bg-white p-2 text-xs transition-colors dark:border-zinc-700 dark:bg-zinc-900"
-      >
-        <option value="" disabled>Ay</option>
-        {MONTHS.map((m, i) => (
-          <option key={m} value={i + 1}>{m}</option>
-        ))}
-      </select>
-      <select
-        aria-label="Yıl"
-        required={required}
-        value={year ?? ""}
-        onChange={(e) => update({ year: Number(e.target.value) })}
-        className="flex-1 min-w-0 rounded-xl border border-zinc-300 bg-white p-2 text-xs transition-colors dark:border-zinc-700 dark:bg-zinc-900"
-      >
-        <option value="" disabled>Yıl</option>
-        {years.map((y) => (
-          <option key={y} value={y}>{y}</option>
-        ))}
-      </select>
+    <div className="flex flex-col gap-1.5 w-full">
+      <div className="flex items-center gap-2">
+        <input
+          type="date"
+          value={selectedDate}
+          max={todayISO}
+          required={required}
+          onChange={(e) => handleDateChange(e.target.value)}
+          className="flex-1 rounded-xl border border-zinc-300 bg-white p-2.5 text-xs font-semibold text-zinc-900 shadow-2xs transition-colors dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        />
+
+        <button
+          type="button"
+          onClick={() => handleDateChange(todayISO)}
+          className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs font-bold text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-300"
+          title="Bugünün tarihini seç"
+        >
+          📍 Bugün
+        </button>
+      </div>
+
+      {selectedDate && (
+        <div className="flex items-center gap-1.5 rounded-lg bg-zinc-100 px-2.5 py-1 text-[11px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+          <span>📅 Seçilen Tarih:</span>
+          <span className="font-bold text-emerald-700 dark:text-emerald-400">
+            {getFormattedTurkishDate(selectedDate)}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
