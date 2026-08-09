@@ -53,7 +53,7 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
     saveUserProfile(updated);
     onProfileUpdated(updated);
     setIsSaving(false);
-    setSuccessMsg("Profil ve fotoğraf başarıyla güncellendi! 🎉");
+    setSuccessMsg("Profil ve fotoğraf başarıyla güncellendi!");
     setTimeout(() => {
       setSuccessMsg("");
       onClose();
@@ -72,7 +72,7 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
         </button>
 
         <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-          Hesap & Profil Ayarları 👤
+          Hesap & Profil Ayarları
         </h2>
         <p className="mt-1 text-xs text-zinc-500">
           Kendi profil fotoğrafını yükleyebilir ve adını düzenleyebilirsin.
@@ -99,7 +99,7 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
               onClick={() => fileInputRef.current?.click()}
               className="rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
             >
-              📷 Fotoğraf Seç / Yükle
+              Fotoğraf Seç / Yükle
             </button>
             {avatarPreview !== null && (
               <button
@@ -170,7 +170,7 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
             }}
             className="w-full rounded-xl border border-red-200 bg-red-50/60 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400"
           >
-            🚪 Oturumu Kapat / Çıkış Yap
+            Oturumu Kapat / Çıkış Yap
           </button>
         </div>
       </div>
