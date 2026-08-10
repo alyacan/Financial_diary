@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import ExpenseForm from "@/components/ExpenseForm";
 import ExpenseChart from "@/components/ExpenseChart";
 import ExpenseTable from "@/components/ExpenseTable";
@@ -10,7 +10,10 @@ import ArchivedPeriodCard from "@/components/ArchivedPeriodCard";
 import StatementUpload from "@/components/StatementUpload";
 import CardWalletWidget from "@/components/CardWalletWidget";
 import ErrorBanner from "@/components/ErrorBanner";
+import DataMigrationBanner from "@/components/DataMigrationBanner";
 import { useExpenseData } from "@/hooks/useExpenseData";
+import { PaymentCard } from "@/lib/types";
+import { getStoredCards } from "@/lib/cardsStorage";
 
 function formatTRY(value: number): string {
   return value.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
@@ -47,6 +50,11 @@ export default function HarcamalarPage() {
 
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [cards, setCards] = useState<PaymentCard[]>([]);
+
+  useEffect(() => {
+    getStoredCards().then(setCards);
+  }, []);
 
   // Filter expenses by selected card if card filter is active
   const filteredExpenses = useMemo(() => {
@@ -83,6 +91,9 @@ export default function HarcamalarPage() {
           <span>📁</span> Dönemi Kapat / Klasörle
         </button>
       </header>
+
+      {/* Local Storage Data Migration Banner */}
+      <DataMigrationBanner onMigrationComplete={() => window.location.reload()} />
 
       <ErrorBanner message={error} onDismiss={clearError} />
 
@@ -149,21 +160,12 @@ export default function HarcamalarPage() {
                   {filteredExpenses.length}
                 </span>
               )}
-              {tab.id === "archives" && archivedPeriods.length > 0 && (
-                <span
-                  className={`ml-1 rounded-full px-2 py-0.5 text-xs ${
-                    isActive ? "bg-zinc-700 text-zinc-100 dark:bg-zinc-300 dark:text-zinc-900" : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                  }`}
-                >
-                  {archivedPeriods.length}
-                </span>
-              )}
             </button>
           );
         })}
       </nav>
 
-      {/* Tab Content 1: Overview */}
+      {/* Tab Content 1: Overview Chart & Heatmap */}
       {activeTab === "overview" && (
         <section className="flex flex-col gap-6">
           <div className="grid gap-6 md:grid-cols-2">
@@ -171,12 +173,8 @@ export default function HarcamalarPage() {
               <h2 className="mb-4 text-lg font-semibold tracking-tight">Kategori Dağılımı</h2>
               <ExpenseChart expenses={filteredExpenses} />
             </div>
-
             <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-              <h2 className="text-lg font-semibold tracking-tight">Harcama Yoğunluk Takvimi</h2>
-              <p className="mb-4 text-xs text-zinc-500">
-                Finansal Takvim&apos;den bağımsızdır, sadece bu dönemin harcamalarını gün bazlı yoğunlukla gösterir.
-              </p>
+              <h2 className="mb-4 text-lg font-semibold tracking-tight">Günlük Yoğunluk Haritası</h2>
               <ExpenseHeatmapCalendar expenses={filteredExpenses} />
             </div>
           </div>
@@ -221,7 +219,12 @@ export default function HarcamalarPage() {
               </span>
             )}
           </div>
-          <ExpenseTable expenses={filteredExpenses} onDelete={handleDeleteExpense} onUpdateCategory={handleUpdateExpenseCategory} />
+          <ExpenseTable
+            expenses={filteredExpenses}
+            cards={cards}
+            onDelete={handleDeleteExpense}
+            onUpdateCategory={handleUpdateExpenseCategory}
+          />
         </section>
       )}
 
