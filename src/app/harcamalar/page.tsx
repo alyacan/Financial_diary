@@ -10,7 +10,6 @@ import ArchivedPeriodCard from "@/components/ArchivedPeriodCard";
 import StatementUpload from "@/components/StatementUpload";
 import CardWalletWidget from "@/components/CardWalletWidget";
 import ErrorBanner from "@/components/ErrorBanner";
-import DataMigrationBanner from "@/components/DataMigrationBanner";
 import { useExpenseData } from "@/hooks/useExpenseData";
 import { PaymentCard } from "@/lib/types";
 import { getStoredCards } from "@/lib/cardsStorage";
@@ -91,9 +90,6 @@ export default function HarcamalarPage() {
           <span>📁</span> Dönemi Kapat / Klasörle
         </button>
       </header>
-
-      {/* Local Storage Data Migration Banner */}
-      <DataMigrationBanner onMigrationComplete={() => window.location.reload()} />
 
       <ErrorBanner message={error} onDismiss={clearError} />
 
