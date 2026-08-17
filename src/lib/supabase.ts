@@ -38,8 +38,20 @@ export function profileFromUser(user: User): UserProfile {
   return {
     name: (user.user_metadata?.name as string | undefined)?.trim() || existing?.name || user.email?.split("@")[0] || "Kullanıcı",
     email: user.email ?? existing?.email ?? "",
-    avatarUrl: existing?.avatarUrl ?? null,
+    avatarUrl: (user.user_metadata?.avatarUrl as string | undefined) ?? existing?.avatarUrl ?? null,
   };
+}
+
+// Adı ve profil fotoğrafını Supabase Auth kullanıcı meta verisine yazar, böylece
+// profil tüm cihazlarda aynı hesaba giriş yapıldığında senkronize görünür.
+// E-posta burada değiştirilmez — gerçek hesap e-postasını değiştirmek ayrı bir
+// doğrulama akışı gerektirir (bkz. updatePassword'ün Supabase tarafındaki dengi).
+export async function syncUserProfile(name: string, avatarUrl: string | null) {
+  const { data, error } = await supabase.auth.updateUser({ data: { name, avatarUrl } });
+  if (error) throw error;
+  const profile = profileFromUser(data.user);
+  saveUserProfile(profile);
+  return profile;
 }
 
 export async function signUpWithEmail(name: string, email: string, password: string) {

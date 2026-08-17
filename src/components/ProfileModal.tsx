@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, useRef, useState } from "react";
-import { UserProfile, loadUserProfile, saveUserProfile } from "@/lib/supabase";
+import { UserProfile, loadUserProfile, syncUserProfile } from "@/lib/supabase";
 import ProfileAvatar from "./ProfileAvatar";
 
 interface Props {
@@ -13,11 +13,11 @@ interface Props {
 
 export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSignOut }: Props) {
   const [profile] = useState<UserProfile | null>(() => loadUserProfile());
-  const [nameInput, setNameInput] = useState(() => profile?.name ?? "Gökçe Altan");
-  const [emailInput, setEmailInput] = useState(() => profile?.email ?? "gokce_altan@gmail.com");
+  const [nameInput, setNameInput] = useState(() => profile?.name ?? "");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(() => profile?.avatarUrl ?? null);
   const [isSaving, setIsSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,22 +42,22 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
     reader.readAsDataURL(file);
   }
 
-  function handleSave() {
+  async function handleSave() {
     setIsSaving(true);
-    const updated: UserProfile = {
-      name: nameInput.trim() || "Kullanıcı",
-      email: emailInput.trim() || "user@example.com",
-      avatarUrl: avatarPreview,
-    };
-
-    saveUserProfile(updated);
-    onProfileUpdated(updated);
-    setIsSaving(false);
-    setSuccessMsg("Profil ve fotoğraf başarıyla güncellendi!");
-    setTimeout(() => {
-      setSuccessMsg("");
-      onClose();
-    }, 1200);
+    setErrorMsg("");
+    try {
+      const updated = await syncUserProfile(nameInput.trim() || "Kullanıcı", avatarPreview);
+      onProfileUpdated(updated);
+      setSuccessMsg("Profil ve fotoğraf başarıyla güncellendi, tüm cihazlarına yansıyacak!");
+      setTimeout(() => {
+        setSuccessMsg("");
+        onClose();
+      }, 1200);
+    } catch {
+      setErrorMsg("Profil kaydedilemedi, lütfen tekrar dene.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -126,20 +126,28 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
           </label>
 
           <label className="flex flex-col gap-1 text-xs font-bold text-zinc-700 dark:text-zinc-300">
-            E-posta Adresi (Cihaz Eşleşme Hesabı)
+            Hesap E-postası
             <input
               type="email"
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="Örn: gokce_altan@gmail.com"
-              className="rounded-xl border border-zinc-300 bg-white p-2.5 text-sm font-medium text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+              value={profile?.email ?? ""}
+              disabled
+              readOnly
+              className="rounded-xl border border-zinc-200 bg-zinc-100 p-2.5 text-sm font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-400"
             />
+            <span className="font-normal text-[11px] text-zinc-400">
+              Giriş yaptığın hesabın e-postası, buradan değiştirilemez.
+            </span>
           </label>
         </div>
 
         {successMsg && (
           <div className="mt-4 rounded-xl bg-emerald-50 p-2.5 text-center text-xs font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
             {successMsg}
+          </div>
+        )}
+        {errorMsg && (
+          <div className="mt-4 rounded-xl bg-red-50 p-2.5 text-center text-xs font-bold text-red-600 dark:bg-red-950 dark:text-red-300">
+            {errorMsg}
           </div>
         )}
 
