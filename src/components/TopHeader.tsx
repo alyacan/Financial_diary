@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import NotificationDropdown from "./NotificationDropdown";
 import ProfileModal from "./ProfileModal";
 import AuthModal from "./AuthModal";
 import ProfileAvatar from "./ProfileAvatar";
 import { UserProfile, loadUserProfile, saveUserProfile, signOutUser, supabase, profileFromUser } from "@/lib/supabase";
+import { getMyPlan, Plan } from "@/lib/userPlan";
 
 export default function TopHeader() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
+  const [plan, setPlan] = useState<Plan>("free");
 
   // Keep local profile in sync with the real Supabase session (e.g. after a page reload).
   useEffect(() => {
@@ -23,16 +26,19 @@ export default function TopHeader() {
         setUserProfile(profile);
       }
     });
+    getMyPlan().then(setPlan);
 
     const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
         setUserProfile(null);
+        setPlan("free");
         return;
       }
       if (session?.user) {
         const profile = profileFromUser(session.user);
         saveUserProfile(profile);
         setUserProfile(profile);
+        getMyPlan().then(setPlan);
       }
     });
 
@@ -89,6 +95,15 @@ export default function TopHeader() {
               <span>🔔</span>
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-zinc-900" />
             </button>
+            {plan === "pro" && (
+              <Link
+                href="/admin"
+                title="Yönetici Paneli"
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-sm transition-colors hover:bg-zinc-200/70 dark:hover:bg-zinc-800"
+              >
+                🛡️
+              </Link>
+            )}
             <button
               title="Hesap & Profil Ayarları"
               onClick={() => {

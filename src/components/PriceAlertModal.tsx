@@ -1,32 +1,7 @@
 "use client";
 
-import { useState } from "react";
-
-export interface PriceAlert {
-  id: string;
-  asset: string; // "Gram Altın", "Dolar (USD)", "Euro (EUR)", "BIST (THYAO)", "Bitcoin (BTC)"
-  condition: "gte" | "lte"; // gte: >= , lte: <=
-  targetPrice: number;
-  createdAt: string;
-}
-
-const ALERTS_STORAGE_KEY = "financial_diary_price_alerts_v1";
-
-export function loadPriceAlerts(): PriceAlert[] {
-  if (typeof window === "undefined") return [];
-  const raw = localStorage.getItem(ALERTS_STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-export function savePriceAlerts(alerts: PriceAlert[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(ALERTS_STORAGE_KEY, JSON.stringify(alerts));
-}
+import { useEffect, useState } from "react";
+import { PriceAlert, ASSETS, getStoredPriceAlerts, addPriceAlert, deletePriceAlert } from "@/lib/priceAlerts";
 
 interface Props {
   isOpen: boolean;
@@ -34,47 +9,51 @@ interface Props {
   onAlertAdded: (newAlert: PriceAlert) => void;
 }
 
-const ASSETS = ["Gram Altın", "Dolar (USD)", "Euro (EUR)", "BIST (THYAO)", "Bitcoin (BTC)"];
-
 export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props) {
-  const [alerts, setAlerts] = useState<PriceAlert[]>(() => loadPriceAlerts());
+  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const [asset, setAsset] = useState(ASSETS[0]);
   const [condition, setCondition] = useState<"gte" | "lte">("gte");
   const [targetPrice, setTargetPrice] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) getStoredPriceAlerts().then(setAlerts);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  function handleAddAlert(e: React.FormEvent) {
+  async function handleAddAlert(e: React.FormEvent) {
     e.preventDefault();
     const price = parseFloat(targetPrice);
     if (isNaN(price) || price <= 0) {
-      alert("Lütfen geçerli bir hedef fiyat girin.");
+      setErrorMsg("Lütfen geçerli bir hedef fiyat girin.");
       return;
     }
 
-    const newAlert: PriceAlert = {
-      id: crypto.randomUUID(),
-      asset,
-      condition,
-      targetPrice: price,
-      createdAt: new Date().toISOString(),
-    };
-
-    const updated = [newAlert, ...alerts];
+    setIsSaving(true);
+    setErrorMsg("");
+    const { alerts: updated, error } = await addPriceAlert({ asset, condition, targetPrice: price });
+    setIsSaving(false);
     setAlerts(updated);
-    savePriceAlerts(updated);
-    onAlertAdded(newAlert);
+
+    if (error) {
+      setErrorMsg(error);
+      return;
+    }
+
+    const newAlert = updated[0];
+    if (newAlert) onAlertAdded(newAlert);
 
     setTargetPrice("");
     setSuccessMsg(`"${asset}" için ${condition === "gte" ? "≥" : "≤"} ${price.toLocaleString("tr-TR")} ₺ alarmı eklendi! 🔔`);
     setTimeout(() => setSuccessMsg(""), 2000);
   }
 
-  function handleDeleteAlert(id: string) {
-    const updated = alerts.filter((a) => a.id !== id);
+  async function handleDeleteAlert(id: string) {
+    const updated = await deletePriceAlert(id);
     setAlerts(updated);
-    savePriceAlerts(updated);
   }
 
   return (
@@ -92,7 +71,7 @@ export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props
           ➕ Fiyat Alarmı & Limit Ekle 🔔
         </h2>
         <p className="mt-1 text-xs text-zinc-500">
-          Gram Altın, Dolar veya BIST hisseleri belirlediğin hedef fiyata ulaştığında anında bildirim alırsın.
+          Gram Altın, Dolar veya BIST 100 belirlediğin hedef fiyata ulaştığında anında bildirim alırsın.
         </p>
 
         {/* Form */}
@@ -139,6 +118,12 @@ export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props
             />
           </label>
 
+          {errorMsg && (
+            <div className="rounded-xl bg-red-50 p-2 text-center text-xs font-bold text-red-800 dark:bg-red-950 dark:text-red-300">
+              {errorMsg}
+            </div>
+          )}
+
           {successMsg && (
             <div className="rounded-xl bg-emerald-50 p-2 text-center text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
               {successMsg}
@@ -147,9 +132,10 @@ export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props
 
           <button
             type="submit"
-            className="mt-1 rounded-xl bg-amber-500 py-2.5 text-xs font-bold text-white shadow-md transition-colors hover:bg-amber-600"
+            disabled={isSaving}
+            className="mt-1 rounded-xl bg-amber-500 py-2.5 text-xs font-bold text-white shadow-md transition-colors hover:bg-amber-600 disabled:opacity-50"
           >
-            🔔 Alarmı Kaydet
+            {isSaving ? "Kaydediliyor..." : "🔔 Alarmı Kaydet"}
           </button>
         </form>
 
@@ -164,7 +150,7 @@ export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props
                   className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50/80 p-2.5 dark:border-zinc-800 dark:bg-zinc-950/60"
                 >
                   <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-zinc-100">
-                    <span>🔔 {a.asset}</span>
+                    <span>{a.triggeredAt ? "✅" : "🔔"} {a.asset}</span>
                     <span className="text-amber-600 dark:text-amber-400">
                       {a.condition === "gte" ? "≥" : "≤"} {a.targetPrice.toLocaleString("tr-TR")} ₺
                     </span>
