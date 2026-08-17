@@ -81,15 +81,21 @@ create policy "pro price_alerts insert" on public.price_alerts
     and exists (select 1 from public.user_plans where user_id = auth.uid() and plan = 'pro')
   );
 
--- Aynı gün aynı saatte (13:00/17:00) birden fazla kez hatırlatma göndermemek için.
+-- Aynı gün aynı saatte (13:00/17:00/21:00) birden fazla kez hatırlatma göndermemek için.
 -- Sadece service-role erişir; hiçbir kullanıcıya policy verilmez (RLS açık, policy yok = varsayılan red).
 create table public.daily_reminder_log (
   reminder_date date not null,
-  slot text not null check (slot in ('13:00', '17:00')),
+  slot text not null check (slot in ('13:00', '17:00', '21:00')),
   sent_at timestamptz not null default now(),
   primary key (reminder_date, slot)
 );
 alter table public.daily_reminder_log enable row level security;
+
+-- Bu şema daha önce '21:00' slotu olmadan uygulanmış bir ortamda tekrar
+-- çalıştırılıyorsa (create table hatasız atlanır), kısıtı burada genişlet:
+alter table public.daily_reminder_log drop constraint if exists daily_reminder_log_slot_check;
+alter table public.daily_reminder_log add constraint daily_reminder_log_slot_check
+  check (slot in ('13:00', '17:00', '21:00'));
 
 -- Mevcut (bu şema uygulanmadan önce kayıt olmuş) kullanıcılar için plan satırlarını
 -- geriye dönük oluştur — hepsi varsayılan olarak 'free' ve is_admin=false başlar.

@@ -9,6 +9,7 @@ export const runtime = "nodejs";
 const REMINDER_COPY: Record<string, string> = {
   "13:00": "Öğle Hatırlatması 📝: Günün ilk yarısındaki harcamalarını eklemeyi unutma.",
   "17:00": "Akşam Hatırlatması 📝: Mesai bitimi ve akşam harcamalarını tamamlamak için tıkla.",
+  "21:00": "Gece Hatırlatması 📝: Günü kapatmadan önce bugünkü harcamalarını kaydettin mi?",
 };
 
 export async function POST(request: Request) {
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
     }
   }
 
-  // 2) TR 13:00 / 17:00 günlük hatırlatmasını kontrol et
+  // 2) TR 13:00 / 17:00 / 21:00 günlük hatırlatmasını kontrol et
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Europe/Istanbul",
     hour: "2-digit",
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
   const trDate = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul" }).format(new Date());
 
   let reminderSent = false;
-  const slot = hour === "13" ? "13:00" : hour === "17" ? "17:00" : null;
+  const slot = hour === "13" ? "13:00" : hour === "17" ? "17:00" : hour === "21" ? "21:00" : null;
 
   if (slot && minute < 30) {
     const { data: existingLog } = await supabaseAdmin
