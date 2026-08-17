@@ -94,7 +94,12 @@ export default function FinancialCalendar({
             count++;
           }
         }
-        setAiMessage(`✅ ${symbol} için ${count} adet yayınlanmış temettü tarihi bulundu ve takvime eklendi!`);
+        const isEstimated = data.source === "Tahmini (Doğrulanmamış)";
+        setAiMessage(
+          isEstimated
+            ? `ℹ️ ${symbol} için resmi bir tarih bulunamadı; geçmiş ödeme desenine dayalı ${count} tahmini tarih takvime eklendi (doğrulanmamış, referans niteliğindedir).`
+            : `✅ ${symbol} için ${count} adet yayınlanmış temettü tarihi bulundu ve takvime eklendi!`
+        );
         setAiTicker("");
       } else {
         setAiMessage(`ℹ️ ${symbol} için ilan edilmiş resmi temettü tarihi bulunamadı.`);

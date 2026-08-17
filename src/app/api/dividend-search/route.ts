@@ -4,43 +4,43 @@ import { GoogleGenAI } from "@google/genai";
 // Standard fallback dividend schedules for popular BIST and US stocks if AI response is sparse
 const BIST_FALLBACKS: Record<string, Array<{ date: string; amountPerShare?: number; title: string }>> = {
   BIMAS: [
-    { date: "2026-06-17", amountPerShare: 4.5, title: "BIMAS 1. Taksit Temettü Ödemesi (Tahmini/Resmi)" },
-    { date: "2026-10-14", amountPerShare: 4.5, title: "BIMAS 2. Taksit Temettü Ödemesi (Tahmini/Resmi)" },
+    { date: "2026-06-17", amountPerShare: 4.5, title: "BIMAS 1. Taksit Temettü Ödemesi (Tahmini)" },
+    { date: "2026-10-14", amountPerShare: 4.5, title: "BIMAS 2. Taksit Temettü Ödemesi (Tahmini)" },
   ],
   TUPRS: [
-    { date: "2026-03-27", amountPerShare: 10.25, title: "TUPRS 1. Taksit Temettü Ödemesi (Tahmini/Resmi)" },
-    { date: "2026-09-28", amountPerShare: 7.5, title: "TUPRS 2. Taksit Temettü Ödemesi (Tahmini/Resmi)" },
+    { date: "2026-03-27", amountPerShare: 10.25, title: "TUPRS 1. Taksit Temettü Ödemesi (Tahmini)" },
+    { date: "2026-09-28", amountPerShare: 7.5, title: "TUPRS 2. Taksit Temettü Ödemesi (Tahmini)" },
   ],
   EREGL: [
-    { date: "2026-03-28", amountPerShare: 0.5, title: "EREGL Temettü Ödemesi (Tahmini/Resmi)" },
+    { date: "2026-03-28", amountPerShare: 0.5, title: "EREGL Temettü Ödemesi (Tahmini)" },
   ],
   FROTO: [
-    { date: "2026-03-24", amountPerShare: 43.0, title: "FROTO 1. Taksit Temettü Ödemesi (Tahmini/Resmi)" },
-    { date: "2026-11-20", amountPerShare: 29.0, title: "FROTO 2. Taksit Temettü Ödemesi (Tahmini/Resmi)" },
+    { date: "2026-03-24", amountPerShare: 43.0, title: "FROTO 1. Taksit Temettü Ödemesi (Tahmini)" },
+    { date: "2026-11-20", amountPerShare: 29.0, title: "FROTO 2. Taksit Temettü Ödemesi (Tahmini)" },
   ],
   AKBNK: [
-    { date: "2026-03-26", amountPerShare: 1.9, title: "AKBNK Temettü Ödemesi (Tahmini/Resmi)" },
+    { date: "2026-03-26", amountPerShare: 1.9, title: "AKBNK Temettü Ödemesi (Tahmini)" },
   ],
   ENJSA: [
-    { date: "2026-04-15", amountPerShare: 2.8, title: "ENJSA Temettü Ödemesi (Tahmini/Resmi)" },
+    { date: "2026-04-15", amountPerShare: 2.8, title: "ENJSA Temettü Ödemesi (Tahmini)" },
   ],
   MGROS: [
-    { date: "2026-05-27", amountPerShare: 6.9, title: "MGROS Temettü Ödemesi (Tahmini/Resmi)" },
+    { date: "2026-05-27", amountPerShare: 6.9, title: "MGROS Temettü Ödemesi (Tahmini)" },
   ],
   SISE: [
-    { date: "2026-05-31", amountPerShare: 0.72, title: "SISE Temettü Ödemesi (Tahmini/Resmi)" },
+    { date: "2026-05-31", amountPerShare: 0.72, title: "SISE Temettü Ödemesi (Tahmini)" },
   ],
   AAPL: [
-    { date: "2026-02-13", amountPerShare: 0.25, title: "AAPL Q1 Dividend Payment" },
-    { date: "2026-05-15", amountPerShare: 0.25, title: "AAPL Q2 Dividend Payment" },
-    { date: "2026-08-14", amountPerShare: 0.25, title: "AAPL Q3 Dividend Payment" },
-    { date: "2026-11-13", amountPerShare: 0.25, title: "AAPL Q4 Dividend Payment" },
+    { date: "2026-02-13", amountPerShare: 0.25, title: "AAPL Q1 Dividend Payment (Tahmini)" },
+    { date: "2026-05-15", amountPerShare: 0.25, title: "AAPL Q2 Dividend Payment (Tahmini)" },
+    { date: "2026-08-14", amountPerShare: 0.25, title: "AAPL Q3 Dividend Payment (Tahmini)" },
+    { date: "2026-11-13", amountPerShare: 0.25, title: "AAPL Q4 Dividend Payment (Tahmini)" },
   ],
   NVDA: [
-    { date: "2026-03-27", amountPerShare: 0.01, title: "NVDA Q1 Dividend Payment" },
-    { date: "2026-06-26", amountPerShare: 0.01, title: "NVDA Q2 Dividend Payment" },
-    { date: "2026-09-25", amountPerShare: 0.01, title: "NVDA Q3 Dividend Payment" },
-    { date: "2026-12-28", amountPerShare: 0.01, title: "NVDA Q4 Dividend Payment" },
+    { date: "2026-03-27", amountPerShare: 0.01, title: "NVDA Q1 Dividend Payment (Tahmini)" },
+    { date: "2026-06-26", amountPerShare: 0.01, title: "NVDA Q2 Dividend Payment (Tahmini)" },
+    { date: "2026-09-25", amountPerShare: 0.01, title: "NVDA Q3 Dividend Payment (Tahmini)" },
+    { date: "2026-12-28", amountPerShare: 0.01, title: "NVDA Q4 Dividend Payment (Tahmini)" },
   ],
 };
 
@@ -98,18 +98,23 @@ Rules:
     }
   }
 
-  // Fallback check for known stocks
-  const fallbackEvents = BIST_FALLBACKS[ticker] ?? [
-    {
-      date: `${currentYear}-05-20`,
-      title: `${ticker} Tahmini Temettü Dönemi`,
-    },
-  ];
+  // Bilinen bir şirket için elimizde geçmiş ödeme desenine dayalı tahmini tarihler varsa
+  // onları döndür — ama bunun resmi/doğrulanmış veri olmadığını açıkça belirt.
+  const fallbackEvents = BIST_FALLBACKS[ticker];
+  if (fallbackEvents) {
+    return NextResponse.json({
+      ticker,
+      events: fallbackEvents,
+      found: true,
+      source: "Tahmini (Doğrulanmamış)",
+    });
+  }
 
+  // Bilinmeyen ticker için uydurma bir tarih üretmek yerine dürüstçe "bulunamadı" dön.
   return NextResponse.json({
     ticker,
-    events: fallbackEvents,
-    found: true,
-    source: "Takvim Bilgisi",
+    events: [],
+    found: false,
+    source: "Tahmini (Doğrulanmamış)",
   });
 }
