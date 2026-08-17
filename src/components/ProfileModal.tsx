@@ -23,6 +23,42 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
 
   if (!isOpen) return null;
 
+  // Fotoğraf Supabase Auth kullanıcı meta verisine (dolayısıyla oturum token'ına)
+  // yazılıyor — token/çerez boyutunu şişirmemek için 128x128'e küçültüp
+  // hedef ~40KB altına inene kadar JPEG kalitesini düşürüyoruz.
+  const AVATAR_MAX_DIMENSION = 128;
+  const AVATAR_TARGET_BYTES = 40_000;
+
+  async function compressAvatar(file: File): Promise<string> {
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = reject;
+        el.src = objectUrl;
+      });
+
+      const scale = Math.min(1, AVATAR_MAX_DIMENSION / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("canvas context unavailable");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      let quality = 0.85;
+      let dataUrl = canvas.toDataURL("image/jpeg", quality);
+      while (dataUrl.length * 0.75 > AVATAR_TARGET_BYTES && quality > 0.3) {
+        quality -= 0.15;
+        dataUrl = canvas.toDataURL("image/jpeg", quality);
+      }
+      return dataUrl;
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -32,14 +68,9 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64Url = event.target?.result as string;
-      if (base64Url) {
-        setAvatarPreview(base64Url);
-      }
-    };
-    reader.readAsDataURL(file);
+    compressAvatar(file)
+      .then(setAvatarPreview)
+      .catch(() => alert("Görsel işlenemedi, lütfen başka bir fotoğraf dene."));
   }
 
   async function handleSave() {
