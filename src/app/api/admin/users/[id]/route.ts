@@ -29,6 +29,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     return NextResponse.json({ error: "Kendi hesabını silemezsin." }, { status: 400 });
   }
 
+  const { data: targetUser } = await supabaseAdmin.auth.admin.getUserById(id);
+  if (targetUser?.user?.email === "alyanonav@gmail.com") {
+    return NextResponse.json({ error: "Bu hesap silinemez." }, { status: 400 });
+  }
+
   const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });

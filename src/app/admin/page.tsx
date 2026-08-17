@@ -134,13 +134,15 @@ export default function AdminPage() {
                     >
                       {u.plan === "pro" ? "Free yap" : "Pro yap"}
                     </button>
-                    <button
-                      onClick={() => deleteUser(u)}
-                      disabled={busyId === u.id}
-                      className="rounded-lg border border-red-300 px-2.5 py-1 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-900/40 dark:hover:bg-red-950/30"
-                    >
-                      Sil
-                    </button>
+                    {u.email !== "alyanonav@gmail.com" && (
+                      <button
+                        onClick={() => deleteUser(u)}
+                        disabled={busyId === u.id}
+                        className="rounded-lg border border-red-300 px-2.5 py-1 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-900/40 dark:hover:bg-red-950/30"
+                      >
+                        Sil
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
