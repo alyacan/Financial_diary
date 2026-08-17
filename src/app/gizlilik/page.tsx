@@ -13,7 +13,7 @@ export default function GizlilikPage() {
         <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
           Kullanım Koşulları ve Gizlilik Politikası
         </h1>
-        <p className="mt-1 text-xs text-zinc-500">Son güncelleme: 9 Ağustos 2026</p>
+        <p className="mt-1 text-xs text-zinc-500">Son güncelleme: 18 Ağustos 2026</p>
 
         <div className="mt-6 flex flex-col gap-5 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
           <section>
@@ -28,9 +28,19 @@ export default function GizlilikPage() {
           <section>
             <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Finansal verilerin nerede tutuluyor</h2>
             <p className="mt-1">
-              Kartların, harcamaların ve bütçe hedeflerin şu an yalnızca kendi tarayıcında (cihazının yerel
-              depolamasında) tutuluyor — bu veriler sunucularımıza gönderilmiyor. İleride buluta senkronizasyon
-              eklersek bu sayfayı güncelleyip önceden bilgilendireceğiz.
+              Kartların, harcamaların, bütçe hedeflerin, yatırım işlemlerin, takvim notların ve diğer finansal
+              kayıtların Supabase üzerinde barındırılan, hesabına özel bir Postgres veritabanında tutuluyor.
+              Bu veriler cihazında değil, sunucu tarafında saklanıyor; yalnızca giriş yapmış hesabın kendi verisine
+              erişebilir (satır bazlı erişim kontrolü ile).
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Bildirimler</h2>
+            <p className="mt-1">
+              Fiyat alarmı veya günlük harcama hatırlatması gibi bildirimleri açarsan, tarayıcının push
+              aboneliği (bildirim gönderebilmemiz için gereken teknik adres) hesabınla ilişkilendirilerek
+              saklanır. Bildirimleri istediğin zaman kapatabilir, aboneliği silebilirsin.
             </p>
           </section>
 
@@ -38,7 +48,8 @@ export default function GizlilikPage() {
             <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Kullandığımız üçüncü taraf servisler</h2>
             <ul className="mt-1 list-disc space-y-1 pl-5">
               <li>
-                <span className="font-semibold">Supabase</span> — hesap oluşturma, giriş ve şifre yönetimi için.
+                <span className="font-semibold">Supabase</span> — hesap oluşturma, giriş, şifre yönetimi ve tüm
+                finansal verilerinin veritabanında saklanması için.
               </li>
               <li>
                 <span className="font-semibold">Google</span> — istersen &quot;Google ile devam et&quot; ile giriş

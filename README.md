@@ -21,11 +21,15 @@ Yatırımlarını (altın, kripto, döviz) takip eden, otomatik kâr/zarar hesap
 - **Harcama Yoğunluk Takvimi**: Harcamalar sayfasında, Finansal Takvim'den tamamen bağımsız ayrı bir mini takvim. Sadece geçmişe bakar — o dönemin her gününü, o günkü toplam harcama tutarına göre (en yüksek harcama günü en koyu, azaldıkça pastelleşen) 5 kademeli bir renk skalasıyla gösterir. Bir güne tıklayınca o günün harcama dökümü altta açılır.
 - **Finans Günlüğüm 📓**: Finansal Takvim ve Yatırım Günlüğü tek sayfada. Takvimde artık **gerçek, otomatik ekonomik olaylar** var: TCMB PPK faiz kararı tarihleri (tcmb.gov.tr resmi takviminden çekilir) + FED/ECB faiz kararları ve ABD/Avrupa önemli veri açıklamaları (ForexFactory herkese açık takviminden, sadece USD/EUR — TRY kapsamı yok). TÜİK TÜFE, OPEC toplantıları ve şirket bilanço/temettü tarihleri için güvenilir ücretsiz otomatik kaynak bulunamadı (TÜİK'in veri servisi dışarıdan erişilebilir değil) — bunlar genel bilgi + kullanıcının manuel ekleyebileceği alan olarak kalıyor, uydurma tarih verilmiyor.
 - **Hesap Ekstresi Yükleme**: Kredi kartı/banka ekstresini PDF olarak yükle. Üç aşamalı otomatik algılama: (1) bilinen banka formatı (şu an İş Bankası Maximum) → hızlı/ücretsiz regex, (2) tanınmayan ama metin içeren format → Gemini metni okuyup harcama/gelir ayrımını anlar, (3) metin yoksa (ekran görüntüsü gibi) → Gemini görüntüyü doğrudan okur. Her yolda Gemini kategorilere ayırır; içe aktarmadan önce düzenlenebilir/hariç tutulabilir. Sadece gerçek harcamalar alınır — ödeme/aktarım/iade/gelir satırları hariç tutulur (hesap türüne göre işaret yönü AI tarafından yorumlanır).
-- Veriler tarayıcıda (localStorage) saklanır — sunucu tarafı veritabanı yok.
+- **Bildirimler ve fiyat alarmı**: Gram Altın/USD/EUR/BIST 100/Bitcoin için hedef fiyat alarmı (`≥`/`≤`), web push aboneliği (VAPID) ve TR 13:00/17:00 günlük harcama girme hatırlatması — 15 dakikada bir çalışan bir cron endpoint'i tarafından tetiklenir. Fiyat alarmı yalnızca `pro` plan hesaplarına açık.
+- **Pro/Free plan ve admin paneli**: Hesaplar `free`/`pro` planına ayrılır; `pro`-only bir admin panelinden kullanıcı listesi görülüp plan değiştirilebilir/kullanıcı silinebilir. Şu an için pro'ya geçiş self-servis değil, manuel yapılır — ödeme entegrasyonu yok.
+- Tüm veriler (harcama, kart, bütçe, arşiv, yatırım, takvim notu, portföy geçmişi, temettü, manuel fiyat, bildirim aboneliği) hesabına özel bir Supabase Postgres veritabanında tutulur — cihazda saklanan veri yok.
 
 ## Kullanılan Teknolojiler ve AI Araçları
 
 - **Next.js 16 (App Router) + TypeScript + Tailwind CSS**
+- **Supabase** — Auth (e-posta/şifre + Google OAuth) ve Postgres veritabanı (RLS açık, tüm modüller için tek kalıcılık katmanı)
+- **web-push** — VAPID tabanlı tarayıcı push bildirimleri (fiyat alarmı, günlük hatırlatma)
 - **Recharts** — portföy dağılım grafiği
 - **docx** — dönem raporu Word (.docx) dışa aktarımı (tamamen tarayıcıda, sunucu/API gerektirmez)
 - **Google Gemini API** (`@google/genai`, `gemini-flash-latest`) — tarihsel olay analizi ve IMRaD/SWOT raporu
@@ -43,14 +47,25 @@ Yatırımlarını (altın, kripto, döviz) takip eden, otomatik kâr/zarar hesap
 npm install
 ```
 
-`.env.example` dosyasını `.env.local` olarak kopyalayıp kendi key'inizi girin:
+`.env.example` dosyasını `.env.local` olarak kopyalayıp kendi değerlerinizi girin:
 ```bash
 cp .env.example .env.local
 ```
+
+Gerekli değişkenler (hepsi `.env.example`'da açıklamalarıyla listeli):
+- `GEMINI_API_KEY` — ücretsiz key: https://aistudio.google.com/apikey
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase projenizin API ayarlarından
+- `POSTGRES_URL_NON_POOLING` — yalnızca `scripts/run-schema.mjs` ile şemaları uygularken gerekir
+- `CRON_SECRET` — kendiniz belirlediğiniz, bildirim cron endpoint'ini koruyan bir sır
+- `VAPID_SUBJECT`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` — `npx web-push generate-vapid-keys` ile üretilir (push bildirimleri için)
+
+`.env.local` `.gitignore`'da olduğu için repo'ya asla eklenmez.
+
+Supabase şemalarını uygulamak için (`supabase/*.sql`):
+```bash
+node scripts/run-schema.mjs supabase/schema_harcamalar.sql
+# diğer şema dosyaları için tekrarlayın
 ```
-GEMINI_API_KEY=your_key_here
-```
-Ücretsiz key: https://aistudio.google.com/apikey. `.env.local` `.gitignore`'da olduğu için repo'ya asla eklenmez.
 
 ```bash
 npm run dev
@@ -60,6 +75,8 @@ http://localhost:3000 adresinden açın.
 
 ## Son Yapılan Değişiklikler
 
+- **Bildirimler, fiyat alarmı ve admin paneli eklendi**: Web push aboneliği, 5 varlık için fiyat alarmı, `pro`-only admin paneli ve TR 13:00/17:00 günlük hatırlatma cron'u.
+- **README ve Gizlilik Politikası gerçek mimariye göre güncellendi**: Verilerin Supabase Postgres'te tutulduğu netleştirildi (önceki metin yanlışlıkla "yalnızca localStorage" diyordu).
 - **Ana Sayfa yeniden tasarlandı**: Claude Design'da hazırlanan bir mockup'a göre — sol menü (Sidebar), sıcak/terrakota oklch renk paleti, Manrope + Newsreader fontları. Güncel Değer/Toplam Yatırım/Toplam Harcama/Toplam Kâr-Zarar kartları, portföy dağılım donut grafiği, portföy değeri trend grafiği (bugünden itibaren gerçek günlük kayıt) ve gerçek verilere dayalı AI Analiz bandı eklendi.
 - **Harcamalar sayfasına Harcama Yoğunluk Takvimi eklendi**: Finansal Takvim'den tamamen bağımsız, sadece geçmiş harcama günlerini tutar yoğunluğuna göre (koyu = yüksek, pastel = düşük) renklendiren ayrı bir mini takvim.
 - **Site geneli yazı tipi Manrope'a çevrildi** (globals.css'te unutulmuş bir Arial kuralı bazı sayfalarda eskiyi eziyordu, düzeltildi).
