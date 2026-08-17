@@ -10,11 +10,11 @@ export async function requireAdmin(request: Request): Promise<{ userId: string }
 
   const { data: planRow, error: planError } = await supabaseAdmin
     .from("user_plans")
-    .select("plan")
+    .select("is_admin")
     .eq("user_id", userData.user.id)
     .maybeSingle();
 
-  if (planError || planRow?.plan !== "pro") {
+  if (planError || planRow?.is_admin !== true) {
     return { error: "Bu işlem için yetkiniz yok.", status: 403 };
   }
 

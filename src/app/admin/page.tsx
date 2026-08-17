@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { getMyPlan, Plan } from "@/lib/userPlan";
+import { getMyAdminStatus } from "@/lib/userPlan";
 
 interface AdminUser {
   id: string;
@@ -12,7 +12,7 @@ interface AdminUser {
 }
 
 export default function AdminPage() {
-  const [plan, setPlan] = useState<Plan | "loading">("loading");
+  const [isAdmin, setIsAdmin] = useState<boolean | "loading">("loading");
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -34,9 +34,9 @@ export default function AdminPage() {
   }
 
   useEffect(() => {
-    getMyPlan().then((p) => {
-      setPlan(p);
-      if (p === "pro") loadUsers();
+    getMyAdminStatus().then((admin) => {
+      setIsAdmin(admin);
+      if (admin) loadUsers();
     });
   }, []);
 
@@ -73,11 +73,11 @@ export default function AdminPage() {
     setUsers((prev) => prev.filter((u) => u.id !== user.id));
   }
 
-  if (plan === "loading") {
+  if (isAdmin === "loading") {
     return <p className="p-8 text-sm text-zinc-500">Yükleniyor...</p>;
   }
 
-  if (plan !== "pro") {
+  if (!isAdmin) {
     return (
       <div className="p-8">
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm font-bold text-red-800 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">

@@ -8,6 +8,10 @@
 create table public.user_plans (
   user_id uuid primary key references auth.users(id) on delete cascade,
   plan text not null default 'free' check (plan in ('free', 'pro')),
+  -- Yönetici (admin panel) yetkisi 'pro' plandan tamamen bağımsızdır: pro yalnızca
+  -- ücretli özellik erişimi (bildirim/fiyat alarmı) sağlar, is_admin ise kullanıcı
+  -- yönetimi API'lerine erişim sağlar. Bkz. src/lib/adminAuth.ts.
+  is_admin boolean not null default false,
   updated_at timestamptz not null default now()
 );
 alter table public.user_plans enable row level security;
@@ -88,11 +92,17 @@ create table public.daily_reminder_log (
 alter table public.daily_reminder_log enable row level security;
 
 -- Mevcut (bu şema uygulanmadan önce kayıt olmuş) kullanıcılar için plan satırlarını
--- geriye dönük oluştur (hepsi varsayılan olarak 'free' başlar).
+-- geriye dönük oluştur — hepsi varsayılan olarak 'free' ve is_admin=false başlar.
 insert into public.user_plans (user_id, plan)
 select id, 'free' from auth.users
 on conflict (user_id) do nothing;
 
--- Bir hesabı 'pro' yapmak için bu şema uygulandıktan sonra ayrıca çalıştırın:
---   update public.user_plans set plan = 'pro', updated_at = now()
---   where user_id = (select id from auth.users where email = 'kendi-hesabinin@epostasi.com');
+-- Bu şema daha önce is_admin kolonu olmadan uygulanmış bir ortamda tekrar
+-- çalıştırılıyorsa (create table hatasız atlanır), kolonu burada ekle:
+alter table public.user_plans add column if not exists is_admin boolean not null default false;
+
+-- Yönetici paneline yalnızca sahibinin (alyanonav@gmail.com) hesabı erişebilsin —
+-- 'pro' plan bundan tamamen bağımsız, ayrıca istenirse başka hesaplara verilebilir.
+update public.user_plans
+set is_admin = true, updated_at = now()
+where user_id = (select id from auth.users where email = 'alyanonav@gmail.com');
