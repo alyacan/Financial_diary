@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import webpush from "web-push";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getLivePrices } from "@/lib/pricesServer";
 import { ASSET_PRICE_KEY_MAP } from "@/lib/priceAlerts";
+import { sendToSubscriptions } from "@/lib/webPush";
 
 export const runtime = "nodejs";
 
@@ -11,56 +11,11 @@ const REMINDER_COPY: Record<string, string> = {
   "17:00": "Akşam Hatırlatması 📝: Mesai bitimi ve akşam harcamalarını tamamlamak için tıkla.",
 };
 
-interface PushSubscriptionRow {
-  id: string;
-  user_id: string;
-  endpoint: string;
-  p256dh: string;
-  auth: string;
-}
-
-async function sendToSubscriptions(subscriptions: PushSubscriptionRow[], payload: { title: string; body: string; url?: string }) {
-  let sent = 0;
-  const staleIds: string[] = [];
-
-  await Promise.all(
-    subscriptions.map(async (sub) => {
-      try {
-        await webpush.sendNotification(
-          {
-            endpoint: sub.endpoint,
-            keys: { p256dh: sub.p256dh, auth: sub.auth },
-          },
-          JSON.stringify(payload)
-        );
-        sent++;
-      } catch (err) {
-        const statusCode = (err as { statusCode?: number }).statusCode;
-        if (statusCode === 404 || statusCode === 410) {
-          staleIds.push(sub.id);
-        }
-      }
-    })
-  );
-
-  if (staleIds.length > 0) {
-    await supabaseAdmin.from("push_subscriptions").delete().in("id", staleIds);
-  }
-
-  return sent;
-}
-
 export async function POST(request: Request) {
   const cronSecret = request.headers.get("x-cron-secret");
   if (!cronSecret || cronSecret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT!,
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!
-  );
 
   const prices = await getLivePrices();
 
@@ -88,16 +43,20 @@ export async function POST(request: Request) {
       .select("id, user_id, endpoint, p256dh, auth")
       .eq("user_id", alert.user_id);
 
-    if (userSubs && userSubs.length > 0) {
-      await sendToSubscriptions(userSubs, {
-        title: "🔔 Fiyat Alarmı Tetiklendi",
-        body: `${alert.asset} fiyatı ${alert.condition === "gte" ? "≥" : "≤"} ${alert.target_price.toLocaleString("tr-TR")} seviyesine ulaştı.`,
-        url: "/yatirimlar",
-      });
-    }
+    const sent = userSubs && userSubs.length > 0
+      ? await sendToSubscriptions(userSubs, {
+          title: "🔔 Fiyat Alarmı Tetiklendi",
+          body: `${alert.asset} fiyatı ${alert.condition === "gte" ? "≥" : "≤"} ${alert.target_price.toLocaleString("tr-TR")} seviyesine ulaştı.`,
+          url: "/yatirimlar",
+        })
+      : 0;
 
-    await supabaseAdmin.from("price_alerts").update({ triggered_at: new Date().toISOString() }).eq("id", alert.id);
-    alertsTriggered++;
+    // Kullanıcının abonesi yoksa ya da gönderim başarısız olduysa alarmı
+    // "tetiklendi" işaretlemiyoruz — bir sonraki cron turunda tekrar denenir.
+    if (sent > 0) {
+      await supabaseAdmin.from("price_alerts").update({ triggered_at: new Date().toISOString() }).eq("id", alert.id);
+      alertsTriggered++;
+    }
   }
 
   // 2) TR 13:00 / 17:00 günlük hatırlatmasını kontrol et

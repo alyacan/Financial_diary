@@ -5,7 +5,8 @@ import Link from "next/link";
 import PriceAlertModal from "./PriceAlertModal";
 import { PriceAlert, getStoredPriceAlerts } from "@/lib/priceAlerts";
 import { getMyPlan, Plan } from "@/lib/userPlan";
-import { subscribeToPush } from "@/hooks/usePushSubscription";
+import { subscribeToPush, hasActivePushSubscription, isIOSNotStandalone } from "@/hooks/usePushSubscription";
+import { sendTestNotification } from "@/lib/pushSubscriptions";
 import { useExpenseData } from "@/hooks/useExpenseData";
 
 interface Props {
@@ -24,8 +25,14 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
     }
     return "default";
   });
+  // Notification.permission tek başına yeterli değil — sunucu tarafında
+  // silinmiş eski bir aboneliği hâlâ "aktif" gibi göstermemek için tarayıcı
+  // düzeyinde gerçek abonelik nesnesini de kontrol ediyoruz.
+  const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean | null>(null);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [pushError, setPushError] = useState("");
+  const [testStatus, setTestStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [isIOSInstallNeeded] = useState(() => isIOSNotStandalone());
 
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
   const [showPriceAlertModal, setShowPriceAlertModal] = useState(false);
@@ -33,7 +40,10 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
   useEffect(() => {
     getMyPlan().then(setPlan);
     getStoredPriceAlerts().then(setPriceAlerts);
+    hasActivePushSubscription().then(setHasActiveSubscription);
   }, []);
+
+  const pushActive = pushStatus === "granted" && hasActiveSubscription === true;
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -64,6 +74,14 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
       return;
     }
     setPushStatus("granted");
+    setHasActiveSubscription(true);
+  }
+
+  async function handleSendTest() {
+    setTestStatus("sending");
+    const result = await sendTestNotification();
+    setTestStatus(result.ok ? "sent" : "error");
+    setTimeout(() => setTestStatus("idle"), 2500);
   }
 
   // Calculate today's total expenses
@@ -108,13 +126,17 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
                   </span>
                 </div>
 
-                {pushStatus === "granted" ? (
+                {pushActive ? (
                   <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
                     🟢 Aktif
                   </span>
                 ) : pushStatus === "denied" ? (
                   <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-700 dark:text-red-300">
                     🔴 Engellendi
+                  </span>
+                ) : isIOSInstallNeeded ? (
+                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                    🟡 Kurulum gerekli
                   </span>
                 ) : (
                   <button
@@ -126,7 +148,31 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
                   </button>
                 )}
               </div>
+
+              {isIOSInstallNeeded && (
+                <p className="mt-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                  📱 iPhone&apos;da bildirim alabilmek için önce Safari&apos;de Paylaş (⬆️) → Ana Ekrana Ekle ile bu siteyi kur, sonra oradan aç.
+                </p>
+              )}
               {pushError && <p className="mt-1.5 text-[11px] font-semibold text-red-600 dark:text-red-400">{pushError}</p>}
+
+              {pushActive && (
+                <div className="mt-1.5 flex items-center gap-2">
+                  <button
+                    onClick={handleSendTest}
+                    disabled={testStatus === "sending"}
+                    className="rounded-lg border border-blue-300 bg-white px-2.5 py-1 text-[11px] font-bold text-blue-700 shadow-2xs transition-colors hover:bg-blue-50 disabled:opacity-50 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
+                  >
+                    {testStatus === "sending" ? "Gönderiliyor..." : "Test Bildirimi Gönder"}
+                  </button>
+                  {testStatus === "sent" && (
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Gönderildi ✅</span>
+                  )}
+                  {testStatus === "error" && (
+                    <span className="text-[11px] font-semibold text-red-600 dark:text-red-400">Gönderilemedi</span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="mt-3 flex flex-col gap-2.5 max-h-72 overflow-y-auto">
@@ -176,15 +222,6 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
               </p>
             </div>
           </Link>
-        </div>
-
-        <div className="mt-3 border-t border-zinc-100 pt-2 text-center dark:border-zinc-800">
-          <button
-            onClick={onClose}
-            className="text-[11px] font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
-          >
-            Tümünü Okundu İşaretle
-          </button>
         </div>
       </div>
 

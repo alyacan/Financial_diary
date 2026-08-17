@@ -26,3 +26,17 @@ export async function savePushSubscription(sub: PushSubscriptionJSON): Promise<{
 export async function deletePushSubscription(endpoint: string): Promise<void> {
   await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
 }
+
+export async function sendTestNotification(): Promise<{ ok: boolean; error?: string }> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) return { ok: false, error: "Test bildirimi için giriş yapmalısın." };
+
+  const res = await fetch("/api/notifications/test", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: body.error ?? "Test bildirimi gönderilemedi." };
+  return { ok: true };
+}
