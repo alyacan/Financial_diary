@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRequire } from "module";
+import ExcelJS from "exceljs";
 import { GoogleGenAI } from "@google/genai";
 import { parseKnownBankStatement, ParsedStatementRow } from "@/lib/statementParser";
 import { EXPENSE_CATEGORIES } from "@/lib/types";
@@ -74,7 +75,29 @@ ${statementText}
   return parseGeminiRows(response.text);
 }
 
-async function categorize(descriptions: string[], apiKey: string): Promise<string[]> {
+// .csv exceljs'in xlsx yükleyicisiyle okunamaz; zaten düz metin olduğu için doğrudan çözülüyor.
+async function excelToText(buffer: Buffer, isCsv: boolean): Promise<string> {
+  if (isCsv) return buffer.toString("utf-8");
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
+  const lines: string[] = [];
+  workbook.eachSheet((sheet) => {
+    sheet.eachRow((row) => {
+      const cells = (row.values as (string | number | Date | null)[]).slice(1);
+      lines.push(cells.map((c) => (c == null ? "" : String(c))).join("\t"));
+    });
+  });
+  return lines.join("\n");
+}
+
+const CATEGORIZE_CHUNK_SIZE = 20;
+
+// Ekstre uzun olunca modelin pozisyonel hizalaması (satır sırasına göre kategori
+// döndürmesi) bozulabiliyor. Tek büyük istekte bu, TÜM işlemleri "Diğer"e düşürüyordu
+// (uzunluk uyuşmazlığında hepsi fallback'e giriyordu). Bunun yerine açıklamaları küçük
+// parçalara bölüp her parçayı bağımsız kategorize ediyoruz; bir parça bozulursa yalnızca
+// o parçadaki işlemler "Diğer" olur, geri kalanlar etkilenmez.
+async function categorizeChunk(descriptions: string[], apiKey: string): Promise<string[]> {
   const ai = new GoogleGenAI({ apiKey });
   const prompt = `Aşağıdaki banka/kredi kartı ekstresi işlem açıklamalarının her birini şu kategorilerden birine ata: ${EXPENSE_CATEGORIES.join(", ")}.
 Türkçe mağaza/marka isimlerini yorumla (örn. "BIM", "ÇAĞDAŞ MARKET" -> Market; "TRENDYOL YEMEK", kafe/restoran isimleri -> Yemek; "TT MOBIL" gibi operatör isimleri -> Faturalar; "WATSONS" gibi kişisel bakım -> Sağlık).
@@ -100,6 +123,15 @@ Yalnızca ${descriptions.length} elemanlı bir JSON dizisi döndür, sırası yu
   return descriptions.map(() => "Diğer");
 }
 
+async function categorize(descriptions: string[], apiKey: string): Promise<string[]> {
+  const chunks: string[][] = [];
+  for (let i = 0; i < descriptions.length; i += CATEGORIZE_CHUNK_SIZE) {
+    chunks.push(descriptions.slice(i, i + CATEGORIZE_CHUNK_SIZE));
+  }
+  const results = await Promise.all(chunks.map((chunk) => categorizeChunk(chunk, apiKey)));
+  return results.flat();
+}
+
 export async function POST(req: NextRequest) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === "buraya_key_yapistir") {
@@ -116,12 +148,20 @@ export async function POST(req: NextRequest) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
+  // exceljs yalnızca .xlsx okur; eski binary .xls desteklenmiyor.
+  const isCsv = /\.csv$/i.test(file.name) || file.type === "text/csv";
+  const isExcel = isCsv || /\.xlsx$/i.test(file.name) ||
+    file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
   let text: string;
   try {
-    const pdfParse = require("pdf-parse/lib/pdf-parse.js");
-    const result = await pdfParse(buffer);
-    text = result.text;
+    if (isExcel) {
+      text = await excelToText(buffer, isCsv);
+    } else {
+      const pdfParse = require("pdf-parse/lib/pdf-parse.js");
+      const result = await pdfParse(buffer);
+      text = result.text;
+    }
   } catch {
     text = ""; // metin çıkarılamadıysa görüntü tabanlı PDF olabilir, aşağıda AI ile denenir
   }
@@ -130,7 +170,7 @@ export async function POST(req: NextRequest) {
   let bankLabel: string;
   let formatWarning: string | undefined;
 
-  const knownBank = parseKnownBankStatement(text);
+  const knownBank = !isExcel ? parseKnownBankStatement(text) : null;
 
   try {
     if (knownBank) {
@@ -138,8 +178,12 @@ export async function POST(req: NextRequest) {
       bankLabel = knownBank.bankLabel;
     } else if (text.trim().length >= MIN_TEXT_LENGTH_FOR_TEXT_MODE) {
       rows = await extractViaGeminiText(text, apiKey);
-      bankLabel = "AI ile metinden okundu (banka formatı tanınmadı)";
-      formatWarning = "Bu bankanın formatı tanınmadı, işlemler AI ile metinden çıkarıldı. Tutarları ve tarihleri mutlaka kontrol et.";
+      bankLabel = isExcel ? "AI ile Excel/CSV dosyasından okundu" : "AI ile metinden okundu (banka formatı tanınmadı)";
+      formatWarning = isExcel
+        ? "İşlemler AI ile Excel/CSV dosyasından çıkarıldı. Tutarları ve tarihleri mutlaka kontrol et."
+        : "Bu bankanın formatı tanınmadı, işlemler AI ile metinden çıkarıldı. Tutarları ve tarihleri mutlaka kontrol et.";
+    } else if (isExcel) {
+      throw new Error("Dosyada okunabilir veri bulunamadı.");
     } else {
       rows = await extractViaGeminiVision(buffer, apiKey);
       bankLabel = "AI ile görüntüden okundu";

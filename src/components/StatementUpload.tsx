@@ -86,14 +86,14 @@ export default function StatementUpload({ existingExpenses, onImport }: Props) {
     <div>
       <h3 className="mb-2 font-semibold">Hesap Ekstresi Yükle</h3>
       <p className="mb-3 text-sm text-zinc-500">
-        Kredi kartı/banka ekstreni PDF olarak yükle, işlemler otomatik ayrıştırılıp AI ile kategorize edilir.
+        Kredi kartı/banka ekstreni PDF veya Excel (xlsx/csv) olarak yükle, işlemler otomatik ayrıştırılıp AI ile kategorize edilir.
         Sadece harcama (pozitif tutarlı) işlemler listelenir — ödeme/aktarım/iade satırları dahil edilmez.
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
         <input
           type="file"
-          accept="application/pdf"
+          accept="application/pdf,.xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="max-w-full text-sm"
         />
