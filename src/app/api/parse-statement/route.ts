@@ -12,6 +12,36 @@ const require = createRequire(import.meta.url);
 // doğrudan "görüp" işlemleri okuması istenir.
 const MIN_TEXT_LENGTH_FOR_TEXT_MODE = 50;
 
+// Ekstre işleme birkaç Gemini çağrısı zincirliyor; varsayılan 15sn'lik fonksiyon
+// limiti retry'larla birlikte yetmiyor.
+export const maxDuration = 60;
+
+// Gemini 503 UNAVAILABLE / 429 döndürdüğünde bu genelde geçici bir yoğunluk ve
+// birkaç saniyede düzeliyor. Kalıcı hatalarda (geçersiz key, bozuk istek) beklemeden çıkılır.
+const RETRIABLE = /\b(429|503)\b|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded|high demand/i;
+const RETRY_DELAYS_MS = [1000, 3000, 6000];
+
+class ModelBusyError extends Error {}
+
+async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (!RETRIABLE.test(message)) throw err;
+      if (attempt >= RETRY_DELAYS_MS.length) {
+        throw new ModelBusyError(
+          "Google AI servisi şu anda yoğun. Birkaç dakika sonra tekrar dene."
+        );
+      }
+      // eş zamanlı parçaların aynı anda yeniden denemesini önlemek için jitter
+      const delay = RETRY_DELAYS_MS[attempt] + Math.random() * 500;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+}
+
 const EXTRACTION_INSTRUCTIONS = `Sadece GERÇEK HARCAMA (para çıkışı, üçüncü tarafa yapılan ödeme/satın alma) işlemlerini listele.
 Şunları KESİNLİKLE HARİÇ TUT:
 - Hesaba gelen para (gelen EFT/havale, maaş, iade, tahsilat)
@@ -43,16 +73,18 @@ async function extractViaGeminiVision(buffer: Buffer, apiKey: string): Promise<P
   const ai = new GoogleGenAI({ apiKey });
   const prompt = `Bu bir banka/kredi kartı hesap ekstresi görüntüsüdür. ${EXTRACTION_INSTRUCTIONS}`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-flash-latest",
-    contents: [
-      {
-        role: "user",
-        parts: [{ inlineData: { mimeType: "application/pdf", data: buffer.toString("base64") } }, { text: prompt }],
-      },
-    ],
-    config: { responseMimeType: "application/json" },
-  });
+  const response = await withRetry(() =>
+    ai.models.generateContent({
+      model: "gemini-flash-latest",
+      contents: [
+        {
+          role: "user",
+          parts: [{ inlineData: { mimeType: "application/pdf", data: buffer.toString("base64") } }, { text: prompt }],
+        },
+      ],
+      config: { responseMimeType: "application/json" },
+    })
+  );
 
   return parseGeminiRows(response.text);
 }
@@ -66,11 +98,13 @@ Ham metin:
 ${statementText}
 """`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-flash-latest",
-    contents: prompt,
-    config: { responseMimeType: "application/json" },
-  });
+  const response = await withRetry(() =>
+    ai.models.generateContent({
+      model: "gemini-flash-latest",
+      contents: prompt,
+      config: { responseMimeType: "application/json" },
+    })
+  );
 
   return parseGeminiRows(response.text);
 }
@@ -108,11 +142,13 @@ ${descriptions.map((d, i) => `${i + 1}. ${d}`).join("\n")}
 
 Yalnızca ${descriptions.length} elemanlı bir JSON dizisi döndür, sırası yukarıdaki listeyle birebir aynı olsun. Örnek: ["Market", "Yemek", ...]`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-flash-latest",
-    contents: prompt,
-    config: { responseMimeType: "application/json" },
-  });
+  const response = await withRetry(() =>
+    ai.models.generateContent({
+      model: "gemini-flash-latest",
+      contents: prompt,
+      config: { responseMimeType: "application/json" },
+    })
+  );
 
   try {
     const parsed = JSON.parse(response.text ?? "[]");
@@ -190,6 +226,9 @@ export async function POST(req: NextRequest) {
       formatWarning = "Bu PDF'te seçilebilir metin yoktu (muhtemelen ekran görüntüsü), işlemler AI ile görüntüden okundu. Tutarları ve tarihleri mutlaka kontrol et.";
     }
   } catch (err) {
+    if (err instanceof ModelBusyError) {
+      return NextResponse.json({ error: err.message }, { status: 503 });
+    }
     return NextResponse.json(
       { error: "Ekstre işlenemedi: " + (err instanceof Error ? err.message : "bilinmeyen hata") },
       { status: 400 }
