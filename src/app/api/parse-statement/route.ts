@@ -19,27 +19,33 @@ export const maxDuration = 60;
 // Gemini 503 UNAVAILABLE / 429 döndürdüğünde bu genelde geçici bir yoğunluk ve
 // birkaç saniyede düzeliyor. Kalıcı hatalarda (geçersiz key, bozuk istek) beklemeden çıkılır.
 const RETRIABLE = /\b(429|503)\b|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded|high demand/i;
-const RETRY_DELAYS_MS = [1000, 3000, 6000];
+const RETRY_DELAYS_MS = [1000, 2000, 4000];
+
+// "-latest" alias'ı en yoğun kullanılan havuza yönleniyor; birincil model
+// ısrarla 503 verirse ikinci, daha az yüklü modele düşülür.
+const MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"];
 
 class ModelBusyError extends Error {}
 
-async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await fn();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (!RETRIABLE.test(message)) throw err;
-      if (attempt >= RETRY_DELAYS_MS.length) {
-        throw new ModelBusyError(
-          "Google AI servisi şu anda yoğun. Birkaç dakika sonra tekrar dene."
-        );
+// callModel her model için ayrı ayrı retry/backoff denenir; hepsi tükenirse
+// ModelBusyError fırlatılır. Kalıcı (retriable olmayan) hatalarda hemen çıkılır.
+async function withRetry<T>(callModel: (model: string) => Promise<T>): Promise<T> {
+  for (let modelIndex = 0; modelIndex < MODELS.length; modelIndex++) {
+    const model = MODELS[modelIndex];
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await callModel(model);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        if (!RETRIABLE.test(message)) throw err;
+        if (attempt >= RETRY_DELAYS_MS.length) break; // bu modelde pes edildi, sıradaki modele geç
+        // eş zamanlı parçaların aynı anda yeniden denemesini önlemek için jitter
+        const delay = RETRY_DELAYS_MS[attempt] + Math.random() * 500;
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
-      // eş zamanlı parçaların aynı anda yeniden denemesini önlemek için jitter
-      const delay = RETRY_DELAYS_MS[attempt] + Math.random() * 500;
-      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
+  throw new ModelBusyError("Google AI servisi şu anda yoğun. Birkaç dakika sonra tekrar dene.");
 }
 
 const EXTRACTION_INSTRUCTIONS = `Sadece GERÇEK HARCAMA (para çıkışı, üçüncü tarafa yapılan ödeme/satın alma) işlemlerini listele.
@@ -73,9 +79,9 @@ async function extractViaGeminiVision(buffer: Buffer, apiKey: string): Promise<P
   const ai = new GoogleGenAI({ apiKey });
   const prompt = `Bu bir banka/kredi kartı hesap ekstresi görüntüsüdür. ${EXTRACTION_INSTRUCTIONS}`;
 
-  const response = await withRetry(() =>
+  const response = await withRetry((model) =>
     ai.models.generateContent({
-      model: "gemini-flash-latest",
+      model,
       contents: [
         {
           role: "user",
@@ -98,9 +104,9 @@ Ham metin:
 ${statementText}
 """`;
 
-  const response = await withRetry(() =>
+  const response = await withRetry((model) =>
     ai.models.generateContent({
-      model: "gemini-flash-latest",
+      model,
       contents: prompt,
       config: { responseMimeType: "application/json" },
     })
@@ -142,9 +148,9 @@ ${descriptions.map((d, i) => `${i + 1}. ${d}`).join("\n")}
 
 Yalnızca ${descriptions.length} elemanlı bir JSON dizisi döndür, sırası yukarıdaki listeyle birebir aynı olsun. Örnek: ["Market", "Yemek", ...]`;
 
-  const response = await withRetry(() =>
+  const response = await withRetry((model) =>
     ai.models.generateContent({
-      model: "gemini-flash-latest",
+      model,
       contents: prompt,
       config: { responseMimeType: "application/json" },
     })
