@@ -193,8 +193,8 @@ export default function HarcamalarPage() {
         <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
           <h2 className="mb-4 text-lg font-semibold tracking-tight">Harcama Ekle ve Ekstre Yükle</h2>
           <div className="grid gap-8 md:grid-cols-2">
-            <StatementUpload existingExpenses={expenses} onImport={handleImportExpenses} />
-            <ExpenseForm onAdd={handleAddExpense} />
+            <StatementUpload existingExpenses={expenses} onImport={handleImportExpenses} cards={cards} defaultCardId={selectedCardId} />
+            <ExpenseForm onAdd={handleAddExpense} cards={cards} defaultCardId={selectedCardId} />
           </div>
         </section>
       )}

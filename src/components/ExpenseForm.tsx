@@ -1,28 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { EXPENSE_CATEGORIES, Expense, PaymentCard } from "@/lib/types";
-import { getStoredCards } from "@/lib/cardsStorage";
 import DateSelect from "./DateSelect";
 
 interface Props {
   onAdd: (expense: Expense) => void;
+  cards: PaymentCard[];
+  defaultCardId: string | null; // cüzdan widget'ında seçili kart
 }
 
-export default function ExpenseForm({ onAdd }: Props) {
+export default function ExpenseForm({ onAdd, cards, defaultCardId }: Props) {
   const [date, setDate] = useState("");
   const [category, setCategory] = useState<string>(EXPENSE_CATEGORIES[0]);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
-  const [cards, setCards] = useState<PaymentCard[]>([]);
-  const [selectedCardId, setSelectedCardId] = useState<string>("");
-
-  useEffect(() => {
-    getStoredCards().then((loaded) => {
-      setCards(loaded);
-      if (loaded.length > 0) setSelectedCardId(loaded[0].id);
-    });
-  }, []);
+  // Kullanıcı elle seçmediyse cüzdanda seçili kart, o da yoksa ilk kart kullanılır.
+  const [pickedCardId, setPickedCardId] = useState<string | null>(null);
+  const selectedCardId = pickedCardId ?? defaultCardId ?? cards[0]?.id ?? "";
+  const setSelectedCardId = setPickedCardId;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { EXPENSE_CATEGORIES, Expense } from "@/lib/types";
+import { EXPENSE_CATEGORIES, Expense, PaymentCard } from "@/lib/types";
 
 interface ParsedRow {
   date: string;
@@ -19,9 +19,15 @@ function formatTRY(value: number): string {
 interface Props {
   existingExpenses: Expense[];
   onImport: (expenses: Expense[]) => void;
+  cards: PaymentCard[];
+  defaultCardId: string | null; // cüzdan widget'ında seçili kart
 }
 
-export default function StatementUpload({ existingExpenses, onImport }: Props) {
+export default function StatementUpload({ existingExpenses, onImport, cards, defaultCardId }: Props) {
+  // Kullanıcı elle seçmediyse cüzdanda seçili kart, o da yoksa ilk kart kullanılır.
+  const [pickedCardId, setPickedCardId] = useState<string | null>(null);
+  const selectedCardId = pickedCardId ?? defaultCardId ?? cards[0]?.id ?? "";
+  const setSelectedCardId = setPickedCardId;
   const [file, setFile] = useState<File | null>(null);
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -76,6 +82,7 @@ export default function StatementUpload({ existingExpenses, onImport }: Props) {
         category: r.category,
         amount: r.amount,
         note: r.description,
+        cardId: selectedCardId || undefined,
       }));
     onImport(toImport);
     setRows([]);
@@ -89,6 +96,23 @@ export default function StatementUpload({ existingExpenses, onImport }: Props) {
         Kredi kartı/banka ekstreni PDF veya Excel (xlsx/csv) olarak yükle, işlemler otomatik ayrıştırılıp AI ile kategorize edilir.
         Sadece harcama (pozitif tutarlı) işlemler listelenir — ödeme/aktarım/iade satırları dahil edilmez.
       </p>
+
+      {cards.length > 0 && (
+        <label className="mb-3 flex flex-col gap-1 text-xs text-zinc-500">
+          Bu ekstre hangi karta ait?
+          <select
+            value={selectedCardId}
+            onChange={(e) => setSelectedCardId(e.target.value)}
+            className="w-full rounded-xl border border-zinc-300 bg-white p-2.5 text-sm font-semibold transition-colors dark:border-zinc-700 dark:bg-zinc-900"
+          >
+            {cards.map((card) => (
+              <option key={card.id} value={card.id}>
+                💳 {card.name} ({card.cardType === "credit" ? "Kredi Kartı" : card.cardType === "debit" ? "Banka Kartı" : "Nakit"})
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <input
