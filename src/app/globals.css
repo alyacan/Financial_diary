@@ -36,12 +36,14 @@
     --foreground: oklch(0.93 0.01 70);
     --shell-card: oklch(0.27 0.014 50 / 0.85);
     --shell-card-solid: oklch(0.27 0.014 50);
-    --shell-border: oklch(0.35 0.02 50 / 0.6);
-    --shell-muted: oklch(0.7 0.02 60);
-    --shell-muted-2: oklch(0.75 0.02 60);
+    --shell-border: oklch(0.38 0.02 50 / 0.7);
+    --shell-muted: oklch(0.75 0.02 60);
+    --shell-muted-2: oklch(0.8 0.02 60);
     --shell-hero-from: oklch(0.32 0.03 40);
     --shell-hero-to: oklch(0.16 0.02 40);
     --shell-nav-active-fg: oklch(0.95 0.02 60);
+    --shell-accent: oklch(0.72 0.12 35);
+    --shell-accent-strong: oklch(0.88 0.09 45);
   }
 }
 

@@ -1,79 +1,113 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRequire } from "module";
-import ExcelJS from "exceljs";
+import * as XLSX from "xlsx";
 import { GoogleGenAI } from "@google/genai";
 import { parseKnownBankStatement, ParsedStatementRow } from "@/lib/statementParser";
 import { EXPENSE_CATEGORIES } from "@/lib/types";
 
 const require = createRequire(import.meta.url);
 
-// pdf-parse metin çıkaramadığında (ör. ekran görüntüsünden oluşturulmuş, seçilebilir
-// metni olmayan PDF'ler) bu eşiğin altında kalır — bu durumda AI'nin görüntüyü
-// doğrudan "görüp" işlemleri okuması istenir.
 const MIN_TEXT_LENGTH_FOR_TEXT_MODE = 50;
-
-// Ekstre işleme birkaç Gemini çağrısı zincirliyor; varsayılan 15sn'lik fonksiyon
-// limiti retry'larla birlikte yetmiyor.
 export const maxDuration = 60;
 
-// Gemini 503 UNAVAILABLE / 429 döndürdüğünde bu genelde geçici bir yoğunluk ve
-// birkaç saniyede düzeliyor. Kalıcı hatalarda (geçersiz key, bozuk istek) beklemeden çıkılır.
 const RETRIABLE = /\b(429|503)\b|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded|high demand/i;
 const RETRY_DELAYS_MS = [1000, 2000, 4000];
 
-// gemini-flash-latest artık düşünen (thinking) bir modele çözümleniyor; uzun bir
-// ekstrede tek çağrı 60sn'lik fonksiyon limitini aşıp 504 veriyordu. Lite model
-// ~20x daha hızlı; flash yalnızca lite ısrarla 503 verirse yedek olarak denenir.
 const MODELS = ["gemini-flash-lite-latest", "gemini-flash-latest"];
 
 class ModelBusyError extends Error {}
 
-// callModel her model için ayrı ayrı retry/backoff denenir; hepsi tükenirse
-// ModelBusyError fırlatılır. Kalıcı (retriable olmayan) hatalarda hemen çıkılır.
-async function withRetry<T>(callModel: (model: string) => Promise<T>): Promise<T> {
-  for (let modelIndex = 0; modelIndex < MODELS.length; modelIndex++) {
-    const model = MODELS[modelIndex];
-    for (let attempt = 0; ; attempt++) {
-      try {
-        return await callModel(model);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        if (!RETRIABLE.test(message)) throw err;
-        if (attempt >= RETRY_DELAYS_MS.length) break; // bu modelde pes edildi, sıradaki modele geç
-        // eş zamanlı parçaların aynı anda yeniden denemesini önlemek için jitter
-        const delay = RETRY_DELAYS_MS[attempt] + Math.random() * 500;
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      }
-    }
-  }
-  throw new ModelBusyError("Google AI servisi şu anda yoğun. Birkaç dakika sonra tekrar dene.");
+async function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
-const EXTRACTION_INSTRUCTIONS = `Sadece GERÇEK HARCAMA (para çıkışı, üçüncü tarafa yapılan ödeme/satın alma) işlemlerini listele.
-Şunları KESİNLİKLE HARİÇ TUT:
-- Hesaba gelen para (gelen EFT/havale, maaş, iade, tahsilat)
-- Hesaplar arası transfer/aktarım (örn. "HESAPTAN AKTARIM", "Vadeli Hesaba Para Yatırma", "Hesap Açılış")
-- Banka tarafından yapılan faiz/komisyon tahsilatı işlemleri (senin harcaman değil)
-Sadece market, restoran, fatura ödemesi, ATM'den nakit çekme gibi gerçek üçüncü taraf harcamalarını dahil et.
-ÖNEMLİ: Bazı hesap türlerinde (kredi kartı) harcamalar pozitif, bazılarında (vadesiz/mevduat hesabı) negatif
-tutarla gösterilir — hangi işlemin gerçek bir harcama olduğuna bağlamdan (işlem açıklamasından) karar ver,
-sadece işaretin pozitif/negatif olmasına güvenme.
+async function callModel(
+  model: string,
+  fn: (model: string) => Promise<{ text?: string | null }>
+): Promise<{ text?: string | null }> {
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      return await fn(model);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const isLastAttempt = attempt === RETRY_DELAYS_MS.length;
+      if (RETRIABLE.test(msg) && !isLastAttempt) {
+        await sleep(RETRY_DELAYS_MS[attempt]);
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error("Beklenmeyen retry akışı.");
+}
 
-Her harcama için:
-- date: YYYY-MM-DD formatında (kaynaktaki tarih formatı ne olursa olsun)
-- description: işlem açıklaması (kısa, orijinal dile sadık)
-- amount: pozitif sayı (TL), ondalık ayracı nokta olacak şekilde normalize et
+async function withRetry(
+  fn: (model: string) => Promise<{ text?: string | null }>
+): Promise<{ text?: string | null }> {
+  let lastError: unknown = null;
+  for (const model of MODELS) {
+    try {
+      return await callModel(model, fn);
+    } catch (err: unknown) {
+      lastError = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      if (RETRIABLE.test(msg)) {
+        continue;
+      }
+      throw err;
+    }
+  }
+  const msg = lastError instanceof Error ? lastError.message : String(lastError);
+  throw new ModelBusyError(
+    `Gemini şu anda yoğun ve yanıt veremedi (${msg}). Lütfen birkaç saniye sonra tekrar dene.`
+  );
+}
 
-Sadece şu şekilde bir JSON dizisi döndür, başka hiçbir açıklama ekleme:
-[{"date": "2024-01-15", "description": "...", "amount": 123.45}, ...]
-Hiç harcama bulamazsan boş dizi [] döndür.`;
+const EXTRACTION_INSTRUCTIONS = `
+Bu ekstreden YALNIZCA kullanıcının yaptığı harcamaları (pozitif tutarlı harcama satırlarını) çıkar.
+Ödeme/aktarım satırlarını DAHİL ETME: "Ödeme - Teşekkür Ederiz", "Maaş", "Havale", "EFT", "Virman", negatif tutarlar, faiz vb. hariç tut.
+Yalnızca para çıkışı olan gerçek harcamaları listele.
+
+Tarih formatı: YYYY-MM-DD
+Tutar: Yalnızca pozitif sayı (ondalık için nokta kullan, örn. 123.45)
+Açıklama: İşlemin adı/mağazası (örn. "MIGROS", "NETFLIX")
+
+Yalnızca şu şemaya uyan bir JSON dizisi döndür:
+[
+  { "date": "YYYY-MM-DD", "description": "İşlem açıklaması", "amount": 123.45 }
+]
+Markdown bloğu veya açıklama ekleme, yalnızca geçerli JSON dizi döndür.
+`;
 
 function parseGeminiRows(text: string | undefined): ParsedStatementRow[] {
-  const parsed = JSON.parse(text ?? "[]");
-  if (!Array.isArray(parsed)) return [];
-  return parsed
-    .filter((r) => r && typeof r.date === "string" && typeof r.description === "string" && typeof r.amount === "number")
-    .map((r) => ({ date: r.date, description: r.description, amount: r.amount }));
+  if (!text) return [];
+  let cleaned = text.trim();
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  }
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((r) => r && r.date && r.description && r.amount != null)
+      .map((r) => {
+        let amt = typeof r.amount === "number" ? r.amount : parseFloat(String(r.amount).replace(/[^0-9.-]+/g, ""));
+        let dateStr = String(r.date).trim();
+        // Convert DD.MM.YYYY or DD/MM/YYYY to YYYY-MM-DD if needed
+        if (/^\d{2}[./-]\d{2}[./-]\d{4}$/.test(dateStr)) {
+          const parts = dateStr.split(/[./-]/);
+          dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return {
+          date: dateStr,
+          description: String(r.description).trim(),
+          amount: amt,
+        };
+      })
+      .filter((r) => !isNaN(r.amount) && r.amount > 0);
+  } catch {
+    return [];
+  }
 }
 
 async function extractViaGeminiVision(buffer: Buffer, apiKey: string): Promise<ParsedStatementRow[]> {
@@ -93,12 +127,12 @@ async function extractViaGeminiVision(buffer: Buffer, apiKey: string): Promise<P
     })
   );
 
-  return parseGeminiRows(response.text);
+  return parseGeminiRows(response.text ?? "");
 }
 
 async function extractViaGeminiText(statementText: string, apiKey: string): Promise<ParsedStatementRow[]> {
   const ai = new GoogleGenAI({ apiKey });
-  const prompt = `Aşağıda bir banka/kredi kartı hesap ekstresinden çıkarılmış ham metin var (format tanınamadı, sütun hizalaması bozulmuş olabilir). ${EXTRACTION_INSTRUCTIONS}
+  const prompt = `Aşağıda bir banka/kredi kartı hesap ekstresinden çıkarılmış ham metin var. ${EXTRACTION_INSTRUCTIONS}
 
 Ham metin:
 """
@@ -113,31 +147,55 @@ ${statementText}
     })
   );
 
-  return parseGeminiRows(response.text);
+  return parseGeminiRows(response.text ?? "");
 }
 
-// .csv exceljs'in xlsx yükleyicisiyle okunamaz; zaten düz metin olduğu için doğrudan çözülüyor.
-async function excelToText(buffer: Buffer, isCsv: boolean): Promise<string> {
-  if (isCsv) return buffer.toString("utf-8");
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
-  const lines: string[] = [];
-  workbook.eachSheet((sheet) => {
-    sheet.eachRow((row) => {
-      const cells = (row.values as (string | number | Date | null)[]).slice(1);
-      lines.push(cells.map((c) => (c == null ? "" : String(c))).join("\t"));
-    });
-  });
-  return lines.join("\n");
+// Robust Excel & CSV Parser (supports .xlsx, .xls, HTML table .xls, CSV)
+function excelToText(buffer: Buffer, isCsv: boolean): string {
+  if (isCsv) {
+    try {
+      return buffer.toString("utf-8");
+    } catch {
+      return buffer.toString("latin1");
+    }
+  }
+
+  // First try XLSX (SheetJS) which handles both binary .xls, .xlsx, and HTML tables
+  try {
+    const workbook = XLSX.read(buffer, { type: "buffer", raw: false, cellDates: true });
+    const lines: string[] = [];
+    for (const sheetName of workbook.SheetNames) {
+      const sheet = workbook.Sheets[sheetName];
+      if (!sheet) continue;
+      const csv = XLSX.utils.sheet_to_csv(sheet, { FS: "\t" });
+      if (csv && csv.trim()) {
+        lines.push(csv.trim());
+      }
+    }
+    if (lines.length > 0) {
+      return lines.join("\n");
+    }
+  } catch (err) {
+    console.warn("XLSX read failed, trying text decoding:", err);
+  }
+
+  // Fallback: check if it's an HTML table saved with .xls/.xlsx extension
+  const asText = buffer.toString("utf-8");
+  if (/<(table|html|tr|td)/i.test(asText)) {
+    return asText
+      .replace(/<tr[^>]*>/gi, "\n")
+      .replace(/<td[^>]*>/gi, "\t")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/\t+/g, "\t")
+      .trim();
+  }
+
+  return asText;
 }
 
 const CATEGORIZE_CHUNK_SIZE = 20;
 
-// Ekstre uzun olunca modelin pozisyonel hizalaması (satır sırasına göre kategori
-// döndürmesi) bozulabiliyor. Tek büyük istekte bu, TÜM işlemleri "Diğer"e düşürüyordu
-// (uzunluk uyuşmazlığında hepsi fallback'e giriyordu). Bunun yerine açıklamaları küçük
-// parçalara bölüp her parçayı bağımsız kategorize ediyoruz; bir parça bozulursa yalnızca
-// o parçadaki işlemler "Diğer" olur, geri kalanlar etkilenmez.
 async function categorizeChunk(descriptions: string[], apiKey: string): Promise<string[]> {
   const ai = new GoogleGenAI({ apiKey });
   const prompt = `Aşağıdaki banka/kredi kartı ekstresi işlem açıklamalarının her birini şu kategorilerden birine ata: ${EXPENSE_CATEGORIES.join(", ")}.
@@ -158,10 +216,14 @@ Yalnızca ${descriptions.length} elemanlı bir JSON dizisi döndür, sırası yu
   );
 
   try {
-    const parsed = JSON.parse(response.text ?? "[]");
+    let cleaned = (response.text ?? "").trim();
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    }
+    const parsed = JSON.parse(cleaned);
     if (Array.isArray(parsed) && parsed.length === descriptions.length) return parsed;
   } catch {
-    // düşer, aşağıda "Diğer" ile doldurulur
+    // fallback to Diğer
   }
   return descriptions.map(() => "Diğer");
 }
@@ -191,22 +253,26 @@ export async function POST(req: NextRequest) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  // exceljs yalnızca .xlsx okur; eski binary .xls desteklenmiyor.
-  const isCsv = /\.csv$/i.test(file.name) || file.type === "text/csv";
-  const isExcel = isCsv || /\.xlsx$/i.test(file.name) ||
-    file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+  // Support .xlsx, .xls, .csv, and standard excel/csv mime types
+  const fileName = file.name.toLowerCase();
+  const isCsv = /\.csv$/i.test(fileName) || file.type === "text/csv";
+  const isExcel = isCsv || /\.xlsx?$/i.test(fileName) ||
+    file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    file.type === "application/vnd.ms-excel";
 
   let text: string;
   try {
     if (isExcel) {
-      text = await excelToText(buffer, isCsv);
+      text = excelToText(buffer, isCsv);
     } else {
       const pdfParse = require("pdf-parse/lib/pdf-parse.js");
       const result = await pdfParse(buffer);
       text = result.text;
     }
-  } catch {
-    text = ""; // metin çıkarılamadıysa görüntü tabanlı PDF olabilir, aşağıda AI ile denenir
+  } catch (parseErr) {
+    console.error("Text extraction failed:", parseErr);
+    text = "";
   }
 
   let rows: ParsedStatementRow[];
@@ -221,16 +287,16 @@ export async function POST(req: NextRequest) {
       bankLabel = knownBank.bankLabel;
     } else if (text.trim().length >= MIN_TEXT_LENGTH_FOR_TEXT_MODE) {
       rows = await extractViaGeminiText(text, apiKey);
-      bankLabel = isExcel ? "AI ile Excel/CSV dosyasından okundu" : "AI ile metinden okundu (banka formatı tanınmadı)";
+      bankLabel = isExcel ? "Excel / CSV dosyasından ayrıştırıldı" : "PDF metninden ayrıştırıldı";
       formatWarning = isExcel
-        ? "İşlemler AI ile Excel/CSV dosyasından çıkarıldı. Tutarları ve tarihleri mutlaka kontrol et."
-        : "Bu bankanın formatı tanınmadı, işlemler AI ile metinden çıkarıldı. Tutarları ve tarihleri mutlaka kontrol et.";
+        ? "İşlemler Excel dosyasından çıkarıldı. Tutarları ve kategorileri kontrol edebilirsiniz."
+        : "İşlemler PDF metninden çıkarıldı. Tutarları ve tarihleri kontrol edebilirsiniz.";
     } else if (isExcel) {
-      throw new Error("Dosyada okunabilir veri bulunamadı.");
+      throw new Error("Excel dosyasında okunabilir işlem tablosu bulunamadı.");
     } else {
       rows = await extractViaGeminiVision(buffer, apiKey);
-      bankLabel = "AI ile görüntüden okundu";
-      formatWarning = "Bu PDF'te seçilebilir metin yoktu (muhtemelen ekran görüntüsü), işlemler AI ile görüntüden okundu. Tutarları ve tarihleri mutlaka kontrol et.";
+      bankLabel = "Görsel olarak analiz edildi";
+      formatWarning = "Bu PDF'te seçilebilir metin olmadığı için görüntü analizi ile okundu.";
     }
   } catch (err) {
     if (err instanceof ModelBusyError) {
@@ -243,7 +309,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (rows.length === 0) {
-    return NextResponse.json({ error: "Ekstrede tanınabilir işlem bulunamadı." }, { status: 400 });
+    return NextResponse.json({ error: "Ekstrede tanınabilir harcama işlemi bulunamadı." }, { status: 400 });
   }
 
   try {
@@ -251,9 +317,8 @@ export async function POST(req: NextRequest) {
     const categorized = rows.map((r, i) => ({ ...r, category: categories[i] ?? "Diğer" }));
     return NextResponse.json({ rows: categorized, bankLabel, warning: formatWarning });
   } catch {
-    // AI kategorizasyonu başarısız olsa bile ayrıştırılan işlemleri "Diğer" ile dönebiliriz.
     const categorized = rows.map((r) => ({ ...r, category: "Diğer" }));
-    const warning = [formatWarning, "AI kategorizasyon başarısız oldu, tümü 'Diğer' olarak işaretlendi."]
+    const warning = [formatWarning, "Kategorizasyon otomatik yapılamadı, tüm işlemler 'Diğer' olarak işaretlendi."]
       .filter(Boolean)
       .join(" ");
     return NextResponse.json({ rows: categorized, bankLabel, warning });

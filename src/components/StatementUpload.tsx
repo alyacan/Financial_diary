@@ -16,6 +16,17 @@ function formatTRY(value: number): string {
   return value.toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
 }
 
+function formatDateDisplay(d?: string): string {
+  if (!d) return "—";
+  if (d.includes("-")) {
+    const parts = d.split("-");
+    if (parts.length === 3 && parts[0].length === 4) {
+      return `${parts[2]}.${parts[1]}.${parts[0]}`;
+    }
+  }
+  return d;
+}
+
 interface Props {
   existingExpenses: Expense[];
   onImport: (expenses: Expense[]) => void;
@@ -51,7 +62,7 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
       if (!res.ok) throw new Error(data.error ?? "Ekstre işlenemedi");
 
       const existingKeys = new Set(existingExpenses.map((e) => `${e.date}|${e.amount}|${e.note ?? ""}`));
-      const parsedRows: ParsedRow[] = data.rows.map((r: Omit<ParsedRow, "include" | "isDuplicate">) => {
+      const parsedRows: ParsedRow[] = (data.rows || []).map((r: Omit<ParsedRow, "include" | "isDuplicate">) => {
         const isDuplicate = existingKeys.has(`${r.date}|${r.amount}|${r.description}`);
         return { ...r, include: !isDuplicate, isDuplicate };
       });
@@ -60,7 +71,7 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
       const duplicateCount = parsedRows.filter((r) => r.isDuplicate).length;
       if (duplicateCount > 0) {
         setWarning(
-          `${duplicateCount} işlem daha önce eklenmiş görünüyor. Yinelenen satırların işareti kaldırıldı.`
+          `${duplicateCount} işlem daha önce eklenmiş görünüyor. Yinelenen satırların işareti otomatik kaldırıldı.`
         );
       }
       if (data.warning) setWarning((prev) => (prev ? `${prev} ${data.warning}` : data.warning));
@@ -104,15 +115,10 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
           <select
             value={selectedCardId}
             onChange={(e) => setSelectedCardId(e.target.value)}
-            className="w-full rounded-xl p-3 text-sm font-semibold outline-none transition-all cursor-pointer"
-            style={{
-              background: "var(--shell-card)",
-              border: "1px solid var(--shell-border)",
-              color: "var(--foreground)",
-            }}
+            className="w-full rounded-xl p-3 text-sm font-semibold outline-none transition-all cursor-pointer border border-zinc-300 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           >
             {cards.map((card) => (
-              <option key={card.id} value={card.id}>
+              <option key={card.id} value={card.id} className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100">
                 {card.name} ({card.cardType === "credit" ? "Kredi Kartı" : card.cardType === "debit" ? "Banka Kartı" : "Nakit"})
               </option>
             ))}
@@ -120,7 +126,7 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
         </div>
       )}
 
-      {/* Styled File Dropzone */}
+      {/* Styled File Dropzone (Supports .xlsx, .xls, .csv, and PDF) */}
       <div
         onClick={() => fileInputRef.current?.click()}
         className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition-all hover:bg-zinc-500/5 group"
@@ -129,7 +135,7 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
         <input
           ref={fileInputRef}
           type="file"
-          accept="application/pdf,.xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+          accept="application/pdf,.xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="hidden"
         />
@@ -148,19 +154,19 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
             {file ? file.name : "Ekstre dosyanızı yüklemek için tıklayın"}
           </p>
           <p className="text-xs text-zinc-500 mt-0.5">
-            {file ? `${(file.size / 1024).toFixed(1)} KB seçildi` : "PDF ekstre, Excel (.xlsx) veya CSV dosyaları desteklenir"}
+            {file ? `${(file.size / 1024).toFixed(1)} KB seçildi` : "Excel (.xlsx / .xls), CSV veya PDF ekstre dosyaları"}
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2 mt-1">
-          <span className="rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-            PDF Ekstre
+          <span className="rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+            Excel (.xlsx / .xls)
           </span>
-          <span className="rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-            Excel (.xlsx)
-          </span>
-          <span className="rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+          <span className="rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
             CSV
+          </span>
+          <span className="rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+            PDF Ekstre
           </span>
         </div>
       </div>
@@ -201,15 +207,13 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setRows((prev) => prev.map((r) => ({ ...r, include: true })))}
-                className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors hover:bg-zinc-500/10"
-                style={{ color: "var(--shell-accent)" }}
+                className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors hover:bg-zinc-500/10 text-amber-600 dark:text-amber-400"
               >
                 Tümünü Seç
               </button>
               <button
                 onClick={() => setRows((prev) => prev.map((r) => ({ ...r, include: !r.isDuplicate })))}
-                className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors hover:bg-zinc-500/10"
-                style={{ color: "var(--shell-muted)" }}
+                className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors hover:bg-zinc-500/10 text-zinc-500 dark:text-zinc-400"
               >
                 Yinelenenleri Çıkar
               </button>
@@ -227,7 +231,7 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
               <table className="w-full min-w-[480px] border-collapse text-left text-xs">
                 <thead>
                   <tr
-                    className="border-b text-[10px] font-bold uppercase tracking-wider text-zinc-500"
+                    className="border-b text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300"
                     style={{ borderColor: "var(--shell-border)", background: "oklch(0.5 0.02 50 / 0.05)" }}
                   >
                     <th className="py-2.5 px-3 w-8"></th>
@@ -251,13 +255,13 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
                           className="rounded accent-amber-600"
                         />
                       </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap font-medium text-zinc-700 dark:text-zinc-300">
-                        {r.date.split("-").reverse().join(".")}
+                      <td className="py-2.5 px-3 whitespace-nowrap font-medium text-zinc-900 dark:text-zinc-100">
+                        {formatDateDisplay(r.date)}
                       </td>
-                      <td className="py-2.5 px-3 max-w-[180px] truncate text-zinc-600 dark:text-zinc-300" title={r.description}>
+                      <td className="py-2.5 px-3 max-w-[180px] truncate text-zinc-700 dark:text-zinc-300 font-medium" title={r.description}>
                         {r.description}
                         {r.isDuplicate && (
-                          <span className="ml-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                          <span className="ml-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
                             (yinelenen)
                           </span>
                         )}
@@ -269,15 +273,10 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
                         <select
                           value={r.category}
                           onChange={(e) => updateRow(i, { category: e.target.value })}
-                          className="rounded-lg px-2 py-1 text-xs font-semibold outline-none transition-all cursor-pointer"
-                          style={{
-                            background: "var(--shell-card-solid)",
-                            border: "1px solid var(--shell-border)",
-                            color: "var(--foreground)",
-                          }}
+                          className="rounded-lg px-2 py-1 text-xs font-bold outline-none transition-all cursor-pointer border border-amber-300/80 bg-amber-50 text-amber-950 dark:border-amber-600/70 dark:bg-amber-950/70 dark:text-amber-200"
                         >
                           {EXPENSE_CATEGORIES.map((c) => (
-                            <option key={c} value={c}>
+                            <option key={c} value={c} className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">
                               {c}
                             </option>
                           ))}
