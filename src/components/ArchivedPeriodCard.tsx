@@ -56,8 +56,16 @@ export default function ArchivedPeriodCard({ period, onDelete, onUpdate }: Props
 
   if (editing) {
     return (
-      <div className="flex flex-col gap-3 rounded-2xl border border-amber-300/80 bg-amber-50/50 p-4 shadow-xs dark:border-amber-800/60 dark:bg-amber-950/20">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300">Klasör Düzenle</h4>
+      <div
+        className="flex flex-col gap-3 rounded-[22px] p-5 shadow-xs transition-all"
+        style={{
+          background: "var(--shell-card-solid)",
+          border: "1px solid var(--shell-accent)",
+        }}
+      >
+        <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--shell-accent-strong)" }}>
+          Klasör Düzenle
+        </h4>
         <label className="flex flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400">
           İsim (opsiyonel)
           <input
@@ -65,7 +73,12 @@ export default function ArchivedPeriodCard({ period, onDelete, onUpdate }: Props
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
             placeholder="Örn: Temmuz Ayı Klasörü"
-            className="rounded-xl border border-zinc-300 bg-white p-2 text-xs dark:border-zinc-700 dark:bg-zinc-900"
+            className="rounded-xl p-2 text-xs outline-none"
+            style={{
+              background: "var(--shell-card)",
+              border: "1px solid var(--shell-border)",
+              color: "var(--foreground)",
+            }}
           />
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -75,7 +88,12 @@ export default function ArchivedPeriodCard({ period, onDelete, onUpdate }: Props
               type="date"
               value={startInput}
               onChange={(e) => setStartInput(e.target.value)}
-              className="rounded-xl border border-zinc-300 bg-white p-2 text-xs dark:border-zinc-700 dark:bg-zinc-900"
+              className="rounded-xl p-2 text-xs outline-none"
+              style={{
+                background: "var(--shell-card)",
+                border: "1px solid var(--shell-border)",
+                color: "var(--foreground)",
+              }}
             />
           </label>
           <label className="flex flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400">
@@ -84,20 +102,31 @@ export default function ArchivedPeriodCard({ period, onDelete, onUpdate }: Props
               type="date"
               value={endInput}
               onChange={(e) => setEndInput(e.target.value)}
-              className="rounded-xl border border-zinc-300 bg-white p-2 text-xs dark:border-zinc-700 dark:bg-zinc-900"
+              className="rounded-xl p-2 text-xs outline-none"
+              style={{
+                background: "var(--shell-card)",
+                border: "1px solid var(--shell-border)",
+                color: "var(--foreground)",
+              }}
             />
           </label>
         </div>
         <div className="flex gap-2 pt-1">
           <button
             onClick={saveEdit}
-            className="flex-1 rounded-xl bg-zinc-900 py-1.5 text-xs font-medium text-white transition-colors dark:bg-zinc-100 dark:text-black"
+            className="flex-1 rounded-xl py-2 text-xs font-bold text-white transition-all hover:opacity-95"
+            style={{ background: "var(--shell-accent)" }}
           >
             Kaydet
           </button>
           <button
             onClick={() => setEditing(false)}
-            className="flex-1 rounded-xl border border-zinc-300 py-1.5 text-xs font-medium dark:border-zinc-700"
+            className="flex-1 rounded-xl py-2 text-xs font-semibold"
+            style={{
+              background: "var(--shell-card)",
+              border: "1px solid var(--shell-border)",
+              color: "var(--shell-muted)",
+            }}
           >
             Vazgeç
           </button>
@@ -107,9 +136,15 @@ export default function ArchivedPeriodCard({ period, onDelete, onUpdate }: Props
   }
 
   return (
-    <div className="group relative flex flex-col justify-between rounded-2xl border border-zinc-200/80 bg-gradient-to-br from-amber-50/40 via-white to-zinc-50/30 p-5 shadow-xs transition-all hover:border-amber-300 hover:shadow-md dark:border-zinc-800 dark:from-zinc-900 dark:via-zinc-900/80 dark:to-zinc-950 dark:hover:border-amber-700/60">
+    <div
+      className="group relative flex flex-col justify-between rounded-[22px] p-5 shadow-xs transition-all hover:shadow-md hover:-translate-y-0.5"
+      style={{
+        background: "var(--shell-card-solid)",
+        border: "1px solid var(--shell-border)",
+      }}
+    >
       {/* Top Action Hover Bar */}
-      <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 z-10">
         <button
           onClick={startEdit}
           aria-label="Klasör Düzenle"
@@ -122,34 +157,40 @@ export default function ArchivedPeriodCard({ period, onDelete, onUpdate }: Props
           onClick={handleDelete}
           aria-label="Klasörü Sil"
           title="Klasörü sil"
-          className="flex h-7 w-7 items-center justify-center rounded-xl bg-red-50 text-xs text-red-600 shadow-2xs transition-colors hover:bg-red-100 dark:bg-red-950/60 dark:hover:bg-red-900"
+          className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-50 text-xs text-rose-600 shadow-2xs transition-colors hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900"
         >
           🗑️
         </button>
       </div>
 
-      <Link href={`/harcamalar/donem/${period.id}`} className="flex flex-col gap-3">
+      <Link href={`/harcamalar/donem/${period.id}`} className="flex flex-col gap-3.5">
         <div className="flex items-start justify-between">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100/80 text-2xl shadow-2xs dark:bg-amber-950/60">
+          <div
+            className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-2xs"
+            style={{ background: "oklch(0.85 0.05 25 / 0.15)", color: "var(--shell-accent-strong)" }}
+          >
             📁
           </div>
-          <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-[11px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+          <span
+            className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+            style={{ background: "oklch(0.5 0.02 50 / 0.1)", color: "var(--shell-muted)" }}
+          >
             {period.expenses.length} harcama
           </span>
         </div>
 
-        <div className="flex flex-col gap-0.5">
-          <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
             {period.name ? period.name : `${formatDate(period.startDate)} - ${formatDate(period.endDate)}`}
           </h3>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-zinc-500 font-medium">
             🗓️ {formatDate(period.startDate)} — {formatDate(period.endDate)}
           </p>
         </div>
 
-        <div className="mt-2 flex items-center justify-between border-t border-zinc-100 pt-3 dark:border-zinc-800/80">
-          <span className="text-xs text-zinc-400">Klasör Toplamı:</span>
-          <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+        <div className="mt-2 flex items-center justify-between border-t pt-3" style={{ borderColor: "var(--shell-border)" }}>
+          <span className="text-xs text-zinc-400 font-medium">Klasör Toplamı:</span>
+          <span className="text-base font-extrabold font-mono text-zinc-900 dark:text-zinc-100">
             {formatTRY(totalAmount)}
           </span>
         </div>

@@ -22,8 +22,6 @@ function formatDate(isoDate: string): string {
   return `${d}.${m}.${y}`;
 }
 
-// Günlük toplam / o dönemdeki en yüksek günlük toplama oranına göre 5 kademeli
-// yoğunluk. En yüksek harcamanın yapıldığı gün en koyu, azaldıkça daha pastel.
 function bucketFor(dayTotal: number, maxDayTotal: number): 0 | 1 | 2 | 3 | 4 | 5 {
   if (dayTotal <= 0 || maxDayTotal <= 0) return 0;
   const ratio = dayTotal / maxDayTotal;
@@ -35,21 +33,21 @@ function bucketFor(dayTotal: number, maxDayTotal: number): 0 | 1 | 2 | 3 | 4 | 5
 }
 
 const BUCKET_BG: Record<number, string> = {
-  0: "var(--viz-gridline)",
-  1: "var(--heat-1)",
-  2: "var(--heat-2)",
-  3: "var(--heat-3)",
-  4: "var(--heat-4)",
-  5: "var(--heat-5)",
+  0: "oklch(0.5 0.02 50 / 0.08)",
+  1: "oklch(0.92 0.04 70)",
+  2: "oklch(0.82 0.08 65)",
+  3: "oklch(0.72 0.12 55)",
+  4: "oklch(0.60 0.14 45)",
+  5: "oklch(0.48 0.16 35)",
 };
 
 const BUCKET_FG: Record<number, string> = {
-  0: "var(--viz-muted)",
-  1: "var(--heat-fg-1)",
-  2: "var(--heat-fg-2)",
-  3: "var(--heat-fg-3)",
-  4: "var(--heat-fg-4)",
-  5: "var(--heat-fg-5)",
+  0: "var(--shell-muted)",
+  1: "#1f1d1a",
+  2: "#1f1d1a",
+  3: "#ffffff",
+  4: "#ffffff",
+  5: "#ffffff",
 };
 
 interface Props {
@@ -87,9 +85,11 @@ export default function ExpenseHeatmapCalendar({ expenses }: Props) {
 
   if (expenses.length === 0) {
     return (
-      <p className="text-sm text-zinc-500">
-        Bu dönemde henüz harcama yok — ilk harcamanı eklediğinde burada günlere göre yoğunluk haritası oluşacak.
-      </p>
+      <div className="flex flex-col items-center justify-center py-10 text-center">
+        <p className="text-xs text-zinc-500 max-w-sm">
+          Bu dönemde henüz harcama yok — ilk harcamanı eklediğinde burada günlere göre harcama yoğunluk haritası oluşacak.
+        </p>
+      </div>
     );
   }
 
@@ -102,32 +102,35 @@ export default function ExpenseHeatmapCalendar({ expenses }: Props) {
   ];
 
   const selectedExpenses = selectedDate ? expenses.filter((e) => e.date === selectedDate) : [];
+  const selectedDayTotal = selectedDate ? (dailyTotals.get(selectedDate) ?? 0) : 0;
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="mb-1 flex items-center justify-between">
+    <div className="flex flex-col gap-4">
+      {/* Month Navigation */}
+      <div className="flex items-center justify-between">
         <button
           onClick={() => goToMonth(-1)}
           aria-label="Önceki ay"
-          className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          className="flex h-8 w-8 items-center justify-center rounded-xl text-zinc-500 transition-all hover:bg-zinc-500/10"
         >
           ←
         </button>
-        <span className="text-sm font-semibold tracking-tight">
+        <span className="text-xs font-bold tracking-tight text-zinc-900 dark:text-zinc-100 uppercase">
           {MONTH_NAMES[viewMonth]} {viewYear}
         </span>
         <button
           onClick={() => goToMonth(1)}
           aria-label="Sonraki ay"
-          className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          className="flex h-8 w-8 items-center justify-center rounded-xl text-zinc-500 transition-all hover:bg-zinc-500/10"
         >
           →
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      {/* Calendar Heatmap Grid */}
+      <div className="grid grid-cols-7 gap-1.5">
         {WEEKDAYS.map((w) => (
-          <div key={w} className="p-1 text-center text-[11px] font-semibold tracking-wide text-zinc-400 uppercase">
+          <div key={w} className="py-1 text-center text-[10px] font-bold tracking-wider text-zinc-400 uppercase">
             {w}
           </div>
         ))}
@@ -142,42 +145,76 @@ export default function ExpenseHeatmapCalendar({ expenses }: Props) {
               key={i}
               onClick={() => setSelectedDate(isSelected ? null : iso)}
               title={dayTotal > 0 ? `${formatDate(iso)} — ${formatTRY(dayTotal)}` : formatDate(iso)}
-              className="flex min-h-[3rem] flex-col items-center justify-center rounded-lg text-sm transition-transform"
+              className="flex min-h-[2.8rem] flex-col items-center justify-center rounded-xl text-xs font-semibold transition-all hover:scale-105"
               style={{
                 background: BUCKET_BG[bucket],
                 color: BUCKET_FG[bucket],
-                outline: isSelected ? "2px solid var(--viz-sequential)" : "none",
-                outlineOffset: "1px",
+                border: isSelected ? "2px solid var(--shell-accent)" : "1px solid transparent",
+                boxShadow: isSelected ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
               }}
             >
-              {day}
+              <span>{day}</span>
+              {dayTotal > 0 && (
+                <span className="text-[9px] opacity-80 font-mono font-medium truncate max-w-[42px]">
+                  {Math.round(dayTotal)}
+                </span>
+              )}
             </button>
           );
         })}
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-zinc-500">
-        <span>Az</span>
-        {[0, 1, 2, 3, 4, 5].map((b) => (
-          <span key={b} className="h-3 w-3 rounded-sm" style={{ background: BUCKET_BG[b] }} />
-        ))}
-        <span>Çok</span>
+      {/* Legend Ramp */}
+      <div className="flex items-center justify-between text-[10px] text-zinc-500 pt-1">
+        <span>Az Harcama</span>
+        <div className="flex items-center gap-1">
+          {[0, 1, 2, 3, 4, 5].map((b) => (
+            <span
+              key={b}
+              className="h-2.5 w-4 rounded-sm"
+              style={{ background: BUCKET_BG[b] }}
+            />
+          ))}
+        </div>
+        <span>Çok Harcama</span>
       </div>
 
+      {/* Selected Day Details Drawer */}
       {selectedDate && (
-        <div className="rounded-lg border border-zinc-200 p-3 text-sm dark:border-zinc-800">
-          <p className="mb-2 font-semibold">{formatDate(selectedDate)}</p>
+        <div
+          className="rounded-2xl p-4 text-xs transition-all shadow-2xs"
+          style={{
+            background: "var(--shell-card-solid)",
+            border: "1px solid var(--shell-border)",
+          }}
+        >
+          <div className="mb-2.5 flex items-center justify-between border-b pb-2" style={{ borderColor: "var(--shell-border)" }}>
+            <span className="font-bold text-zinc-900 dark:text-zinc-100">
+              📅 {formatDate(selectedDate)}
+            </span>
+            <span className="font-bold font-mono text-sm" style={{ color: "var(--shell-accent-strong)" }}>
+              {formatTRY(selectedDayTotal)}
+            </span>
+          </div>
+
           {selectedExpenses.length === 0 ? (
-            <p className="text-zinc-500">Bu gün harcama yok.</p>
+            <p className="text-zinc-500 py-1 text-[11px]">Bu güne ait harcama kaydı yok.</p>
           ) : (
-            <ul className="flex flex-col gap-1">
+            <ul className="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
               {selectedExpenses.map((e) => (
-                <li key={e.id} className="flex justify-between gap-3">
-                  <span>
-                    {e.category}
-                    {e.note ? ` — ${e.note}` : ""}
+                <li
+                  key={e.id}
+                  className="flex items-center justify-between gap-2 rounded-lg p-1.5 transition-colors hover:bg-zinc-500/5"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold bg-amber-500/10 text-amber-900 dark:text-amber-300">
+                      {e.category}
+                    </span>
+                    {e.note && <span className="truncate text-zinc-600 dark:text-zinc-400 text-[11px]">{e.note}</span>}
+                  </div>
+                  <span className="font-bold font-mono whitespace-nowrap text-zinc-900 dark:text-zinc-100">
+                    {formatTRY(e.amount)}
                   </span>
-                  <span className="font-medium">{formatTRY(e.amount)}</span>
                 </li>
               ))}
             </ul>

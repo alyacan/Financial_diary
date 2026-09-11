@@ -238,34 +238,56 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
       {/* Add Card Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="flex w-full max-w-md flex-col gap-4 rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 dark:border-zinc-800">
-              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Yeni Kart / Ödeme Yöntemi Ekle</h3>
-              <button onClick={() => setModalOpen(false)} className="text-zinc-400 hover:text-zinc-600">
+          <div
+            className="flex w-full max-w-md flex-col gap-4 rounded-3xl p-6 shadow-2xl"
+            style={{
+              background: "var(--shell-card-solid)",
+              border: "1px solid var(--shell-border)",
+            }}
+          >
+            <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: "var(--shell-border)" }}>
+              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <span>💳</span>
+                <span>Yeni Kart / Cüzdan Ekle</span>
+              </h3>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="rounded-lg p-1 text-zinc-400 transition-colors hover:bg-zinc-500/10 hover:text-zinc-600 dark:hover:text-zinc-200"
+              >
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleAddCard} className="flex flex-col gap-3.5">
               <label className="flex flex-col gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                Kart İçi İsim
+                <span>Kart / Cüzdan Adı</span>
                 <input
                   type="text"
                   required
-                  placeholder="Örn: Garanti Bonus, Akbank Axess, Ziraat Banka"
+                  placeholder="Örn: Garanti Bonus, Akbank Axess, Nakit Cüzdan"
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
-                  className="rounded-xl border border-zinc-300 bg-zinc-50 p-2.5 text-xs dark:border-zinc-700 dark:bg-zinc-950"
+                  className="rounded-xl p-2.5 text-xs font-medium outline-none transition-all"
+                  style={{
+                    background: "var(--shell-card)",
+                    border: "1px solid var(--shell-border)",
+                    color: "var(--foreground)",
+                  }}
                 />
               </label>
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                  Kart Tipi
+                  <span>Kart Tipi</span>
                   <select
                     value={cardType}
                     onChange={(e) => setCardType(e.target.value as "credit" | "debit" | "cash")}
-                    className="rounded-xl border border-zinc-300 bg-zinc-50 p-2.5 text-xs dark:border-zinc-700 dark:bg-zinc-950"
+                    className="rounded-xl p-2.5 text-xs font-semibold outline-none transition-all cursor-pointer"
+                    style={{
+                      background: "var(--shell-card)",
+                      border: "1px solid var(--shell-border)",
+                      color: "var(--foreground)",
+                    }}
                   >
                     <option value="credit">Kredi Kartı</option>
                     <option value="debit">Banka Kartı (Mevduat)</option>
@@ -274,24 +296,34 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
                 </label>
 
                 <label className="flex flex-col gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                  Aylık Limit (Opsiyonel)
+                  <span>Aylık Limit (₺)</span>
                   <input
                     type="number"
                     step="any"
                     placeholder="Örn: 50000"
                     value={cardLimit}
                     onChange={(e) => setCardLimit(e.target.value)}
-                    className="rounded-xl border border-zinc-300 bg-zinc-50 p-2.5 text-xs dark:border-zinc-700 dark:bg-zinc-950"
+                    className="rounded-xl p-2.5 text-xs font-mono font-bold outline-none transition-all"
+                    style={{
+                      background: "var(--shell-card)",
+                      border: "1px solid var(--shell-border)",
+                      color: "var(--foreground)",
+                    }}
                   />
                 </label>
               </div>
 
               <label className="flex flex-col gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                Kart Rengi / Şablonu
+                <span>Görsel Tema / Renk</span>
                 <select
                   value={cardColor}
                   onChange={(e) => setCardColor(e.target.value)}
-                  className="rounded-xl border border-zinc-300 bg-zinc-50 p-2.5 text-xs dark:border-zinc-700 dark:bg-zinc-950"
+                  className="rounded-xl p-2.5 text-xs font-semibold outline-none transition-all cursor-pointer"
+                  style={{
+                    background: "var(--shell-card)",
+                    border: "1px solid var(--shell-border)",
+                    color: "var(--foreground)",
+                  }}
                 >
                   {GRADIENT_OPTIONS.map((g) => (
                     <option key={g.value} value={g.value}>
@@ -304,14 +336,20 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
               <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 rounded-xl bg-zinc-900 py-2.5 text-xs font-bold text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-black"
+                  className="flex-1 rounded-xl py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:opacity-95"
+                  style={{ background: "var(--shell-accent)" }}
                 >
                   Kaydet & Cüzdana Ekle
                 </button>
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="rounded-xl border border-zinc-300 px-4 py-2.5 text-xs font-semibold dark:border-zinc-700"
+                  className="rounded-xl px-4 py-2.5 text-xs font-semibold transition-all hover:bg-zinc-500/10"
+                  style={{
+                    background: "var(--shell-card)",
+                    border: "1px solid var(--shell-border)",
+                    color: "var(--shell-muted)",
+                  }}
                 >
                   Vazgeç
                 </button>
