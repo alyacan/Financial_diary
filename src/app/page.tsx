@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import { useInvestments } from "@/hooks/useInvestments";
 import { useExpenseData } from "@/hooks/useExpenseData";
@@ -16,10 +17,10 @@ function formatTRY(value: number): string {
 
 function greeting(): string {
   const hour = new Date().getHours();
-  if (hour < 6) return "İyi geceler 👋";
-  if (hour < 12) return "Günaydın 👋";
-  if (hour < 18) return "İyi günler 👋";
-  return "İyi akşamlar 👋";
+  if (hour < 6) return "İyi geceler";
+  if (hour < 12) return "Günaydın";
+  if (hour < 18) return "İyi günler";
+  return "İyi akşamlar";
 }
 
 const QUICK_LINKS = [
@@ -42,7 +43,7 @@ const QUICK_LINKS = [
   },
   {
     href: "/gunluk",
-    label: "Finans Günlüğüm 📓",
+    label: "Finans Günlüğüm",
     description: "Canlı ekonomik takvim ve yatırım kararlarının takvimi",
     icon: (
       <>
@@ -101,7 +102,7 @@ export default function Home() {
           className="rounded-2xl border p-3 text-sm"
           style={{ borderColor: "oklch(0.75 0.1 70)", background: "oklch(0.94 0.05 80 / 0.5)", color: "oklch(0.35 0.08 60)" }}
         >
-          ⚠️ Şu varlıklar için güncel fiyat girilmedi, toplam hesaplamalara dahil edilmedi:{" "}
+          <Icon name="alert" /> Şu varlıklar için güncel fiyat girilmedi, toplam hesaplamalara dahil edilmedi:{" "}
           {missingPricePositions.map((p) => `${ASSET_LABELS[p.assetType] ?? p.assetType} (${p.subType})`).join(", ")}.{" "}
           Detaylar için <Link href="/yatirimlar" className="underline">Yatırımlar</Link> sayfasına bak.
         </div>
@@ -245,7 +246,7 @@ export default function Home() {
         >
           <div className="flex max-w-[640px] flex-col gap-1.5">
             <div className="text-xs tracking-wide uppercase font-bold" style={{ color: "oklch(0.35 0.05 30)" }}>
-              🤖 AI Analiz Özetiniz
+              <Icon name="bot" /> AI Analiz Özetiniz
             </div>
             <div className="text-[17px] font-bold">{insight.title}</div>
             <div className="text-[13.5px]" style={{ color: "oklch(0.35 0.04 30)" }}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Icon from "@/components/Icon";
 import { Transaction, ASSET_LABELS, AssetType, getAssetIcon } from "@/lib/types";
 
 function formatTRY(value: number): string {
@@ -39,7 +40,7 @@ export default function FinancialJournal({ transactions }: Props) {
   if (entriesWithNotes.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-800">
-        <span className="text-3xl">📓</span>
+        <Icon name="book" className="h-8 w-8" strokeWidth={1.5} />
         <h3 className="mt-3 text-base font-semibold text-zinc-900 dark:text-zinc-100">Henüz Günlük Notu Yok</h3>
         <p className="mt-1 max-w-md text-sm text-zinc-500">
           Yatırımlar veya İşlemler sayfasında yeni bir işlem eklerken &quot;Not&quot; alanına o anki alım gerekçeni yazarsan burada zaman tüneli olarak listelenir.
@@ -60,7 +61,7 @@ export default function FinancialJournal({ transactions }: Props) {
             placeholder="Günlük notlarında veya varlıklarda ara..."
             className="w-full rounded-xl border border-zinc-300 bg-white py-2 pl-9 pr-3 text-sm transition-colors dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
           />
-          <span className="absolute left-3 top-2.5 text-xs text-zinc-400">🔍</span>
+          <span className="absolute left-3 top-2.5 text-xs text-zinc-400"><Icon name="search" /></span>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
@@ -84,7 +85,7 @@ export default function FinancialJournal({ transactions }: Props) {
                   : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
               }`}
             >
-              {getAssetIcon(type)} {ASSET_LABELS[type as AssetType] ?? type}
+              <Icon name={getAssetIcon(type)} /> {ASSET_LABELS[type as AssetType] ?? type}
             </button>
           ))}
         </div>
@@ -105,10 +106,10 @@ export default function FinancialJournal({ transactions }: Props) {
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 pb-3 dark:border-zinc-800">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                    📅 {formatDate(t.date)}
+                    <Icon name="calendar" /> {formatDate(t.date)}
                   </span>
                   <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                    {getAssetIcon(t.assetType, t.subType)} {ASSET_LABELS[t.assetType] ?? t.assetType} ({t.subType})
+                    <Icon name={getAssetIcon(t.assetType, t.subType)} /> {ASSET_LABELS[t.assetType] ?? t.assetType} ({t.subType})
                   </span>
                 </div>
                 <div className="text-xs text-zinc-500">

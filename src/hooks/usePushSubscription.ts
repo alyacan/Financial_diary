@@ -45,7 +45,7 @@ export async function subscribeToPush(): Promise<{ ok: boolean; error?: string }
     if (isIOSNotStandalone()) {
       return {
         ok: false,
-        error: "iPhone'da bildirim alabilmek için önce Safari'de Paylaş (⬆️) → Ana Ekrana Ekle ile bu siteyi uygulama gibi kur, sonra oradan aç.",
+        error: "iPhone'da bildirim alabilmek için önce Safari'de Paylaş → Ana Ekrana Ekle ile bu siteyi uygulama gibi kur, sonra oradan aç.",
       };
     }
     return { ok: false, error: "Tarayıcınız Web Push bildirimlerini desteklemiyor." };

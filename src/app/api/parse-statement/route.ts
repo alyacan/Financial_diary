@@ -91,7 +91,7 @@ function parseGeminiRows(text: string | undefined): ParsedStatementRow[] {
     return parsed
       .filter((r) => r && r.date && r.description && r.amount != null)
       .map((r) => {
-        let amt = typeof r.amount === "number" ? r.amount : parseFloat(String(r.amount).replace(/[^0-9.-]+/g, ""));
+        const amt = typeof r.amount === "number" ? r.amount : parseFloat(String(r.amount).replace(/[^0-9.-]+/g, ""));
         let dateStr = String(r.date).trim();
         // Convert DD.MM.YYYY or DD/MM/YYYY to YYYY-MM-DD if needed
         if (/^\d{2}[./-]\d{2}[./-]\d{4}$/.test(dateStr)) {

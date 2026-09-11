@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Icon from "@/components/Icon";
 import FinancialJournal from "@/components/FinancialJournal";
 import FinancialCalendar from "@/components/FinancialCalendar";
 import ErrorBanner from "@/components/ErrorBanner";
@@ -32,7 +33,7 @@ export default function GunlukPage() {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6 sm:p-10">
       <header className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">Finans Günlüğüm 📓</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Finans Günlüğüm</h1>
         <p className="text-sm text-zinc-500">
           Önemli ekonomik tarihler, temettü takvimi ve yatırım kararlarının gerekçeleri tek ekranda.
         </p>
@@ -78,7 +79,7 @@ export default function GunlukPage() {
               : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
           }`}
         >
-          <span>📅</span>
+          <Icon name="calendar" />
           <span>Finansal Takvim & Temettüler</span>
         </button>
 
@@ -90,7 +91,7 @@ export default function GunlukPage() {
               : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
           }`}
         >
-          <span>📓</span>
+          <Icon name="book" />
           <span>Yatırım Günlüğü Zaman Tüneli</span>
           {transactionsWithNotes.length > 0 && (
             <span

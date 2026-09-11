@@ -79,7 +79,7 @@ export default function ExpenseChart({ expenses }: Props) {
                     <div className="mt-1 font-mono font-extrabold text-sm" style={{ color: "var(--shell-accent-strong)" }}>
                       {formatTRY(item.value)}
                     </div>
-                    <div className="text-[10px] text-zinc-500 mt-0.5">Toplamın %{percent}'i</div>
+                    <div className="text-[10px] text-zinc-500 mt-0.5">Toplamın %{percent}&apos;i</div>
                   </div>
                 );
               }

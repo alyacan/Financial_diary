@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import { CalendarNote, DividendEntry, RECURRING_CALENDAR_INFO } from "@/lib/types";
 import { EconomicEvent } from "@/lib/economicCalendar";
 import { AutoDividendEvent } from "@/lib/dividendCalendar";
@@ -80,7 +81,7 @@ export default function FinancialCalendar({
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        setAiMessage(`⚠️ ${data.error ?? "Temettü araması yapılamadı."}`);
+        setAiMessage(`${data.error ?? "Temettü araması yapılamadı."}`);
       } else if (data.events && data.events.length > 0) {
         let count = 0;
         for (const ev of data.events) {
@@ -97,15 +98,15 @@ export default function FinancialCalendar({
         const isEstimated = data.source === "Tahmini (Doğrulanmamış)";
         setAiMessage(
           isEstimated
-            ? `ℹ️ ${symbol} için resmi bir tarih bulunamadı; geçmiş ödeme desenine dayalı ${count} tahmini tarih takvime eklendi (doğrulanmamış, referans niteliğindedir).`
-            : `✅ ${symbol} için ${count} adet yayınlanmış temettü tarihi bulundu ve takvime eklendi!`
+            ? `${symbol} için resmi bir tarih bulunamadı; geçmiş ödeme desenine dayalı ${count} tahmini tarih takvime eklendi (doğrulanmamış, referans niteliğindedir).`
+            : `${symbol} için ${count} adet yayınlanmış temettü tarihi bulundu ve takvime eklendi!`
         );
         setAiTicker("");
       } else {
-        setAiMessage(`ℹ️ ${symbol} için ilan edilmiş resmi temettü tarihi bulunamadı.`);
+        setAiMessage(`${symbol} için ilan edilmiş resmi temettü tarihi bulunamadı.`);
       }
     } catch {
-      setAiMessage("⚠️ Temettü araştırması yapılırken bir hata oluştu.");
+      setAiMessage("Temettü araştırması yapılırken bir hata oluştu.");
     } finally {
       setSearchingDividend(false);
     }
@@ -122,12 +123,12 @@ export default function FinancialCalendar({
         setEconomicEvents(events);
         saveEconomicEventsCache(events);
         if (forceRefresh) {
-          setEconomicRefreshMsg(`✅ ${events.length} adet güncel faiz, enflasyon ve ekonomik olay takvime yüklendi (24 saat önbelleklendi).`);
+          setEconomicRefreshMsg(`${events.length} adet güncel faiz, enflasyon ve ekonomik olay takvime yüklendi (24 saat önbelleklendi).`);
         }
       })
       .catch(() => {
         if (forceRefresh) {
-          setEconomicRefreshMsg("⚠️ Ekonomik takvim yenilenirken bir sorun oluştu.");
+          setEconomicRefreshMsg("Ekonomik takvim yenilenirken bir sorun oluştu.");
         }
       })
       .finally(() => setLoadingEconomicEvents(false));
@@ -332,10 +333,10 @@ export default function FinancialCalendar({
         <div className="rounded-2xl border border-blue-200 bg-blue-50/40 p-5 dark:border-blue-900/40 dark:bg-blue-950/20">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-blue-900 dark:text-blue-100">
-              📅 {formatDate(date)} Tarihindeki Gelişmeler & Notlar
+              <Icon name="calendar" /> {formatDate(date)} Tarihindeki Gelişmeler & Notlar
             </h3>
             <button onClick={() => setDate("")} className="text-xs text-zinc-400 hover:text-zinc-600">
-              Kapat ✕
+              Kapat <Icon name="x" />
             </button>
           </div>
           {selectedDateEvents.length === 0 && selectedDateDividends.length === 0 && selectedDateNotes.length === 0 ? (
@@ -383,7 +384,7 @@ export default function FinancialCalendar({
                 : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
             }`}
           >
-            <span>📊</span>
+            <Icon name="chart" />
             <span>Ekonomik Takvim ({upcomingEvents.length})</span>
           </button>
 
@@ -395,7 +396,7 @@ export default function FinancialCalendar({
                 : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
             }`}
           >
-            <span>💰</span>
+            <Icon name="coins" />
             <span>Temettü Haberleri ({combinedDividends.length})</span>
           </button>
 
@@ -407,7 +408,7 @@ export default function FinancialCalendar({
                 : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
             }`}
           >
-            <span>📝</span>
+            <Icon name="note" />
             <span>Notlarım & Hatırlatıcılar ({notes.length})</span>
           </button>
         </div>
@@ -425,7 +426,7 @@ export default function FinancialCalendar({
                 disabled={loadingEconomicEvents}
                 className="flex items-center gap-1.5 rounded-xl border border-zinc-300 bg-white px-3.5 py-1.5 text-xs font-medium transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800"
               >
-                <span>{loadingEconomicEvents ? "⌛" : "🔄"}</span>
+                <Icon name={loadingEconomicEvents ? "loader" : "refresh"} className={`h-4 w-4 ${loadingEconomicEvents ? "animate-spin" : ""}`} />
                 <span>{loadingEconomicEvents ? "Yenileniyor..." : "Canlı Ekonomik Takvimi Yenile"}</span>
               </button>
             </div>
@@ -461,7 +462,7 @@ export default function FinancialCalendar({
             {/* AI Dividend Search Box */}
             <div className="rounded-2xl border border-blue-200 bg-blue-50/40 p-5 dark:border-blue-900/40 dark:bg-blue-950/20">
               <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                🤖 AI ile Hisse Temettü Tarihini Bul & Takvime Ekle
+                <Icon name="bot" /> AI ile Hisse Temettü Tarihini Bul & Takvime Ekle
               </h4>
               <p className="mt-1 text-xs text-zinc-500">
                 İstediğin hisse kodunu yaz (örn: BIMAS, TUPRS, THYAO, AAPL). AI ilan edilmiş resmi temettü tarihini araştırıp bulacak ve otomatik takvime ekleyecektir.
@@ -480,7 +481,7 @@ export default function FinancialCalendar({
                   disabled={searchingDividend || !aiTicker.trim()}
                   className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {searchingDividend ? "🔍 Araştırılıyor..." : "🔍 Temettü Tarihini Bul & Takvime Ekle"}
+                  <Icon name="search" /> {searchingDividend ? "Araştırılıyor..." : "Temettü Tarihini Bul & Takvime Ekle"}
                 </button>
               </form>
 

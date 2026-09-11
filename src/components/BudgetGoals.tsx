@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Icon from "@/components/Icon";
 import Image from "next/image";
 import { EXPENSE_CATEGORIES, CategoryBudget } from "@/lib/types";
 import { BudgetProgress } from "@/lib/budgetStats";
@@ -219,7 +220,7 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
                       className="rounded-lg p-1.5 text-xs text-zinc-400 transition-all hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 opacity-60 group-hover:opacity-100"
                       title="Bütçeyi Kaldır"
                     >
-                      ✕
+                      <Icon name="x" />
                     </button>
                   </div>
 

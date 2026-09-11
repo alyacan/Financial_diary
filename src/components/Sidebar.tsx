@@ -31,7 +31,7 @@ const LINKS = [
   },
   {
     href: "/gunluk",
-    label: "Finans Günlüğüm 📓",
+    label: "Finans Günlüğüm",
     icon: (
       <>
         <path d="M4 4h13a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3V4Z" />

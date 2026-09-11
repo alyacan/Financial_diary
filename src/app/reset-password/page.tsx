@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import { supabase, updatePassword } from "@/lib/supabase";
 
@@ -47,14 +48,14 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    setSuccessMsg("Şifreniz başarıyla güncellendi! 🎉 Artık yeni şifrenle giriş yapabilirsin.");
+    setSuccessMsg("Şifreniz başarıyla güncellendi! Artık yeni şifrenle giriş yapabilirsin.");
   }
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center p-4">
       <div className="w-full max-w-md rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900 sm:p-8">
         <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-          Yeni Şifre Belirle 🔒
+          <Icon name="lock" /> Yeni Şifre Belirle
         </h1>
         <p className="mt-1 text-xs text-zinc-500">
           Mailindeki bağlantı üzerinden buraya ulaştın. Hesabın için yeni bir şifre belirle.
@@ -62,13 +63,13 @@ export default function ResetPasswordPage() {
 
         {sessionReady === false && !successMsg && (
           <div className="mt-4 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700 dark:bg-red-950/60 dark:text-red-300">
-            ⚠️ Bağlantı geçersiz veya süresi dolmuş. Lütfen şifre sıfırlama işlemini yeniden başlat.
+            <Icon name="alert" /> Bağlantı geçersiz veya süresi dolmuş. Lütfen şifre sıfırlama işlemini yeniden başlat.
           </div>
         )}
 
         {errorMsg && (
           <div className="mt-4 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700 dark:bg-red-950/60 dark:text-red-300">
-            ⚠️ {errorMsg}
+            <Icon name="alert" /> {errorMsg}
           </div>
         )}
         {successMsg && (
@@ -110,7 +111,7 @@ export default function ResetPasswordPage() {
               disabled={isLoading}
               className="mt-2 rounded-xl bg-zinc-900 py-3 text-xs font-bold text-white shadow-md transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-black dark:hover:bg-zinc-200"
             >
-              {isLoading ? "Güncelleniyor..." : "🔒 Şifreyi Güncelle"}
+              {isLoading ? "Güncelleniyor..." : <><Icon name="lock" /> Şifreyi Güncelle</>}
             </button>
           </form>
         )}

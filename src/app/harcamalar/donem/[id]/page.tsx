@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import { ArchivedPeriod, ASSET_LABELS, Transaction } from "@/lib/types";
 import { deleteArchivedPeriod, loadArchivedPeriods, loadTransactions, updateArchivedPeriod } from "@/lib/storage";
@@ -134,13 +135,13 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
             onClick={startEdit}
             className="flex items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium transition-colors hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
           >
-            ✏️ Dönemi Düzenle
+            <Icon name="edit" /> Dönemi Düzenle
           </button>
           <button
             onClick={handleDeletePeriod}
             className="flex items-center gap-1 rounded-xl border border-red-200 bg-red-50/50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-400"
           >
-            🗑️ Klasörü Sil
+            <Icon name="trash" /> Klasörü Sil
           </button>
         </div>
       </div>
@@ -197,13 +198,13 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
         ) : (
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">📁</span>
+              <Icon name="folder" className="h-8 w-8" strokeWidth={1.5} />
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">
                   {period.name ? period.name : `${formatDate(period.startDate)} - ${formatDate(period.endDate)}`}
                 </h1>
                 <span className="mt-1 inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                  🗓️ {formatDate(period.startDate)} — {formatDate(period.endDate)} Hesabı
+                  <Icon name="calendar" /> {formatDate(period.startDate)} — {formatDate(period.endDate)} Hesabı
                 </span>
               </div>
             </div>

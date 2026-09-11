@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useRef, useState } from "react";
+import Icon from "@/components/Icon";
 import { UserProfile, loadUserProfile, syncUserProfile } from "@/lib/supabase";
 import ProfileAvatar from "./ProfileAvatar";
 
@@ -99,7 +100,7 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
           onClick={onClose}
           className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400"
         >
-          ✕
+          <Icon name="x" />
         </button>
 
         <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">

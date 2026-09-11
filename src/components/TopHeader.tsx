@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import NotificationDropdown from "./NotificationDropdown";
 import ProfileModal from "./ProfileModal";
@@ -92,7 +93,7 @@ export default function TopHeader() {
               onClick={() => setShowNotifications((prev) => !prev)}
               className="relative flex h-8 w-8 items-center justify-center rounded-xl text-sm transition-colors hover:bg-zinc-200/70 dark:hover:bg-zinc-800"
             >
-              <span>🔔</span>
+              <Icon name="bell" className="h-4 w-4" />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-zinc-900" />
             </button>
             {isAdmin && (
@@ -101,7 +102,7 @@ export default function TopHeader() {
                 title="Yönetici Paneli"
                 className="flex h-8 w-8 items-center justify-center rounded-xl text-sm transition-colors hover:bg-zinc-200/70 dark:hover:bg-zinc-800"
               >
-                🛡️
+                <Icon name="shield" className="h-4 w-4" />
               </Link>
             )}
             <button
@@ -115,7 +116,7 @@ export default function TopHeader() {
               }}
               className="flex h-8 w-8 items-center justify-center rounded-xl text-sm transition-colors hover:bg-zinc-200/70 dark:hover:bg-zinc-800"
             >
-              ⚙️
+              <Icon name="settings" className="h-4 w-4" />
             </button>
 
             {/* Interactive Notification Popover */}
@@ -152,7 +153,7 @@ export default function TopHeader() {
               className="flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-900 shadow-xs transition-all hover:bg-amber-100 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-300"
               title="Giriş Yap veya Yeni Profil Oluştur"
             >
-              <span>👤</span>
+              <Icon name="user" className="h-3.5 w-3.5" />
               <span>Giriş Yap / Profil Oluştur</span>
             </button>
           )}

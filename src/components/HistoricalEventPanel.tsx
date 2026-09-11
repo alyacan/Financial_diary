@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Icon from "@/components/Icon";
 
 interface Props {
   date: string;
@@ -57,7 +58,7 @@ export default function HistoricalEventPanel({ date, assetLabel, quantity, note 
 
       {!shortText && !loadingShort && !error && (
         <button onClick={loadShort} className="text-zinc-600 hover:underline dark:text-zinc-300">
-          🕐 Tarihsel bağlamı göster (AI)
+          <Icon name="clock" /> Tarihsel bağlamı göster (AI)
         </button>
       )}
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Icon from "@/components/Icon";
 import TransactionForm from "@/components/TransactionForm";
 import PortfolioChart from "@/components/PortfolioChart";
 import TransactionTable from "@/components/TransactionTable";
@@ -16,10 +17,10 @@ function formatTRY(value: number): string {
 type TabType = "overview" | "prices" | "add" | "transactions";
 
 const TABS: { id: TabType; label: string; icon: string }[] = [
-  { id: "overview", label: "Genel Bakış", icon: "📊" },
-  { id: "prices", label: "Canlı Fiyatlar & Giriş", icon: "⚡" },
-  { id: "add", label: "İşlem Ekle", icon: "➕" },
-  { id: "transactions", label: "İşlemlerim", icon: "📋" },
+  { id: "overview", label: "Genel Bakış", icon: "chart" },
+  { id: "prices", label: "Canlı Fiyatlar & Giriş", icon: "zap" },
+  { id: "add", label: "İşlem Ekle", icon: "plus" },
+  { id: "transactions", label: "İşlemlerim", icon: "list" },
 ];
 
 export default function YatirimlarPage() {
@@ -65,7 +66,7 @@ export default function YatirimlarPage() {
           disabled={loadingPrices}
           className="flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800"
         >
-          <span>{loadingPrices ? "⌛" : "🔄"}</span>
+          <Icon name={loadingPrices ? "loader" : "refresh"} className={`h-4 w-4 ${loadingPrices ? "animate-spin" : ""}`} />
           <span>{loadingPrices ? "Fiyatlar Güncelleniyor..." : "Canlı Fiyatları Yenile"}</span>
         </button>
       </header>
@@ -75,7 +76,7 @@ export default function YatirimlarPage() {
       {/* Missing Prices Notification Banner */}
       {missingPricePositions.length > 0 && (
         <div className="rounded-2xl border border-amber-300 bg-amber-50/70 p-4 text-xs text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200">
-          ⚠️ <strong>Eksik Fiyat Uyarısı:</strong> Şu varlıklar için henüz güncel fiyat girilmedi:{" "}
+          <Icon name="alert" /> <strong>Eksik Fiyat Uyarısı:</strong> Şu varlıklar için henüz güncel fiyat girilmedi:{" "}
           {missingPricePositions.map((p) => `${ASSET_LABELS[p.assetType] ?? p.assetType} (${p.subType})`).join(", ")}.
           &ldquo;Canlı Fiyatlar & Giriş&rdquo; sekmesinden güncel fiyatlarını girebilirsin.
         </div>
@@ -124,7 +125,7 @@ export default function YatirimlarPage() {
                   : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
               }`}
             >
-              <span>{tab.icon}</span>
+              <Icon name={tab.icon} className="h-4 w-4" />
               <span>{tab.label}</span>
               {tab.id === "transactions" && rows.length > 0 && (
                 <span

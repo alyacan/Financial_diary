@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import Icon from "@/components/Icon";
 import { Expense, PaymentCard } from "@/lib/types";
 import { getStoredCards, addPaymentCard, deletePaymentCard } from "@/lib/cardsStorage";
 
@@ -217,7 +218,7 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
                 onClick={() => setModalOpen(false)}
                 className="rounded-lg p-1 text-zinc-400 transition-colors hover:bg-zinc-500/10 hover:text-zinc-600 dark:hover:text-zinc-200"
               >
-                ✕
+                <Icon name="x" />
               </button>
             </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useState } from "react";
+import Icon from "@/components/Icon";
 import { TransactionProfit } from "@/lib/calculations";
 import { ASSET_LABELS, BALANCE_ONLY_TYPES, getAssetIcon, tefasUrl } from "@/lib/types";
 import HistoricalEventPanel from "./HistoricalEventPanel";
@@ -25,7 +26,7 @@ export default function TransactionTable({ rows, onDelete }: Props) {
   if (rows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-800">
-        <span className="text-3xl">📋</span>
+        <Icon name="list" className="h-8 w-8" strokeWidth={1.5} />
         <h3 className="mt-2 text-sm font-bold text-zinc-900 dark:text-zinc-100">Henüz Kayıtlı İşlem Yok</h3>
         <p className="mt-1 text-xs text-zinc-500">
           Yukarıdaki &quot;İşlem Ekle&quot; sekmesinden varlık alım/satım veya bakiye işlemlerinizi ekleyebilirsiniz.
@@ -59,7 +60,7 @@ export default function TransactionTable({ rows, onDelete }: Props) {
                   {/* Column 1: Date */}
                   <div className="col-span-2 flex items-center gap-2">
                     <span className="rounded-lg bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                      📅 {formatDate(transaction.date)}
+                      <Icon name="calendar" /> {formatDate(transaction.date)}
                     </span>
                   </div>
 
@@ -67,7 +68,7 @@ export default function TransactionTable({ rows, onDelete }: Props) {
                   <div className="col-span-3 flex flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
-                        {icon && <span className="mr-1">{icon}</span>}
+                        {icon && <Icon name={icon} className="mr-1 inline h-[1em] w-[1em] align-[-0.125em]" />}
                         {ASSET_LABELS[transaction.assetType] ?? transaction.assetType} ({transaction.subType})
                       </span>
 
@@ -87,7 +88,7 @@ export default function TransactionTable({ rows, onDelete }: Props) {
                           className="cursor-help rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-950/60 dark:text-amber-300"
                           title={transaction.note}
                         >
-                          📝 Not
+                          <Icon name="note" /> Not
                         </span>
                       )}
                     </div>
@@ -137,7 +138,7 @@ export default function TransactionTable({ rows, onDelete }: Props) {
                             : "bg-rose-100/90 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300/50"
                         }`}
                       >
-                        <span>{profit >= 0 ? "🟢" : "🔴"}</span>
+                        <Icon name={profit >= 0 ? "trending-up" : "trending-down"} />
                         <span>
                           {profit >= 0 ? "+" : ""}
                           {formatTRY(profit)} ({profitPercent >= 0 ? "+" : ""}
@@ -152,14 +153,14 @@ export default function TransactionTable({ rows, onDelete }: Props) {
                         className="rounded-xl border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-semibold text-zinc-700 transition-colors hover:bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
                         title="Yapay zekâ ve tarihsel bağlam analizi"
                       >
-                        {isExpanded ? "Kapat ▲" : "🤖 AI Bağlamı"}
+                        {isExpanded ? <>Kapat <Icon name="chevron-up" /></> : <><Icon name="bot" /> AI Bağlamı</>}
                       </button>
                       <button
                         onClick={() => onDelete(transaction.id)}
                         className="rounded-xl border border-zinc-200 bg-white p-1 text-xs text-zinc-400 transition-colors hover:border-red-300 hover:text-red-600 dark:border-zinc-800 dark:bg-zinc-900"
                         title="İşlemi Sil"
                       >
-                        🗑️
+                        <Icon name="trash" className="h-4 w-4" />
                       </button>
                     </div>
                   </div>

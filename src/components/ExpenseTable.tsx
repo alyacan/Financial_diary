@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Icon from "@/components/Icon";
 import { EXPENSE_CATEGORIES, Expense, PaymentCard } from "@/lib/types";
 
 function formatTRY(value: number): string {
@@ -133,7 +134,7 @@ export default function ExpenseTable({ expenses, cards = [], onDelete, onUpdateC
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
               >
-                ✕
+                <Icon name="x" />
               </button>
             )}
           </div>

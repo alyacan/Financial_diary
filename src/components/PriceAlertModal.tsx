@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import { PriceAlert, ASSETS, getStoredPriceAlerts, addPriceAlert, deletePriceAlert } from "@/lib/priceAlerts";
 
 interface Props {
@@ -47,7 +48,7 @@ export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props
     if (newAlert) onAlertAdded(newAlert);
 
     setTargetPrice("");
-    setSuccessMsg(`"${asset}" için ${condition === "gte" ? "≥" : "≤"} ${price.toLocaleString("tr-TR")} ₺ alarmı eklendi! 🔔`);
+    setSuccessMsg(`"${asset}" için ${condition === "gte" ? "≥" : "≤"} ${price.toLocaleString("tr-TR")} ₺ alarmı eklendi!`);
     setTimeout(() => setSuccessMsg(""), 2000);
   }
 
@@ -64,11 +65,11 @@ export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props
           onClick={onClose}
           className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400"
         >
-          ✕
+          <Icon name="x" />
         </button>
 
         <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-          ➕ Fiyat Alarmı & Limit Ekle 🔔
+          <Icon name="bell" /> Fiyat Alarmı & Limit Ekle
         </h2>
         <p className="mt-1 text-xs text-zinc-500">
           Gram Altın, Dolar veya BIST 100 belirlediğin hedef fiyata ulaştığında anında bildirim alırsın.
@@ -135,7 +136,7 @@ export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props
             disabled={isSaving}
             className="mt-1 rounded-xl bg-amber-500 py-2.5 text-xs font-bold text-white shadow-md transition-colors hover:bg-amber-600 disabled:opacity-50"
           >
-            {isSaving ? "Kaydediliyor..." : "🔔 Alarmı Kaydet"}
+            {isSaving ? "Kaydediliyor..." : <><Icon name="bell" /> Alarmı Kaydet</>}
           </button>
         </form>
 
@@ -150,7 +151,7 @@ export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props
                   className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50/80 p-2.5 dark:border-zinc-800 dark:bg-zinc-950/60"
                 >
                   <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-zinc-100">
-                    <span>{a.triggeredAt ? "✅" : "🔔"} {a.asset}</span>
+                    <span><Icon name={a.triggeredAt ? "check-circle" : "bell"} /> {a.asset}</span>
                     <span className="text-amber-600 dark:text-amber-400">
                       {a.condition === "gte" ? "≥" : "≤"} {a.targetPrice.toLocaleString("tr-TR")} ₺
                     </span>
@@ -160,7 +161,7 @@ export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props
                     className="text-xs font-bold text-red-500 hover:text-red-700"
                     title="Alarmı Sil"
                   >
-                    Sil ✕
+                    Sil <Icon name="x" />
                   </button>
                 </div>
               ))}

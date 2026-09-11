@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Icon from "@/components/Icon";
 import Link from "next/link";
 import PriceAlertModal from "./PriceAlertModal";
 import { PriceAlert, getStoredPriceAlerts } from "@/lib/priceAlerts";
@@ -97,7 +98,7 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
       >
         <div className="flex items-center justify-between border-b border-zinc-100 pb-3 dark:border-zinc-800">
           <div className="flex items-center gap-2">
-            <span className="text-base">🔔</span>
+            <Icon name="bell" className="h-4 w-4" />
             <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Bildirim & Fiyat Alarmları</h3>
           </div>
           {plan === "pro" && (
@@ -105,14 +106,14 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
               onClick={() => setShowPriceAlertModal(true)}
               className="rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-2xs hover:bg-amber-600 transition-colors"
             >
-              ➕ Alarm Ekle
+              <Icon name="plus" /> Alarm Ekle
             </button>
           )}
         </div>
 
         {plan !== "pro" ? (
           <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-xs font-semibold text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-400">
-            🔒 Bu özellik şu anda yalnızca belirli hesaplara açık.
+            <Icon name="lock" /> Bu özellik şu anda yalnızca belirli hesaplara açık.
           </div>
         ) : (
           <>
@@ -120,7 +121,7 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
             <div className="mt-3 rounded-xl border border-blue-200/80 bg-blue-50/50 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/30">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs">📣</span>
+                  <Icon name="megaphone" className="h-3.5 w-3.5" />
                   <span className="text-xs font-bold text-blue-950 dark:text-blue-200">
                     Web Push Bildirimleri
                   </span>
@@ -128,15 +129,15 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
 
                 {pushActive ? (
                   <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
-                    🟢 Aktif
+                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> Aktif
                   </span>
                 ) : pushStatus === "denied" ? (
                   <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-700 dark:text-red-300">
-                    🔴 Engellendi
+                    <span className="inline-block h-2 w-2 rounded-full bg-red-500" /> Engellendi
                   </span>
                 ) : isIOSInstallNeeded ? (
                   <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
-                    🟡 Kurulum gerekli
+                    <span className="inline-block h-2 w-2 rounded-full bg-amber-500" /> Kurulum gerekli
                   </span>
                 ) : (
                   <button
@@ -151,7 +152,7 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
 
               {isIOSInstallNeeded && (
                 <p className="mt-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
-                  📱 iPhone&apos;da bildirim alabilmek için önce Safari&apos;de Paylaş (⬆️) → Ana Ekrana Ekle ile bu siteyi kur, sonra oradan aç.
+                  <Icon name="smartphone" /> iPhone&apos;da bildirim alabilmek için önce Safari&apos;de Paylaş → Ana Ekrana Ekle ile bu siteyi kur, sonra oradan aç.
                 </p>
               )}
               {pushError && <p className="mt-1.5 text-[11px] font-semibold text-red-600 dark:text-red-400">{pushError}</p>}
@@ -166,7 +167,7 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
                     {testStatus === "sending" ? "Gönderiliyor..." : "Test Bildirimi Gönder"}
                   </button>
                   {testStatus === "sent" && (
-                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Gönderildi ✅</span>
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400"><Icon name="check" /> Gönderildi</span>
                   )}
                   {testStatus === "error" && (
                     <span className="text-[11px] font-semibold text-red-600 dark:text-red-400">Gönderilemedi</span>
@@ -183,7 +184,7 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
                   className="flex items-start gap-3 rounded-xl border border-amber-200/80 bg-amber-50/50 p-3 dark:border-amber-900/40 dark:bg-amber-950/30"
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-sm shadow-2xs dark:bg-amber-900/50">
-                    {a.triggeredAt ? "✅" : "🔔"}
+                    <Icon name={a.triggeredAt ? "check-circle" : "bell"} className="h-4 w-4" />
                   </span>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-xs font-bold text-amber-950 dark:text-amber-200">
@@ -209,7 +210,7 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
             className="flex items-start gap-3 rounded-xl border border-emerald-200/80 bg-emerald-50/50 p-3 transition-colors hover:bg-emerald-100/60 dark:border-emerald-900/40 dark:bg-emerald-950/30"
           >
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-sm shadow-2xs dark:bg-emerald-900/50">
-              📊
+              <Icon name="chart" className="h-4 w-4" />
             </span>
             <div className="flex flex-col gap-0.5">
               <span className="text-xs font-bold text-emerald-950 dark:text-emerald-200">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Icon from "@/components/Icon";
 
 const MONTHS_TURKISH = [
   "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
@@ -128,7 +129,7 @@ export default function DateSelect({ value, onChange }: Props) {
         className="shrink-0 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs font-bold text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-300"
         title="Bugünün tarihini seç"
       >
-        📍 Bugün
+        <Icon name="pin" /> Bugün
       </button>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import { supabase } from "@/lib/supabase";
 import { getMyAdminStatus } from "@/lib/userPlan";
 
@@ -89,7 +90,7 @@ export default function AdminPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6 sm:p-8">
-      <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">🛡️ Yönetici Paneli — Kayıtlı Kullanıcılar</h1>
+      <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100"><Icon name="shield" /> Yönetici Paneli — Kayıtlı Kullanıcılar</h1>
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-bold text-red-800 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">

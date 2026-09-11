@@ -22,13 +22,13 @@ export const ASSET_LABELS: Record<string, string> = {
 };
 
 export function getAssetIcon(assetType: string, subType?: string): string {
-  if (assetType === "gold") return "🥇";
-  if (assetType === "silver") return "🥈";
+  if (assetType === "gold") return "coins";
+  if (assetType === "silver") return "coins";
   if (assetType === "crypto") {
-    if (subType === "ethereum") return "🟣";
-    return "🟠";
+    if (subType === "ethereum") return "bitcoin";
+    return "bitcoin";
   }
-  if (assetType === "forex" || assetType === "cash") return "💲";
+  if (assetType === "forex" || assetType === "cash") return "dollar";
   return "";
 }
 
