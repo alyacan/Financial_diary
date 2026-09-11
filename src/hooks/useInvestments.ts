@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Transaction, GOLD_SUBTYPES } from "@/lib/types";
-import { addTransaction, deleteTransaction, loadTransactions, clearPortfolioSnapshots } from "@/lib/storage";
+import { addTransaction, deleteTransaction, loadTransactions } from "@/lib/storage";
 import {
   fetchLivePrices,
   loadManualPrices,
@@ -113,7 +113,6 @@ export function useInvestments() {
   async function handleDelete(id: string) {
     try {
       setTransactions(await deleteTransaction(id));
-      await clearPortfolioSnapshots();
     } catch (err) {
       setError(err instanceof Error ? err.message : "İşlem silinemedi.");
     }

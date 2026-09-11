@@ -340,14 +340,6 @@ export async function recordPortfolioSnapshot(value: number): Promise<PortfolioS
   return all;
 }
 
-// Bir işlem/harcama/dönem silindiğinde geçmiş grafiğin artık var olmayan veriye
-// ait eski bir toplamı göstermeye devam etmemesi için trend geçmişi sıfırlanır.
-export async function clearPortfolioSnapshots(): Promise<void> {
-  const userId = await currentUserId();
-  if (!userId) return;
-  await supabase.from("portfolio_snapshots").delete().eq("user_id", userId);
-}
-
 interface BudgetRow {
   category: string;
   monthly_goal: number;

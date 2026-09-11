@@ -21,9 +21,10 @@ export const maxDuration = 60;
 const RETRIABLE = /\b(429|503)\b|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded|high demand/i;
 const RETRY_DELAYS_MS = [1000, 2000, 4000];
 
-// "-latest" alias'ı en yoğun kullanılan havuza yönleniyor; birincil model
-// ısrarla 503 verirse ikinci, daha az yüklü modele düşülür.
-const MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"];
+// gemini-flash-latest artık düşünen (thinking) bir modele çözümleniyor; uzun bir
+// ekstrede tek çağrı 60sn'lik fonksiyon limitini aşıp 504 veriyordu. Lite model
+// ~20x daha hızlı; flash yalnızca lite ısrarla 503 verirse yedek olarak denenir.
+const MODELS = ["gemini-flash-lite-latest", "gemini-flash-latest"];
 
 class ModelBusyError extends Error {}
 

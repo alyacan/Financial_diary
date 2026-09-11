@@ -5,7 +5,6 @@ import { ArchivedPeriod, CategoryBudget, Expense } from "@/lib/types";
 import {
   addExpense,
   addExpenses,
-  clearPortfolioSnapshots,
   closePeriod,
   deleteArchivedPeriod,
   deleteCategoryBudget,
@@ -66,7 +65,6 @@ export function useExpenseData() {
   async function handleDeleteExpense(id: string) {
     try {
       setExpenses(await deleteExpense(id));
-      await clearPortfolioSnapshots();
     } catch (err) {
       fail(err, "Harcama silinemedi.");
     }
@@ -101,7 +99,6 @@ export function useExpenseData() {
   async function handleDeleteArchivedPeriod(id: string) {
     try {
       setArchivedPeriods(await deleteArchivedPeriod(id));
-      await clearPortfolioSnapshots();
     } catch (err) {
       fail(err, "Dönem silinemedi.");
     }
