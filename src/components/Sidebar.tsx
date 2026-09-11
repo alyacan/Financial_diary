@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
@@ -50,12 +51,22 @@ export default function Sidebar() {
       className="flex flex-col gap-12 border-b p-6 md:border-b-0 md:border-r md:p-7"
       style={{ borderColor: "var(--shell-border)" }}
     >
-      <div className="flex flex-col gap-0.5">
-        <div className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">Finansal Günlük</div>
-        <div className="text-xs font-medium tracking-wide text-zinc-500">
-          kişisel finans defterin
+      <Link href="/" className="group flex items-center gap-3 transition-opacity hover:opacity-90">
+        <Image
+          src="/icon.png"
+          alt="Finansal Günlük Logo"
+          width={36}
+          height={36}
+          priority
+          className="h-9 w-9 shrink-0 object-contain drop-shadow-xs transition-transform group-hover:scale-105"
+        />
+        <div className="flex flex-col gap-0.5">
+          <div className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">Finansal Günlük</div>
+          <div className="text-xs font-medium tracking-wide text-zinc-500">
+            kişisel finans defterin
+          </div>
         </div>
-      </div>
+      </Link>
 
       <nav className="flex flex-col gap-1">
         {LINKS.map((link) => {
