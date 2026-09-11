@@ -52,7 +52,6 @@ export default function DateSelect({ value, onChange }: Props) {
 
   // Emit change to parent
   function updateDate(newDay: number, newMonth: number, newYear: number) {
-    // Prevent future dates
     let targetYear = newYear;
     let targetMonth = newMonth;
     let targetDay = newDay;
@@ -78,14 +77,21 @@ export default function DateSelect({ value, onChange }: Props) {
     updateDate(currentDay, currentMonth, currentYear);
   }
 
+  const selectStyle = {
+    background: "var(--shell-card)",
+    border: "1px solid var(--shell-border)",
+    color: "var(--foreground)",
+  };
+
   return (
-    <div className="flex w-full items-center gap-1.5">
+    <div className="flex w-full flex-wrap items-center gap-2">
       {/* 1. GÜN */}
       <select
         aria-label="Gün"
         value={day}
         onChange={(e) => updateDate(Number(e.target.value), month, year)}
-        className="w-20 rounded-xl border border-zinc-300 bg-white p-2.5 text-xs font-semibold text-zinc-900 shadow-2xs transition-colors dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        className="w-20 shrink-0 rounded-xl px-3 py-2.5 text-xs font-bold outline-none transition-all cursor-pointer"
+        style={selectStyle}
       >
         {Array.from({ length: maxDays }, (_, i) => i + 1).map((d) => (
           <option key={d} value={d}>
@@ -94,12 +100,13 @@ export default function DateSelect({ value, onChange }: Props) {
         ))}
       </select>
 
-      {/* 2. AY */}
+      {/* 2. AY (Asla daralıp kaybolmaz) */}
       <select
         aria-label="Ay"
         value={month}
         onChange={(e) => updateDate(day, Number(e.target.value), year)}
-        className="flex-1 min-w-0 rounded-xl border border-zinc-300 bg-white p-2.5 text-xs font-semibold text-zinc-900 shadow-2xs transition-colors dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        className="min-w-[110px] flex-1 rounded-xl px-3 py-2.5 text-xs font-bold outline-none transition-all cursor-pointer"
+        style={selectStyle}
       >
         {MONTHS_TURKISH.map((m, i) => (
           <option key={m} value={i + 1}>
@@ -113,7 +120,8 @@ export default function DateSelect({ value, onChange }: Props) {
         aria-label="Yıl"
         value={year}
         onChange={(e) => updateDate(day, month, Number(e.target.value))}
-        className="w-24 rounded-xl border border-zinc-300 bg-white p-2.5 text-xs font-semibold text-zinc-900 shadow-2xs transition-colors dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        className="w-24 shrink-0 rounded-xl px-3 py-2.5 text-xs font-bold outline-none transition-all cursor-pointer"
+        style={selectStyle}
       >
         {years.map((y) => (
           <option key={y} value={y}>
@@ -126,10 +134,16 @@ export default function DateSelect({ value, onChange }: Props) {
       <button
         type="button"
         onClick={handleSetToday}
-        className="shrink-0 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs font-bold text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-300"
+        className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold transition-all hover:opacity-90 active:scale-98"
+        style={{
+          background: "var(--shell-card)",
+          border: "1px solid var(--shell-border)",
+          color: "var(--shell-accent)",
+        }}
         title="Bugünün tarihini seç"
       >
-        <Icon name="pin" /> Bugün
+        <Icon name="pin" className="h-3.5 w-3.5" />
+        <span>Bugün</span>
       </button>
     </div>
   );

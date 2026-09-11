@@ -314,9 +314,17 @@ export default function YatirimlarPage() {
 
       {/* Tab 3: Add Transaction Form */}
       {activeTab === "add" && (
-        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <h2 className="mb-4 text-lg font-semibold tracking-tight">Yeni Varlık İşlemi Ekle</h2>
-          <TransactionForm onAdd={handleAdd} />
+        <section
+          className="rounded-3xl p-6 sm:p-8 shadow-xs"
+          style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
+        >
+          <div className="mb-6 flex flex-col gap-1">
+            <h2 className="text-xl font-extrabold tracking-tight">Yeni Varlık İşlemi Ekle</h2>
+            <p className="text-xs text-zinc-500">
+              Portföyünüze altın, hisse, fon, döviz veya nakit bakiye ekleyerek canlı kâr/zarar takibini başlatın.
+            </p>
+          </div>
+          <TransactionForm onAdd={handleAdd} onSuccess={() => setActiveTab("transactions")} />
         </section>
       )}
 
