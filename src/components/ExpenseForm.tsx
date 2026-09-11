@@ -8,9 +8,10 @@ interface Props {
   onAdd: (expense: Expense) => void;
   cards: PaymentCard[];
   defaultCardId: string | null;
+  onSuccess?: () => void;
 }
 
-export default function ExpenseForm({ onAdd, cards, defaultCardId }: Props) {
+export default function ExpenseForm({ onAdd, cards, defaultCardId, onSuccess }: Props) {
   const [date, setDate] = useState("");
   const [category, setCategory] = useState<string>(EXPENSE_CATEGORIES[0]);
   const [amount, setAmount] = useState("");
@@ -36,42 +37,30 @@ export default function ExpenseForm({ onAdd, cards, defaultCardId }: Props) {
     setDate("");
     setAmount("");
     setNote("");
+    if (onSuccess) onSuccess();
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col gap-5 rounded-[22px] p-6 sm:p-7 shadow-xs transition-all"
-      style={{
-        background: "var(--shell-card-solid)",
-        border: "1px solid var(--shell-border)",
-      }}
-    >
-      <div className="border-b pb-3" style={{ borderColor: "var(--shell-border)" }}>
-        <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-          <span>✍️</span>
-          <span>Elle Yeni Harcama Ekle</span>
-        </h3>
-        <p className="text-xs text-zinc-500 mt-0.5">
-          Fiş, nakit veya tekil kart harcamalarınızı anında döneme kaydedin.
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        {/* Date Picker */}
-        <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-          <span>Harcama Tarihi</span>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <div className="flex flex-col gap-5">
+        {/* Date Field */}
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+            Harcama Tarihi
+          </label>
           <DateSelect value={date} onChange={setDate} required />
-        </label>
+        </div>
 
         {/* Category & Amount Row */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-            <span>Kategori</span>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+              Kategori
+            </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full rounded-xl p-2.5 text-xs font-semibold outline-none transition-all cursor-pointer"
+              className="w-full rounded-xl p-3 text-sm font-semibold outline-none transition-all cursor-pointer"
               style={{
                 background: "var(--shell-card)",
                 border: "1px solid var(--shell-border)",
@@ -84,12 +73,14 @@ export default function ExpenseForm({ onAdd, cards, defaultCardId }: Props) {
                 </option>
               ))}
             </select>
-          </label>
+          </div>
 
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-            <span>Tutar (₺)</span>
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+              Tutar (TRY)
+            </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono font-bold text-zinc-400">₺</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-zinc-400 text-sm">₺</span>
               <input
                 type="number"
                 step="any"
@@ -97,7 +88,7 @@ export default function ExpenseForm({ onAdd, cards, defaultCardId }: Props) {
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-xl pl-8 pr-3 py-2.5 text-xs font-bold outline-none transition-all font-mono"
+                className="w-full rounded-xl pl-9 pr-4 py-3 text-sm font-bold font-mono outline-none transition-all"
                 style={{
                   background: "var(--shell-card)",
                   border: "1px solid var(--shell-border)",
@@ -105,17 +96,19 @@ export default function ExpenseForm({ onAdd, cards, defaultCardId }: Props) {
                 }}
               />
             </div>
-          </label>
+          </div>
         </div>
 
-        {/* Card Selector (if cards exist) */}
+        {/* Payment Card Field */}
         {cards.length > 0 && (
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-            <span>Ödeme Yöntemi / Kart</span>
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+              Ödeme Kartı / Cüzdan
+            </label>
             <select
               value={selectedCardId}
               onChange={(e) => setSelectedCardId(e.target.value)}
-              className="w-full rounded-xl p-2.5 text-xs font-semibold outline-none transition-all cursor-pointer"
+              className="w-full rounded-xl p-3 text-sm font-semibold outline-none transition-all cursor-pointer"
               style={{
                 background: "var(--shell-card)",
                 border: "1px solid var(--shell-border)",
@@ -124,39 +117,42 @@ export default function ExpenseForm({ onAdd, cards, defaultCardId }: Props) {
             >
               {cards.map((card) => (
                 <option key={card.id} value={card.id}>
-                  {card.cardType === "credit" ? "💳" : card.cardType === "debit" ? "🏦" : "💵"} {card.name} (
-                  {card.cardType === "credit" ? "Kredi Kartı" : card.cardType === "debit" ? "Banka Kartı" : "Nakit"})
+                  {card.name} ({card.cardType === "credit" ? "Kredi Kartı" : card.cardType === "debit" ? "Banka Kartı" : "Nakit"})
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         )}
 
-        {/* Note Input */}
-        <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-          <span>Açıklama / Not (Opsiyonel)</span>
+        {/* Note / Description */}
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+            Açıklama / Not (Opsiyonel)
+          </label>
           <input
             type="text"
-            placeholder="Örn: Haftalık market alışverişi, kahve..."
+            placeholder="Örn: Market alışverişi, akşam yemeği..."
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="w-full rounded-xl p-2.5 text-xs font-medium outline-none transition-all"
+            className="w-full rounded-xl p-3 text-sm font-medium outline-none transition-all"
             style={{
               background: "var(--shell-card)",
               border: "1px solid var(--shell-border)",
               color: "var(--foreground)",
             }}
           />
-        </label>
+        </div>
       </div>
 
       <button
         type="submit"
-        className="mt-2 flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs font-bold text-white shadow-xs transition-all hover:opacity-95 active:scale-98"
+        className="flex items-center justify-center gap-2.5 rounded-xl py-3.5 px-6 text-sm font-bold text-white shadow-xs transition-all hover:opacity-95 active:scale-98"
         style={{ background: "var(--shell-accent)" }}
       >
-        <span>💾</span>
-        <span>Harcamayı Kaydet & Listeye Ekle</span>
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>Harcamayı Kaydet</span>
       </button>
     </form>
   );

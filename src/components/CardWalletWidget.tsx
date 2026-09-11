@@ -35,7 +35,6 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
     getStoredCards().then(setCards);
   }, []);
 
-  // Calculate statistics per card for current period expenses
   const cardStats = useMemo(() => {
     const map = new Map<string, { total: number; count: number; lastExpense?: Expense }>();
 
@@ -95,20 +94,27 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
     }
   }
 
-  const totalPeriodSpend = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
-
   return (
-    <section className="flex flex-col gap-5 rounded-[22px] p-6 shadow-xs backdrop-blur-sm transition-all sm:p-7" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
+    <section
+      className="flex flex-col gap-5 rounded-[22px] p-6 shadow-xs backdrop-blur-sm transition-all sm:p-7"
+      style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
+    >
       {/* Wallet Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4" style={{ borderColor: "var(--shell-border)" }}>
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-lg text-white shadow-xs" style={{ background: "linear-gradient(135deg, var(--shell-hero-from), var(--shell-hero-to))" }}>
-            💳
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-2xl text-white shadow-xs"
+            style={{ background: "linear-gradient(135deg, var(--shell-hero-from), var(--shell-hero-to))" }}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <rect x="2" y="5" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+              <line x1="2" y1="10" x2="22" y2="10" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
           <div>
-            <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Kredi & Banka Kartlarım Cüzdanı</h2>
-            <p className="text-xs text-zinc-500">
-              Bu dönem toplam harcama: <strong className="text-zinc-900 dark:text-zinc-100">{formatTRY(totalPeriodSpend)}</strong>
+            <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Ödeme Kartlarım & Cüzdan</h2>
+            <p className="text-xs text-zinc-500 font-medium">
+              Filtrelemek ve işlemlerini görmek için karta tıklayın
             </p>
           </div>
         </div>
@@ -117,118 +123,76 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
           {selectedCardId && (
             <button
               onClick={() => onSelectCard(null)}
-              className="rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors hover:opacity-90"
+              className="rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors hover:opacity-90"
               style={{ background: "var(--shell-card-solid)", border: "1px solid var(--shell-border)", color: "var(--shell-nav-active-fg)" }}
             >
-              Filtreyi Temizle (Tüm Kartlar)
+              Filtreyi Temizle (Tümü)
             </button>
           )}
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition-all hover:opacity-95"
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all hover:opacity-95"
             style={{ background: "var(--shell-accent)" }}
           >
-            <span>✨</span>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
             <span>Yeni Kart Ekle</span>
           </button>
         </div>
       </div>
 
-      {/* Cards List / Slider Grid */}
+      {/* Cards Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => {
           const stats = cardStats.get(card.id) ?? { total: 0, count: 0 };
           const isSelected = selectedCardId === card.id;
 
           return (
-            <div key={card.id} className="group relative">
-              {/* Interactive 3D Card Tile */}
-              <div
-                onClick={() => onSelectCard(isSelected ? null : card.id)}
-                className={`relative flex h-44 cursor-pointer flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br ${card.color} p-4 text-white shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl ${
-                  isSelected ? "ring-4 ring-amber-400 ring-offset-2 dark:ring-offset-zinc-950" : ""
-                }`}
-              >
-                {/* Metallic shine backdrop element */}
-                <div className="pointer-events-none absolute -top-12 -right-12 h-36 w-36 rounded-full bg-white/10 blur-xl" />
-
-                {/* Top Row: Chip + Card Type Badge + Delete */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">💳</span>
-                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase backdrop-blur-xs">
-                      {card.cardType === "credit" ? "KREDİ KARTI" : card.cardType === "debit" ? "BANKA KARTI" : "NAKİT"}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteCard(card.id);
-                    }}
-                    className="text-white/60 opacity-0 transition-opacity hover:text-white group-hover:opacity-100"
-                    title="Kartı Sil"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                {/* Middle: Card Name */}
-                <div>
-                  <h3 className="font-mono text-base font-bold tracking-wide text-white drop-shadow-xs">
-                    {card.name}
-                  </h3>
-                  {card.limit && (
-                    <p className="text-[11px] text-white/70">
-                      Limit: {formatTRY(card.limit)}
-                    </p>
-                  )}
-                </div>
-
-                {/* Bottom Row: Current Period Spent Total */}
-                <div className="flex items-end justify-between border-t border-white/15 pt-2">
-                  <span className="text-[11px] font-medium text-white/80">Bu Dönem Harcanan:</span>
-                  <span className="font-mono text-base font-extrabold text-white">
-                    {formatTRY(stats.total)}
+            <div
+              key={card.id}
+              onClick={() => onSelectCard(isSelected ? null : card.id)}
+              className={`group relative flex cursor-pointer flex-col justify-between rounded-2xl bg-gradient-to-br ${card.color} p-5 text-white shadow-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl ${
+                isSelected ? "ring-4 ring-amber-400 ring-offset-2 scale-[1.02]" : "opacity-95 hover:opacity-100"
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase backdrop-blur-xs">
+                    {card.cardType === "credit" ? "KREDİ KARTI" : card.cardType === "debit" ? "BANKA KARTI" : "NAKİT"}
                   </span>
                 </div>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteCard(card.id);
+                  }}
+                  className="text-white/60 opacity-0 transition-opacity hover:text-white group-hover:opacity-100 p-1"
+                  title="Kartı Sil"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
 
-              {/* Hover Tooltip Popup Box (Sayfa Yenilenmeden Üzerine Gelindiğinde Açılan Detay Kutusu) */}
-              <div className="pointer-events-none absolute left-1/2 -top-2 z-30 w-64 -translate-x-1/2 -translate-y-full rounded-2xl border border-zinc-200 bg-zinc-900 p-3.5 text-white shadow-2xl opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:-top-3 group-hover:opacity-100 dark:border-zinc-700">
-                <div className="mb-2 flex items-center justify-between border-b border-zinc-800 pb-1.5">
-                  <span className="font-bold text-xs text-amber-300">{card.name} Harcama Detayı</span>
-                  <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-400">{stats.count} işlem</span>
-                </div>
-                <div className="flex flex-col gap-1.5 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-zinc-400">Dönemlik Toplam:</span>
-                    <span className="font-bold text-white">{formatTRY(stats.total)}</span>
-                  </div>
+              <div className="my-4">
+                <h3 className="font-mono text-base font-bold tracking-wide text-white drop-shadow-xs">
+                  {card.name}
+                </h3>
+                {card.limit && (
+                  <p className="text-[11px] text-white/80 mt-0.5">
+                    Limit: {formatTRY(card.limit)}
+                  </p>
+                )}
+              </div>
 
-                  {card.limit && (
-                    <div className="flex justify-between">
-                      <span className="text-zinc-400">Kalan Limit:</span>
-                      <span className="font-medium text-emerald-400">
-                        {formatTRY(Math.max(0, card.limit - stats.total))}
-                      </span>
-                    </div>
-                  )}
-
-                  {stats.lastExpense ? (
-                    <div className="mt-1 border-t border-zinc-800/80 pt-1.5 text-[11px]">
-                      <span className="text-zinc-400">Son İşlem: </span>
-                      <span className="font-medium text-zinc-200">
-                        {stats.lastExpense.category} ({formatTRY(stats.lastExpense.amount)})
-                      </span>
-                    </div>
-                  ) : (
-                    <p className="mt-1 text-[11px] text-zinc-500 italic">Henüz bu kartla işlem yapılmadı.</p>
-                  )}
-                </div>
-                <div className="mt-2 text-center text-[10px] font-semibold text-amber-400/90">
-                  👆 Tıklayarak harcama tablosunu filtreleyin
-                </div>
+              <div className="flex items-end justify-between border-t border-white/20 pt-2.5">
+                <span className="text-[11px] font-medium text-white/80">Bu Dönem:</span>
+                <span className="font-mono text-base font-extrabold text-white">
+                  {formatTRY(stats.total)}
+                </span>
               </div>
             </div>
           );
@@ -239,16 +203,15 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div
-            className="flex w-full max-w-md flex-col gap-4 rounded-3xl p-6 shadow-2xl"
+            className="flex w-full max-w-md flex-col gap-4 rounded-3xl p-6 sm:p-7 shadow-2xl"
             style={{
               background: "var(--shell-card-solid)",
               border: "1px solid var(--shell-border)",
             }}
           >
-            <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: "var(--shell-border)" }}>
-              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                <span>💳</span>
-                <span>Yeni Kart / Cüzdan Ekle</span>
+            <div className="flex items-center justify-between border-b pb-3.5" style={{ borderColor: "var(--shell-border)" }}>
+              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                Yeni Kart veya Cüzdan Ekle
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
@@ -258,8 +221,8 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
               </button>
             </div>
 
-            <form onSubmit={handleAddCard} className="flex flex-col gap-3.5">
-              <label className="flex flex-col gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+            <form onSubmit={handleAddCard} className="flex flex-col gap-4">
+              <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                 <span>Kart / Cüzdan Adı</span>
                 <input
                   type="text"
@@ -267,7 +230,7 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
                   placeholder="Örn: Garanti Bonus, Akbank Axess, Nakit Cüzdan"
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
-                  className="rounded-xl p-2.5 text-xs font-medium outline-none transition-all"
+                  className="rounded-xl p-3 text-xs font-medium outline-none transition-all"
                   style={{
                     background: "var(--shell-card)",
                     border: "1px solid var(--shell-border)",
@@ -277,12 +240,12 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
               </label>
 
               <div className="grid grid-cols-2 gap-3">
-                <label className="flex flex-col gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                   <span>Kart Tipi</span>
                   <select
                     value={cardType}
                     onChange={(e) => setCardType(e.target.value as "credit" | "debit" | "cash")}
-                    className="rounded-xl p-2.5 text-xs font-semibold outline-none transition-all cursor-pointer"
+                    className="rounded-xl p-3 text-xs font-semibold outline-none transition-all cursor-pointer"
                     style={{
                       background: "var(--shell-card)",
                       border: "1px solid var(--shell-border)",
@@ -290,20 +253,20 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
                     }}
                   >
                     <option value="credit">Kredi Kartı</option>
-                    <option value="debit">Banka Kartı (Mevduat)</option>
-                    <option value="cash">Nakit / Cüzdan</option>
+                    <option value="debit">Banka Kartı</option>
+                    <option value="cash">Nakit</option>
                   </select>
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                  <span>Aylık Limit (₺)</span>
+                <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                  <span>Aylık Limit (TRY)</span>
                   <input
                     type="number"
                     step="any"
                     placeholder="Örn: 50000"
                     value={cardLimit}
                     onChange={(e) => setCardLimit(e.target.value)}
-                    className="rounded-xl p-2.5 text-xs font-mono font-bold outline-none transition-all"
+                    className="rounded-xl p-3 text-xs font-mono font-bold outline-none transition-all"
                     style={{
                       background: "var(--shell-card)",
                       border: "1px solid var(--shell-border)",
@@ -313,12 +276,12 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
                 </label>
               </div>
 
-              <label className="flex flex-col gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+              <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                 <span>Görsel Tema / Renk</span>
                 <select
                   value={cardColor}
                   onChange={(e) => setCardColor(e.target.value)}
-                  className="rounded-xl p-2.5 text-xs font-semibold outline-none transition-all cursor-pointer"
+                  className="rounded-xl p-3 text-xs font-semibold outline-none transition-all cursor-pointer"
                   style={{
                     background: "var(--shell-card)",
                     border: "1px solid var(--shell-border)",
@@ -333,18 +296,18 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
                 </select>
               </label>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2.5 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 rounded-xl py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:opacity-95"
+                  className="flex-1 rounded-xl py-3 text-xs font-bold text-white shadow-xs transition-all hover:opacity-95"
                   style={{ background: "var(--shell-accent)" }}
                 >
-                  Kaydet & Cüzdana Ekle
+                  Cüzdana Ekle
                 </button>
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="rounded-xl px-4 py-2.5 text-xs font-semibold transition-all hover:bg-zinc-500/10"
+                  className="rounded-xl px-5 py-3 text-xs font-semibold transition-all hover:bg-zinc-500/10"
                   style={{
                     background: "var(--shell-card)",
                     border: "1px solid var(--shell-border)",

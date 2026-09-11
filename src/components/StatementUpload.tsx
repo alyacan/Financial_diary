@@ -21,9 +21,10 @@ interface Props {
   onImport: (expenses: Expense[]) => void;
   cards: PaymentCard[];
   defaultCardId: string | null;
+  onSuccess?: () => void;
 }
 
-export default function StatementUpload({ existingExpenses, onImport, cards, defaultCardId }: Props) {
+export default function StatementUpload({ existingExpenses, onImport, cards, defaultCardId, onSuccess }: Props) {
   const [pickedCardId, setPickedCardId] = useState<string | null>(null);
   const selectedCardId = pickedCardId ?? defaultCardId ?? cards[0]?.id ?? "";
   const setSelectedCardId = setPickedCardId;
@@ -59,7 +60,7 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
       const duplicateCount = parsedRows.filter((r) => r.isDuplicate).length;
       if (duplicateCount > 0) {
         setWarning(
-          `${duplicateCount} işlem daha önce içe aktarılmış görünüyor (aynı tarih/tutar/açıklama) — tekrar eklenmesin diye işaretleri otomatik kaldırıldı, istersen elle işaretleyip yine de ekleyebilirsin.`
+          `${duplicateCount} işlem daha önce eklenmiş görünüyor. Yinelenen satırların işareti kaldırıldı.`
         );
       }
       if (data.warning) setWarning((prev) => (prev ? `${prev} ${data.warning}` : data.warning));
@@ -87,36 +88,23 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
     onImport(toImport);
     setRows([]);
     setFile(null);
+    if (onSuccess) onSuccess();
   }
 
   const selectedRows = rows.filter((r) => r.include);
   const selectedTotal = selectedRows.reduce((sum, r) => sum + r.amount, 0);
 
   return (
-    <div
-      className="flex flex-col gap-5 rounded-[22px] p-6 sm:p-7 shadow-xs transition-all"
-      style={{
-        background: "var(--shell-card-solid)",
-        border: "1px solid var(--shell-border)",
-      }}
-    >
-      <div className="border-b pb-3" style={{ borderColor: "var(--shell-border)" }}>
-        <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-          <span>📄</span>
-          <span>Hesap & Kredi Kartı Ekstresi Yükle</span>
-        </h3>
-        <p className="text-xs text-zinc-500 mt-0.5">
-          PDF veya Excel ekstrenizi yükleyin; yapay zekâ işlemleri otomatik ayrıştırıp kategorilere ayırsın.
-        </p>
-      </div>
-
+    <div className="flex flex-col gap-6">
       {cards.length > 0 && (
-        <label className="flex flex-col gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-          <span>Ekstre Hangi Karta Ait?</span>
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+            Ekstrenin Ait Olduğu Kart
+          </label>
           <select
             value={selectedCardId}
             onChange={(e) => setSelectedCardId(e.target.value)}
-            className="w-full rounded-xl p-2.5 text-xs font-semibold outline-none transition-all cursor-pointer"
+            className="w-full rounded-xl p-3 text-sm font-semibold outline-none transition-all cursor-pointer"
             style={{
               background: "var(--shell-card)",
               border: "1px solid var(--shell-border)",
@@ -125,18 +113,17 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
           >
             {cards.map((card) => (
               <option key={card.id} value={card.id}>
-                {card.cardType === "credit" ? "💳" : card.cardType === "debit" ? "🏦" : "💵"} {card.name} (
-                {card.cardType === "credit" ? "Kredi Kartı" : card.cardType === "debit" ? "Banka Kartı" : "Nakit"})
+                {card.name} ({card.cardType === "credit" ? "Kredi Kartı" : card.cardType === "debit" ? "Banka Kartı" : "Nakit"})
               </option>
             ))}
           </select>
-        </label>
+        </div>
       )}
 
-      {/* Styled Dropzone Container */}
+      {/* Styled File Dropzone */}
       <div
         onClick={() => fileInputRef.current?.click()}
-        className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-6 text-center cursor-pointer transition-all hover:bg-zinc-500/5 group"
+        className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 text-center cursor-pointer transition-all hover:bg-zinc-500/5 group"
         style={{ borderColor: file ? "var(--shell-accent)" : "var(--shell-border)" }}
       >
         <input
@@ -148,29 +135,31 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
         />
 
         <div
-          className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl transition-transform group-hover:scale-110"
+          className="flex h-14 w-14 items-center justify-center rounded-2xl transition-transform group-hover:scale-105"
           style={{ background: "oklch(0.85 0.05 25 / 0.15)", color: "var(--shell-accent-strong)" }}
         >
-          {file ? "📑" : "📤"}
+          <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
         </div>
 
         <div>
-          <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-            {file ? file.name : "Ekstre dosyanızı seçmek için tıklayın"}
+          <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+            {file ? file.name : "Ekstre dosyanızı yüklemek için tıklayın"}
           </p>
-          <p className="text-[11px] text-zinc-500 mt-0.5">
-            {file ? `${(file.size / 1024).toFixed(1)} KB` : "PDF, Excel (.xlsx) veya CSV formatları desteklenir"}
+          <p className="text-xs text-zinc-500 mt-0.5">
+            {file ? `${(file.size / 1024).toFixed(1)} KB seçildi` : "PDF ekstre, Excel (.xlsx) veya CSV dosyaları desteklenir"}
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-1.5 mt-1">
-          <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+        <div className="flex flex-wrap gap-2 mt-1">
+          <span className="rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
             PDF Ekstre
           </span>
-          <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-            Excel .xlsx
+          <span className="rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+            Excel (.xlsx)
           </span>
-          <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+          <span className="rounded-lg px-2.5 py-1 text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
             CSV
           </span>
         </div>
@@ -179,29 +168,28 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
       <button
         onClick={handleUpload}
         disabled={!file || loading}
-        className="flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs font-bold text-white shadow-xs transition-all hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex items-center justify-center gap-2.5 rounded-xl py-3.5 px-6 text-sm font-bold text-white shadow-xs transition-all hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40"
         style={{ background: "var(--shell-accent)" }}
       >
-        <span>{loading ? "⏳" : "⚡"}</span>
-        <span>{loading ? "Ekstre İşleniyor & AI Ayrıştırıyor..." : "Ekstreyi Yükle ve Ayrıştır"}</span>
+        <span>{loading ? "Ekstre Ayrıştırılıyor..." : "Ekstreyi Yükle ve Analiz Et"}</span>
       </button>
 
       {error && (
-        <div className="rounded-xl p-3 text-xs font-medium text-rose-700 bg-rose-50 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
-          ❌ {error}
+        <div className="rounded-xl p-3.5 text-xs font-semibold text-rose-700 bg-rose-50 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+          {error}
         </div>
       )}
 
       {warning && (
-        <div className="rounded-xl p-3 text-xs font-medium text-amber-800 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-900">
-          ⚠️ {warning}
+        <div className="rounded-xl p-3.5 text-xs font-semibold text-amber-800 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-900">
+          {warning}
         </div>
       )}
 
-      {/* Parsed Rows Review Area */}
+      {/* Parsed Rows Review Section */}
       {rows.length > 0 && (
-        <div className="mt-2 flex flex-col gap-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-4" style={{ borderColor: "var(--shell-border)" }}>
+        <div className="flex flex-col gap-3.5 pt-2 border-t" style={{ borderColor: "var(--shell-border)" }}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
                 {rows.length} işlem tespit edildi {bankLabel ? `(${bankLabel})` : ""}
@@ -223,7 +211,7 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
                 className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors hover:bg-zinc-500/10"
                 style={{ color: "var(--shell-muted)" }}
               >
-                Yinelenenleri Kaldır
+                Yinelenenleri Çıkar
               </button>
             </div>
           </div>
@@ -236,7 +224,7 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
             }}
           >
             <div className="max-h-72 overflow-y-auto">
-              <table className="w-full min-w-[500px] border-collapse text-left text-xs">
+              <table className="w-full min-w-[480px] border-collapse text-left text-xs">
                 <thead>
                   <tr
                     className="border-b text-[10px] font-bold uppercase tracking-wider text-zinc-500"
@@ -305,11 +293,10 @@ export default function StatementUpload({ existingExpenses, onImport, cards, def
           <button
             onClick={handleImport}
             disabled={selectedRows.length === 0}
-            className="flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs font-bold text-white shadow-xs transition-all hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex items-center justify-center gap-2 rounded-xl py-3.5 px-6 text-sm font-bold text-white shadow-xs transition-all hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40"
             style={{ background: "var(--shell-accent)" }}
           >
-            <span>📥</span>
-            <span>Seçilen {selectedRows.length} Harcamayı Döneme Aktar ({formatTRY(selectedTotal)})</span>
+            <span>Seçilen {selectedRows.length} Harcamayı Aktar ({formatTRY(selectedTotal)})</span>
           </button>
         </div>
       )}

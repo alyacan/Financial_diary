@@ -87,7 +87,7 @@ export default function ExpenseHeatmapCalendar({ expenses }: Props) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
         <p className="text-xs text-zinc-500 max-w-sm">
-          Bu dönemde henüz harcama yok — ilk harcamanı eklediğinde burada günlere göre harcama yoğunluk haritası oluşacak.
+          Bu dönemde henüz harcama yok — ilk harcamanızı eklediğinizde burada günlere göre yoğunluk haritası oluşacaktır.
         </p>
       </div>
     );
@@ -113,7 +113,9 @@ export default function ExpenseHeatmapCalendar({ expenses }: Props) {
           aria-label="Önceki ay"
           className="flex h-8 w-8 items-center justify-center rounded-xl text-zinc-500 transition-all hover:bg-zinc-500/10"
         >
-          ←
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
         </button>
         <span className="text-xs font-bold tracking-tight text-zinc-900 dark:text-zinc-100 uppercase">
           {MONTH_NAMES[viewMonth]} {viewYear}
@@ -123,11 +125,13 @@ export default function ExpenseHeatmapCalendar({ expenses }: Props) {
           aria-label="Sonraki ay"
           className="flex h-8 w-8 items-center justify-center rounded-xl text-zinc-500 transition-all hover:bg-zinc-500/10"
         >
-          →
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
         </button>
       </div>
 
-      {/* Calendar Heatmap Grid */}
+      {/* Calendar Grid */}
       <div className="grid grid-cols-7 gap-1.5">
         {WEEKDAYS.map((w) => (
           <div key={w} className="py-1 text-center text-[10px] font-bold tracking-wider text-zinc-400 uppercase">
@@ -164,9 +168,9 @@ export default function ExpenseHeatmapCalendar({ expenses }: Props) {
         })}
       </div>
 
-      {/* Legend Ramp */}
+      {/* Legend */}
       <div className="flex items-center justify-between text-[10px] text-zinc-500 pt-1">
-        <span>Az Harcama</span>
+        <span>Düşük</span>
         <div className="flex items-center gap-1">
           {[0, 1, 2, 3, 4, 5].map((b) => (
             <span
@@ -176,10 +180,10 @@ export default function ExpenseHeatmapCalendar({ expenses }: Props) {
             />
           ))}
         </div>
-        <span>Çok Harcama</span>
+        <span>Yüksek</span>
       </div>
 
-      {/* Selected Day Details Drawer */}
+      {/* Selected Day Details */}
       {selectedDate && (
         <div
           className="rounded-2xl p-4 text-xs transition-all shadow-2xs"
@@ -190,7 +194,7 @@ export default function ExpenseHeatmapCalendar({ expenses }: Props) {
         >
           <div className="mb-2.5 flex items-center justify-between border-b pb-2" style={{ borderColor: "var(--shell-border)" }}>
             <span className="font-bold text-zinc-900 dark:text-zinc-100">
-              📅 {formatDate(selectedDate)}
+              {formatDate(selectedDate)}
             </span>
             <span className="font-bold font-mono text-sm" style={{ color: "var(--shell-accent-strong)" }}>
               {formatTRY(selectedDayTotal)}
