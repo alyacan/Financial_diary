@@ -1,13 +1,27 @@
 {
-  "name": "Finansal Günlük",
-  "short_name": "Fin. Günlük",
+  "name": "Finansal G\u00fcnl\u00fck",
+  "short_name": "Fin. G\u00fcnl\u00fck",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#faf8f5",
+  "background_color": "#ffffff",
   "theme_color": "#c4633f",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/icon.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/icon-192.png?v=4",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png?v=4",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png?v=4",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
   ]
 }
