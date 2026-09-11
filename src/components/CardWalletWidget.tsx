@@ -98,11 +98,11 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
   const totalPeriodSpend = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
 
   return (
-    <section className="flex flex-col gap-4 rounded-3xl border border-zinc-200/80 bg-gradient-to-br from-zinc-50 via-white to-zinc-100/50 p-5 shadow-xs dark:border-zinc-800 dark:from-zinc-900/90 dark:via-zinc-900 dark:to-zinc-950">
+    <section className="flex flex-col gap-5 rounded-[22px] p-6 shadow-xs backdrop-blur-sm transition-all sm:p-7" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
       {/* Wallet Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 pb-3 dark:border-zinc-800/80">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4" style={{ borderColor: "var(--shell-border)" }}>
         <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-900 text-lg text-white shadow-2xs dark:bg-zinc-100 dark:text-black">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-lg text-white shadow-xs" style={{ background: "linear-gradient(135deg, var(--shell-hero-from), var(--shell-hero-to))" }}>
             💳
           </div>
           <div>
@@ -117,14 +117,16 @@ export default function CardWalletWidget({ expenses, selectedCardId, onSelectCar
           {selectedCardId && (
             <button
               onClick={() => onSelectCard(null)}
-              className="rounded-xl border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+              className="rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors hover:opacity-90"
+              style={{ background: "var(--shell-card-solid)", border: "1px solid var(--shell-border)", color: "var(--shell-nav-active-fg)" }}
             >
               Filtreyi Temizle (Tüm Kartlar)
             </button>
           )}
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-zinc-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-black dark:hover:bg-zinc-200"
+            className="flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition-all hover:opacity-95"
+            style={{ background: "var(--shell-accent)" }}
           >
             <span>✨</span>
             <span>Yeni Kart Ekle</span>

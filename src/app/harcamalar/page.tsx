@@ -74,24 +74,104 @@ export default function HarcamalarPage() {
 
   // Filter tabs if no archives exist
   const visibleTabs = TABS.filter((t) => t.id !== "archives" || archivedPeriods.length > 0);
+  const totalFilteredAmount = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6 sm:p-10">
+    <div className="mx-auto flex max-w-[1400px] flex-col gap-8 p-6 sm:gap-10 sm:p-10">
+      {/* Header */}
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Harcama Analizi & Kartlarım</h1>
-          <p className="mt-1 text-sm text-zinc-500">Banka/kredi kartı takibi, bütçe yönetimi ve dönem analizi</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-4xl">
+            Harcama Analizi & Kartlarım
+          </h1>
+          <p className="mt-1 text-sm font-medium" style={{ color: "var(--shell-muted)" }}>
+            Banka ve kredi kartı cüzdanı, bütçe takibi ve dönem harcama analizi
+          </p>
         </div>
         <button
           onClick={onClosePeriod}
           disabled={expenses.length === 0}
-          className="flex items-center gap-2 rounded-xl border border-zinc-300 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all hover:shadow-xs disabled:cursor-not-allowed disabled:opacity-40"
+          style={{
+            background: "var(--shell-card)",
+            border: "1px solid var(--shell-border)",
+            color: "var(--shell-nav-active-fg)",
+          }}
         >
-          <span>📁</span> Dönemi Kapat / Klasörle
+          <span>📁</span>
+          <span>Dönemi Kapat / Klasörle</span>
         </button>
       </header>
 
       <ErrorBanner message={error} onDismiss={clearError} />
+
+      {/* Quick KPI Summary Bar (Aligned with Home Page Hero Aesthetic) */}
+      <section aria-label="harcama özeti" className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        {/* Hero Card */}
+        <div
+          className="flex flex-col justify-between gap-6 rounded-[20px] p-6 shadow-md transition-all hover:shadow-lg"
+          style={{
+            background: "linear-gradient(150deg, var(--shell-hero-from), var(--shell-hero-to))",
+            color: "var(--shell-hero-fg)",
+          }}
+        >
+          <div className="flex items-start justify-between">
+            <div className="text-[13px] font-semibold tracking-wide uppercase" style={{ color: "oklch(0.85 0.05 25)" }}>
+              {selectedCardId ? "Seçili Kart Harcaması" : "Bu Dönem Toplam Harcama"}
+            </div>
+            {selectedCardId && (
+              <span
+                className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                style={{ background: "oklch(0.4 0.1 25 / 0.4)", color: "oklch(0.9 0.05 25)" }}
+              >
+                Filtreli
+              </span>
+            )}
+          </div>
+          <div>
+            <div className="text-3xl font-extrabold tracking-tight sm:text-4xl">{formatTRY(totalFilteredAmount)}</div>
+            <div className="mt-1.5 text-[13px]" style={{ color: "oklch(0.75 0.03 60)" }}>
+              {filteredExpenses.length} adet harcama kaydı {selectedCardId ? "(Seçili kart)" : "(Tüm kartlar)"}
+            </div>
+          </div>
+        </div>
+
+        {/* KPI Card 2: Bütçe */}
+        <div
+          className="flex flex-col justify-between gap-4 rounded-[20px] p-6 transition-all hover:shadow-xs"
+          style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
+        >
+          <div className="text-xs font-semibold tracking-wide uppercase" style={{ color: "var(--shell-muted)" }}>
+            Bütçe Hedefleri
+          </div>
+          <div>
+            <div className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-3xl">
+              {budgets.length} Kategori
+            </div>
+            <div className="mt-1 text-xs" style={{ color: "var(--shell-muted)" }}>
+              15&apos;inden 15&apos;ine hesap dönemi
+            </div>
+          </div>
+        </div>
+
+        {/* KPI Card 3: Arşiv */}
+        <div
+          className="flex flex-col justify-between gap-4 rounded-[20px] p-6 transition-all hover:shadow-xs"
+          style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
+        >
+          <div className="text-xs font-semibold tracking-wide uppercase" style={{ color: "var(--shell-muted)" }}>
+            Arşivlenen Dönemler
+          </div>
+          <div>
+            <div className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-3xl">
+              {archivedPeriods.length} Klasör
+            </div>
+            <div className="mt-1 text-xs" style={{ color: "var(--shell-muted)" }}>
+              Kapanmış geçmiş dönem kayıtları
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Real Credit/Debit Card Wallet Widget */}
       <CardWalletWidget
@@ -100,58 +180,41 @@ export default function HarcamalarPage() {
         onSelectCard={setSelectedCardId}
       />
 
-      {/* Quick KPI Summary Bar */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <div className="text-xs uppercase tracking-wider text-zinc-500">
-            {selectedCardId ? "Seçili Kart Harcaması" : "Bu Dönem Toplam Harcama"}
-          </div>
-          <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            {formatTRY(filteredExpenses.reduce((sum, e) => sum + e.amount, 0))}
-          </div>
-          <div className="mt-1 text-xs text-zinc-400">
-            {filteredExpenses.length} adet harcama kaydı {selectedCardId && "(Filtreli)"}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <div className="text-xs uppercase tracking-wider text-zinc-500">Bütçe Takibi</div>
-          <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            {budgets.length} Kategori
-          </div>
-          <div className="mt-1 text-xs text-zinc-400">15&apos;inden 15&apos;ine hesap dönemi</div>
-        </div>
-
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <div className="text-xs uppercase tracking-wider text-zinc-500">Arşivlenen Dönemler</div>
-          <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            {archivedPeriods.length} Klasör
-          </div>
-          <div className="mt-1 text-xs text-zinc-400">Kapanmış geçmiş dönemler</div>
-        </div>
-      </section>
-
-      {/* Tabs Navigation */}
-      <nav className="flex flex-wrap gap-1.5 border-b border-zinc-200 pb-2 dark:border-zinc-800" aria-label="Harcama sekmeleri">
+      {/* Tabs Navigation Segmented Control */}
+      <nav
+        className="flex flex-wrap items-center gap-1.5 rounded-2xl p-1.5 backdrop-blur-md"
+        style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
+        aria-label="Harcama sekmeleri"
+      >
         {visibleTabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+              className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+              style={
                 isActive
-                  ? "bg-zinc-900 text-white shadow-xs dark:bg-zinc-100 dark:text-black"
-                  : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-              }`}
+                  ? {
+                      background: "var(--shell-card-solid)",
+                      border: "1px solid oklch(0.85 0.03 30 / 0.5)",
+                      color: "var(--shell-nav-active-fg)",
+                      boxShadow: "0 2px 10px -2px oklch(0.2 0.02 40 / 0.12)",
+                      fontWeight: 600,
+                    }
+                  : { color: "var(--shell-muted-2)", border: "1px solid transparent" }
+              }
             >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
               {tab.id === "table" && filteredExpenses.length > 0 && (
                 <span
-                  className={`ml-1 rounded-full px-2 py-0.5 text-xs ${
-                    isActive ? "bg-zinc-700 text-zinc-100 dark:bg-zinc-300 dark:text-zinc-900" : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                  }`}
+                  className="ml-1 rounded-full px-2 py-0.5 text-xs font-semibold"
+                  style={
+                    isActive
+                      ? { background: "oklch(0.85 0.05 25 / 0.2)", color: "var(--shell-accent-strong)" }
+                      : { background: "oklch(0.5 0.02 50 / 0.12)", color: "var(--shell-muted)" }
+                  }
                 >
                   {filteredExpenses.length}
                 </span>
@@ -163,25 +226,63 @@ export default function HarcamalarPage() {
 
       {/* Tab Content 1: Overview Chart & Heatmap */}
       {activeTab === "overview" && (
-        <section className="flex flex-col gap-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-              <h2 className="mb-4 text-lg font-semibold tracking-tight">Kategori Dağılımı</h2>
+        <section className="flex flex-col gap-8">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div
+              className="rounded-[22px] p-6 shadow-xs backdrop-blur-sm transition-all sm:p-7"
+              style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
+            >
+              <h2 className="mb-4 text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Kategori Dağılımı</h2>
               <ExpenseChart expenses={filteredExpenses} />
             </div>
-            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-              <h2 className="mb-4 text-lg font-semibold tracking-tight">Günlük Yoğunluk Haritası</h2>
+            <div
+              className="rounded-[22px] p-6 shadow-xs backdrop-blur-sm transition-all sm:p-7"
+              style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
+            >
+              <h2 className="mb-4 text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Günlük Yoğunluk Haritası</h2>
               <ExpenseHeatmapCalendar expenses={filteredExpenses} />
             </div>
+          </div>
+
+          {/* Quick Table View in Overview for Seamless UX */}
+          <div
+            className="rounded-[22px] p-6 shadow-xs backdrop-blur-sm transition-all sm:p-8"
+            style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
+          >
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Bu Dönemin Harcamaları</h2>
+                <p className="text-xs font-medium" style={{ color: "var(--shell-muted)" }}>
+                  Kayıtlı harcamalarınızı hızlıca inceleyebilir ve filtreleyebilirsiniz
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveTab("add")}
+                className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all hover:opacity-95"
+                style={{ background: "var(--shell-accent)" }}
+              >
+                <span>➕</span>
+                <span>Yeni Harcama / Ekstre</span>
+              </button>
+            </div>
+            <ExpenseTable
+              expenses={filteredExpenses}
+              cards={cards}
+              onDelete={handleDeleteExpense}
+              onUpdateCategory={handleUpdateExpenseCategory}
+            />
           </div>
         </section>
       )}
 
       {/* Tab Content 2: Budget Goals */}
       {activeTab === "budget" && (
-        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <h2 className="text-lg font-semibold tracking-tight">Hedef Bazlı Bütçe</h2>
-          <p className="mb-4 text-xs text-zinc-500">
+        <section
+          className="rounded-[22px] p-6 shadow-xs backdrop-blur-sm transition-all sm:p-8"
+          style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
+        >
+          <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Hedef Bazlı Bütçe</h2>
+          <p className="mb-6 text-xs font-medium" style={{ color: "var(--shell-muted)" }}>
             Kategori başına aylık bir hedef belirle; harcaman hesap özeti dönemine göre (ayın 15&apos;inden bir sonraki ayın 14&apos;üne kadar) hedefe ve bir önceki döneme göre karşılaştırılsın.
           </p>
           <BudgetGoals budgets={budgets} progress={budgetProgress} onSave={handleSaveBudget} onDelete={handleDeleteBudget} />
@@ -190,9 +291,12 @@ export default function HarcamalarPage() {
 
       {/* Tab Content 3: Add Expense / Statement Upload */}
       {activeTab === "add" && (
-        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <h2 className="mb-4 text-lg font-semibold tracking-tight">Harcama Ekle ve Ekstre Yükle</h2>
-          <div className="grid gap-8 md:grid-cols-2">
+        <section
+          className="rounded-[22px] p-6 shadow-xs backdrop-blur-sm transition-all sm:p-8"
+          style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
+        >
+          <h2 className="mb-6 text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Harcama Ekle ve Ekstre Yükle</h2>
+          <div className="grid gap-8 lg:grid-cols-2">
             <StatementUpload existingExpenses={expenses} onImport={handleImportExpenses} cards={cards} defaultCardId={selectedCardId} />
             <ExpenseForm onAdd={handleAddExpense} cards={cards} defaultCardId={selectedCardId} />
           </div>
@@ -201,16 +305,22 @@ export default function HarcamalarPage() {
 
       {/* Tab Content 4: Expenses Table */}
       {activeTab === "table" && (
-        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <section
+          className="rounded-[22px] p-6 shadow-xs backdrop-blur-sm transition-all sm:p-8"
+          style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
+        >
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight">Harcamalar Listesi</h2>
-              <p className="text-xs text-zinc-500">
+              <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">Harcamalar Listesi</h2>
+              <p className="text-xs font-medium" style={{ color: "var(--shell-muted)" }}>
                 Kayıtlı harcamalarını görebilir, silebilir veya kategorisine tıklayarak değiştirebilirsin.
               </p>
             </div>
             {selectedCardId && (
-              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900 dark:bg-amber-950 dark:text-amber-300">
+              <span
+                className="rounded-full px-3 py-1 text-xs font-semibold"
+                style={{ background: "oklch(0.85 0.1 70 / 0.3)", color: "oklch(0.45 0.12 60)" }}
+              >
                 🔍 Kart Filtresi Aktif
               </span>
             )}
@@ -226,9 +336,14 @@ export default function HarcamalarPage() {
 
       {/* Tab Content 5: Archived Periods */}
       {activeTab === "archives" && archivedPeriods.length > 0 && (
-        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <h2 className="mb-4 text-lg font-semibold tracking-tight">Arşivlenen Dönemler ({archivedPeriods.length})</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <section
+          className="rounded-[22px] p-6 shadow-xs backdrop-blur-sm transition-all sm:p-8"
+          style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
+        >
+          <h2 className="mb-5 text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            Arşivlenen Dönemler ({archivedPeriods.length})
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[...archivedPeriods].reverse().map((period) => (
               <ArchivedPeriodCard
                 key={period.id}
