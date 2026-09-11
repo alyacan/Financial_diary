@@ -172,13 +172,13 @@ export default function HarcamalarPage() {
           }}
         >
           <div className="flex items-start justify-between">
-            <div className="text-[12px] font-bold tracking-wider uppercase" style={{ color: "oklch(0.85 0.05 25)" }}>
+            <div className="text-[12px] font-bold tracking-wider uppercase text-white/80">
               {selectedCardId ? "Seçili Kart Harcaması" : "Bu Dönem Toplam Harcama"}
             </div>
             {selectedCardId && (
               <span
                 className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                style={{ background: "oklch(0.4 0.1 25 / 0.4)", color: "oklch(0.9 0.05 25)" }}
+                style={{ background: "rgba(255, 255, 255, 0.2)", color: "#ffffff" }}
               >
                 Filtreli
               </span>

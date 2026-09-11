@@ -2,7 +2,7 @@
 
 :root {
   --background: oklch(0.975 0.01 100);
-  --foreground: oklch(0.22 0.02 135);
+  --foreground: oklch(0.2 0.015 135);
 }
 
 @theme inline {
@@ -12,46 +12,49 @@
   --font-serif: var(--font-montserrat);
 }
 
-/* Finansal Günlük Tasarım Paleti — İkonumuzla Uyumlu "Botanical Sage & Forest Olive" */
+/* Finansal Günlük — Yüksek Kontrastlı Botanical Sage & Forest Olive Tasarım Sistemi */
 :root {
-  --shell-card: oklch(0.995 0.005 100 / 0.88);
+  --shell-card: oklch(0.995 0.005 100 / 0.92);
   --shell-card-solid: oklch(0.995 0.005 100);
-  --shell-border: oklch(0.88 0.02 135 / 0.65);
-  --shell-muted: oklch(0.5 0.03 135);
-  --shell-muted-2: oklch(0.42 0.03 135);
-  --shell-accent: oklch(0.48 0.09 138);
-  --shell-accent-strong: oklch(0.38 0.09 138);
-  --shell-accent-soft: oklch(0.72 0.07 138);
-  --shell-accent-bg: oklch(0.48 0.09 138 / 0.12);
-  --shell-hero-from: oklch(0.3 0.04 138);
-  --shell-hero-to: oklch(0.2 0.03 138);
-  --shell-hero-fg: oklch(0.98 0.01 100);
-  --shell-positive: oklch(0.52 0.14 142);
-  --shell-positive-bg: oklch(0.52 0.14 142 / 0.15);
-  --shell-negative: oklch(0.52 0.16 28);
-  --shell-gold: oklch(0.75 0.12 85);
-  --shell-gold-bg: oklch(0.75 0.12 85 / 0.15);
-  --shell-nav-active-fg: oklch(0.22 0.05 138);
+  --shell-border: oklch(0.88 0.02 135 / 0.7);
+  --shell-muted: oklch(0.48 0.02 135);
+  --shell-muted-2: oklch(0.4 0.02 135);
+  --shell-accent: #3b5e32;
+  --shell-accent-strong: #2a4524;
+  --shell-accent-soft: #6d9363;
+  --shell-accent-bg: rgba(59, 94, 50, 0.12);
+  --shell-hero-from: oklch(0.28 0.04 138);
+  --shell-hero-to: oklch(0.18 0.03 138);
+  --shell-hero-fg: #ffffff;
+  --shell-positive: #16a34a;
+  --shell-positive-bg: rgba(22, 163, 74, 0.14);
+  --shell-negative: #dc2626;
+  --shell-gold: #d97706;
+  --shell-gold-bg: rgba(217, 119, 6, 0.14);
+  --shell-nav-active-fg: #2a4524;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: oklch(0.18 0.02 135);
-    --foreground: oklch(0.94 0.01 100);
-    --shell-card: oklch(0.25 0.02 135 / 0.88);
-    --shell-card-solid: oklch(0.25 0.02 135);
-    --shell-border: oklch(0.35 0.03 135 / 0.7);
-    --shell-muted: oklch(0.75 0.02 120);
-    --shell-muted-2: oklch(0.8 0.02 120);
-    --shell-hero-from: oklch(0.28 0.04 138);
-    --shell-hero-to: oklch(0.16 0.03 138);
-    --shell-nav-active-fg: oklch(0.96 0.02 120);
-    --shell-accent: oklch(0.68 0.11 138);
-    --shell-accent-strong: oklch(0.82 0.1 138);
-    --shell-accent-soft: oklch(0.78 0.08 138);
-    --shell-accent-bg: oklch(0.68 0.11 138 / 0.2);
-    --shell-gold: oklch(0.8 0.12 85);
-    --shell-gold-bg: oklch(0.8 0.12 85 / 0.2);
+    --background: #0d0f0e;
+    --foreground: #f4f5f4;
+    --shell-card: rgba(24, 28, 25, 0.94);
+    --shell-card-solid: #181c19;
+    --shell-border: rgba(255, 255, 255, 0.12);
+    --shell-muted: #9ca3af;
+    --shell-muted-2: #d1d5db;
+    --shell-hero-from: #1c221d;
+    --shell-hero-to: #111412;
+    --shell-nav-active-fg: #ffffff;
+    --shell-accent: #65a355;
+    --shell-accent-strong: #86c476;
+    --shell-accent-soft: #9cd48d;
+    --shell-accent-bg: rgba(101, 163, 85, 0.18);
+    --shell-gold: #f59e0b;
+    --shell-gold-bg: rgba(245, 158, 11, 0.18);
+    --shell-positive: #22c55e;
+    --shell-positive-bg: rgba(34, 197, 94, 0.18);
+    --shell-negative: #ef4444;
   }
 }
 
@@ -61,10 +64,10 @@
   --viz-text-secondary: #4a5448;
   --viz-muted: #7b8579;
   --viz-gridline: #e2e6e0;
-  --viz-sequential: #426338;
+  --viz-sequential: #3b5e32;
 }
 
-/* Harcama yoğunluk takvimi: Yeşil botanik kademe rampası */
+/* Harcama yoğunluk takvimi */
 :root {
   --heat-1: #d8e5d4;
   --heat-fg-1: #1a2617;
@@ -80,21 +83,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --viz-surface: #172016;
-    --viz-text-secondary: #c2ccc0;
-    --viz-muted: #7b8579;
-    --viz-gridline: #273325;
-    --viz-sequential: #6ea162;
-    --heat-1: #253a21;
+    --viz-surface: #141815;
+    --viz-text-secondary: #d1d5db;
+    --viz-muted: #9ca3af;
+    --viz-gridline: #262c27;
+    --viz-sequential: #65a355;
+    --heat-1: #1c271b;
     --heat-fg-1: #fff;
-    --heat-2: #3a5b33;
+    --heat-2: #2d422b;
     --heat-fg-2: #fff;
-    --heat-3: #56844d;
+    --heat-3: #42633e;
     --heat-fg-3: #fff;
-    --heat-4: #7fb574;
-    --heat-fg-4: #171717;
-    --heat-5: #b0cca9;
-    --heat-fg-5: #171717;
+    --heat-4: #659a5d;
+    --heat-fg-4: #121512;
+    --heat-5: #92cf88;
+    --heat-fg-5: #121512;
   }
 }
 

@@ -49,7 +49,7 @@ export default function RootLayout({
       <body className="min-h-full font-sans" style={{ background: "var(--background)", color: "var(--foreground)" }}>
         <div className="relative min-h-screen">
           <div
-            className="pointer-events-none fixed inset-0 z-0"
+            className="pointer-events-none fixed inset-0 z-0 dark:hidden"
             style={{
               background: `
                 radial-gradient(ellipse 750px 550px at 6% 6%, oklch(0.92 0.05 138 / 0.35), transparent 65%),

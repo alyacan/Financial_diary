@@ -84,7 +84,7 @@ export default function YatirimlarPage() {
 
       {/* Top KPI Cards */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-[#181c19]">
           <div className="text-xs uppercase tracking-wider text-zinc-500">Toplam Yatırım Maliyeti</div>
           <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
             {formatTRY(totalInvested)}
@@ -92,7 +92,7 @@ export default function YatirimlarPage() {
           <div className="mt-1 text-xs text-zinc-400">{positions.length} farklı varlık pozisyonu</div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-[#181c19]">
           <div className="text-xs uppercase tracking-wider text-zinc-500">Portföy Güncel Değeri</div>
           <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
             {formatTRY(totalValue)}
@@ -100,7 +100,7 @@ export default function YatirimlarPage() {
           <div className="mt-1 text-xs text-zinc-400">Canlı kurlar ile güncellenmiş</div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-[#181c19]">
           <div className="text-xs uppercase tracking-wider text-zinc-500">Toplam Kâr / Zarar</div>
           <div className={`mt-1.5 text-2xl font-bold tracking-tight ${totalProfit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
             {totalProfit >= 0 ? "+" : ""}{formatTRY(totalProfit)}
@@ -144,13 +144,13 @@ export default function YatirimlarPage() {
       {/* Tab 1: Overview */}
       {activeTab === "overview" && (
         <section className="flex flex-col gap-6">
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-white/10 dark:bg-[#181c19]">
             <h2 className="mb-4 text-lg font-semibold tracking-tight">Portföy Varlık Dağılımı</h2>
             <PortfolioChart positions={positions} />
           </div>
 
           {fundCategoryBreakdown.length > 0 && (
-            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-white/10 dark:bg-[#181c19]">
               <h2 className="mb-1 text-lg font-semibold tracking-tight">Fon Dağılımı (Kategoriye Göre)</h2>
               <p className="mb-4 text-xs text-zinc-500">
                 Yatırılan toplam tutara göre TEFAS ve yatırım fonlarının kategori kırılımı.
@@ -159,7 +159,7 @@ export default function YatirimlarPage() {
                 {fundCategoryBreakdown.map((f) => {
                   const percent = totalFundInvested > 0 ? (f.totalInvested / totalFundInvested) * 100 : 0;
                   return (
-                    <div key={f.category} className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3.5 shadow-2xs dark:border-zinc-800 dark:bg-zinc-900/40">
+                    <div key={f.category} className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3.5 shadow-2xs dark:border-white/10 dark:bg-[#181c19]">
                       <span className="text-sm font-medium">{f.category}</span>
                       <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                         {formatTRY(f.totalInvested)} (%{percent.toFixed(1)})
@@ -177,7 +177,7 @@ export default function YatirimlarPage() {
       {activeTab === "prices" && (
         <section className="flex flex-col gap-6">
           {/* Live Market Tickers Bar */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-white/10 dark:bg-[#181c19]">
             <h2 className="mb-3 text-lg font-semibold tracking-tight">Canlı Piyasa Fiyatları & Endeksler</h2>
             <div className="flex flex-wrap gap-3 text-xs">
               <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-2.5 dark:border-amber-900/40 dark:bg-amber-950/20">
@@ -222,7 +222,7 @@ export default function YatirimlarPage() {
 
           {/* TEFAS Manual Fund Entry */}
           {distinctFundCodes.length > 0 && (
-            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-white/10 dark:bg-[#181c19]">
               <h3 className="mb-1 text-base font-semibold tracking-tight">TEFAS Fon Fiyatı & Risk Bilgisi Girişi</h3>
               <p className="mb-4 text-xs text-zinc-500">
                 TEFAS fon fiyatlarını doğrudan TEFAS sayfasından bakıp tek tıkla buraya kaydedebilirsin.
@@ -330,7 +330,7 @@ export default function YatirimlarPage() {
 
       {/* Tab 4: Transactions Table */}
       {activeTab === "transactions" && (
-        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-white/10 dark:bg-[#181c19]">
           <h2 className="mb-1 text-lg font-semibold tracking-tight">İşlemlerim & Pozisyonlar</h2>
           <p className="mb-4 text-xs text-zinc-500">
             Kayıtlı yatırımlarınızı inceleyebilir, kâr/zarar oranlarınızı görebilir ve silme işlemi yapabilirsiniz.

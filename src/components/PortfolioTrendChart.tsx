@@ -36,8 +36,8 @@ export default function PortfolioTrendChart({ snapshots }: Props) {
         <AreaChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
           <defs>
             <linearGradient id="portfolioTrendFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="oklch(0.8 0.06 25)" stopOpacity={0.35} />
-              <stop offset="100%" stopColor="oklch(0.8 0.06 25)" stopOpacity={0} />
+              <stop offset="0%" stopColor="#16a34a" stopOpacity={0.35} />
+              <stop offset="100%" stopColor="#16a34a" stopOpacity={0} />
             </linearGradient>
           </defs>
           <YAxis hide domain={["dataMin", "dataMax"]} />
@@ -49,7 +49,7 @@ export default function PortfolioTrendChart({ snapshots }: Props) {
           <Area
             type="monotone"
             dataKey="value"
-            stroke="oklch(0.55 0.1 25)"
+            stroke="#16a34a"
             strokeWidth={3}
             fill="url(#portfolioTrendFill)"
           />

@@ -38,7 +38,7 @@ export default function TransactionTable({ rows, onDelete }: Props) {
   return (
     <div className="flex flex-col gap-3">
       {/* Table Header Bar */}
-      <div className="hidden grid-cols-12 gap-3 px-4 py-2 text-xs font-bold uppercase tracking-wider text-zinc-400 sm:grid">
+      <div className="hidden grid-cols-12 gap-3 px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 sm:grid">
         <div className="col-span-2">Tarih</div>
         <div className="col-span-3">Varlık</div>
         <div className="col-span-2 text-right">Miktar & Alış</div>
@@ -55,7 +55,7 @@ export default function TransactionTable({ rows, onDelete }: Props) {
 
           return (
             <Fragment key={transaction.id}>
-              <div className="group relative flex flex-col gap-3 rounded-2xl border border-zinc-200/90 bg-white p-4 shadow-2xs transition-all hover:border-zinc-300 hover:shadow-xs dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:border-zinc-700">
+              <div className="group relative flex flex-col gap-3 rounded-2xl border border-zinc-200/90 bg-white p-4 shadow-2xs transition-all hover:border-zinc-300 hover:shadow-xs dark:border-white/10 dark:bg-[#181c19] dark:hover:border-white/20">
                 <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-12">
                   {/* Column 1: Date */}
                   <div className="col-span-2 flex items-center gap-2">

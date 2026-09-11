@@ -118,21 +118,21 @@ export default function Home() {
           }}
         >
           <div className="flex items-start justify-between">
-            <div className="text-[13px] tracking-wide uppercase font-semibold" style={{ color: "oklch(0.85 0.05 25)" }}>
+            <div className="text-[13px] tracking-wide uppercase font-semibold text-white/80">
               Güncel Portföy Değeri
             </div>
             {totalInvested > 0 && (
               <div
                 className="flex items-center gap-1.5 rounded-full px-2.5 py-1"
-                style={{ background: profitPercent >= 0 ? "var(--shell-positive-bg)" : "oklch(0.4 0.1 25 / 0.3)" }}
+                style={{ background: profitPercent >= 0 ? "var(--shell-positive-bg)" : "rgba(239, 68, 68, 0.2)" }}
               >
                 <span
                   className="h-1.5 w-1.5 rounded-full"
-                  style={{ background: profitPercent >= 0 ? "oklch(0.75 0.16 145)" : "oklch(0.7 0.16 25)" }}
+                  style={{ background: profitPercent >= 0 ? "#22c55e" : "#ef4444" }}
                 />
                 <span
                   className="text-xs font-semibold"
-                  style={{ color: profitPercent >= 0 ? "oklch(0.85 0.1 145)" : "oklch(0.85 0.1 25)" }}
+                  style={{ color: profitPercent >= 0 ? "#4ade80" : "#fca5a5" }}
                 >
                   {profitPercent >= 0 ? "+" : ""}
                   {profitPercent.toFixed(1)}%
@@ -142,7 +142,7 @@ export default function Home() {
           </div>
           <div>
             <div className="text-3xl font-extrabold tracking-tight sm:text-4xl">{formatTRY(totalValue)}</div>
-            <div className="mt-1.5 text-[13px]" style={{ color: "oklch(0.75 0.03 60)" }}>
+            <div className="mt-1.5 text-[13px] text-white/75">
               {pricedPositionCount} aktif pozisyon
             </div>
           </div>
@@ -238,26 +238,27 @@ export default function Home() {
       {insight && (
         <Link
           href="/harcamalar"
-          className="flex items-center justify-between gap-6 rounded-[20px] p-7 shadow-md transition-all hover:brightness-[1.02]"
+          className="group flex items-center justify-between gap-6 rounded-[22px] p-6 sm:p-7 shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 border"
           style={{
-            background: "linear-gradient(120deg, oklch(0.88 0.06 25), oklch(0.82 0.08 20))",
-            color: "oklch(0.22 0.02 40)",
+            background: "linear-gradient(135deg, var(--shell-card-solid) 0%, var(--shell-accent-bg) 100%)",
+            borderColor: "var(--shell-border)",
+            color: "var(--foreground)",
           }}
         >
           <div className="flex max-w-[640px] flex-col gap-1.5">
-            <div className="text-xs tracking-wide uppercase font-bold" style={{ color: "oklch(0.35 0.05 30)" }}>
+            <div className="flex items-center gap-2 text-xs tracking-wider uppercase font-bold" style={{ color: "var(--shell-accent)" }}>
               <Icon name="bot" /> AI Analiz Özetiniz
             </div>
-            <div className="text-[17px] font-bold">{insight.title}</div>
-            <div className="text-[13.5px]" style={{ color: "oklch(0.35 0.04 30)" }}>
+            <div className="text-lg font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">{insight.title}</div>
+            <div className="text-sm font-medium" style={{ color: "var(--shell-muted)" }}>
               {insight.detail}
             </div>
           </div>
           <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full shadow-2xs"
-            style={{ background: "oklch(0.99 0.01 70 / 0.6)" }}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full shadow-2xs border transition-transform group-hover:scale-110"
+            style={{ background: "var(--shell-card)", borderColor: "var(--shell-border)", color: "var(--shell-accent)" }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="oklch(0.3 0.05 30)" strokeWidth={2}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
           </div>

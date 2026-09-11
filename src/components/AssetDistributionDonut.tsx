@@ -5,15 +5,15 @@ import { PositionSummary } from "@/lib/calculations";
 import { ASSET_LABELS } from "@/lib/types";
 
 const ASSET_COLORS: Record<string, string> = {
-  gold: "oklch(0.55 0.1 25)",
-  crypto: "oklch(0.7 0.12 60)",
-  forex: "oklch(0.35 0.02 40)",
-  fund: "oklch(0.6 0.09 350)",
-  stock: "oklch(0.5 0.12 145)",
-  bank: "oklch(0.6 0.07 250)",
-  time_deposit: "oklch(0.65 0.08 90)",
-  deposit: "oklch(0.55 0.07 200)",
-  cash: "oklch(0.75 0.02 60)",
+  gold: "#f59e0b",
+  crypto: "#3b82f6",
+  forex: "#0284c7",
+  fund: "#8b5cf6",
+  stock: "#10b981",
+  bank: "#06b6d4",
+  time_deposit: "#6366f1",
+  deposit: "#14b8a6",
+  cash: "#64748b",
 };
 
 function formatTRY(value: number): string {

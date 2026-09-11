@@ -30,8 +30,9 @@ interface Props {
 export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Props) {
   const [inputs, setInputs] = useState<Record<string, string>>({});
 
+  const activeBudgets = budgets.filter((b) => b.category !== "Kira" && (EXPENSE_CATEGORIES as readonly string[]).includes(b.category));
   const progressByCategory = new Map(progress.map((p) => [p.category, p]));
-  const budgetedCategories = new Set(budgets.map((b) => b.category));
+  const budgetedCategories = new Set(activeBudgets.map((b) => b.category));
   const availableCategories = EXPENSE_CATEGORIES.filter((c) => !budgetedCategories.has(c));
 
   function handleSave(category: string) {
@@ -61,7 +62,7 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
             </p>
           </div>
           <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: "oklch(0.5 0.02 50 / 0.1)", color: "var(--shell-muted)" }}>
-            {budgets.length} / {EXPENSE_CATEGORIES.length} Kategori Tanımlı
+            {activeBudgets.length} / {EXPENSE_CATEGORIES.length} Kategori Tanımlı
           </span>
         </div>
 
@@ -129,7 +130,7 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
       </div>
 
       {/* Active Budget Cards Grid */}
-      {budgets.length === 0 ? (
+      {activeBudgets.length === 0 ? (
         <div
           className="flex flex-col items-center justify-center gap-3 rounded-[22px] border border-dashed p-12 text-center"
           style={{ borderColor: "var(--shell-border)", background: "var(--shell-card)" }}
@@ -153,7 +154,7 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          {budgets.map((b) => {
+          {activeBudgets.map((b) => {
             const p = progressByCategory.get(b.category);
             const percent = p ? Math.min(100, p.percentUsed) : 0;
             const over = p ? p.percentUsed > 100 : false;
@@ -196,15 +197,15 @@ export default function BudgetGoals({ budgets, progress, onSave, onDelete }: Pro
                         className="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
                         style={{
                           background: over
-                            ? "oklch(0.5 0.15 25 / 0.15)"
+                            ? "rgba(239, 68, 68, 0.15)"
                             : percent > 85
-                            ? "oklch(0.6 0.12 70 / 0.15)"
-                            : "oklch(0.5 0.13 145 / 0.15)",
+                            ? "rgba(245, 158, 11, 0.15)"
+                            : "rgba(34, 197, 94, 0.15)",
                           color: over
-                            ? "oklch(0.5 0.15 25)"
+                            ? "#ef4444"
                             : percent > 85
-                            ? "oklch(0.6 0.12 70)"
-                            : "oklch(0.5 0.13 145)",
+                            ? "#d97706"
+                            : "#16a34a",
                         }}
                       >
                         {over ? "Limit Aşıldı" : `%${p ? p.percentUsed.toFixed(0) : 0}`}

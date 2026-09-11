@@ -310,7 +310,7 @@ export default function FinancialCalendar({
                     )}
                     {dayDividends.length > 0 && (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white dark:bg-black" : "bg-emerald-500"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white dark:bg-black" : "bg-amber-400"}`}
                         title={dayDividends.map((d) => `Temettü: ${d.ticker}`).join(", ")}
                       />
                     )}
@@ -353,10 +353,10 @@ export default function FinancialCalendar({
               ))}
               {selectedDateDividends.map((d) => (
                 <div key={d.id} className="flex items-center gap-2 rounded-lg bg-white p-2.5 text-xs shadow-2xs dark:bg-zinc-900">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span className="font-semibold">{d.ticker} Temettü Ödemesi</span>
+                  <span className="h-2 w-2 rounded-full bg-amber-400 ring-2 ring-amber-400/30" />
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">{d.ticker} Temettü Ödemesi</span>
                   {d.amountPerShare !== undefined && <span className="text-zinc-500">({d.amountPerShare} / hisse)</span>}
-                  <span className="ml-auto text-[11px] text-zinc-400">{d.source}</span>
+                  <span className="ml-auto text-[11px] rounded-md bg-amber-50 px-2 py-0.5 font-bold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/50">{d.source}</span>
                 </div>
               ))}
               {selectedDateNotes.map((n) => (
@@ -392,11 +392,11 @@ export default function FinancialCalendar({
             onClick={() => setSubTab("dividends")}
             className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-bold transition-all ${
               subTab === "dividends"
-                ? "border-[var(--shell-accent)] text-[var(--shell-accent)]"
+                ? "border-amber-500 text-amber-600 dark:text-amber-400"
                 : "border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
             }`}
           >
-            <Icon name="coins" />
+            <Icon name="coins" className={subTab === "dividends" ? "text-amber-500" : ""} />
             <span>Temettü Haberleri ({combinedDividends.length})</span>
           </button>
 
@@ -479,7 +479,7 @@ export default function FinancialCalendar({
                 <button
                   type="submit"
                   disabled={searchingDividend || !aiTicker.trim()}
-                  className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-all shadow-xs hover:opacity-90 disabled:opacity-50" style={{ background: "var(--shell-accent)" }}
+                  className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-black transition-all shadow-xs hover:opacity-90 disabled:opacity-50 bg-amber-400 hover:bg-amber-300 dark:bg-amber-400 dark:hover:bg-amber-300"
                 >
                   <Icon name="search" /> {searchingDividend ? "Araştırılıyor..." : "Temettü Tarihini Bul & Takvime Ekle"}
                 </button>
@@ -500,7 +500,7 @@ export default function FinancialCalendar({
                   {combinedDividends.map((d) => (
                     <div key={d.id} className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3.5 shadow-2xs dark:border-zinc-800 dark:bg-zinc-900/40">
                       <div className="flex items-center gap-2.5">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-amber-400 ring-4 ring-amber-400/20" />
                         <div>
                           <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">{formatDate(d.date)} — {d.ticker}</div>
                           {d.amountPerShare !== undefined && (
@@ -509,7 +509,7 @@ export default function FinancialCalendar({
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                        <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/50">
                           {d.source}
                         </span>
                         {d.source === "Manuel" && (
@@ -551,8 +551,8 @@ export default function FinancialCalendar({
                     className="rounded-xl border border-zinc-300 p-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
                   />
                 </label>
-                <button type="submit" className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors dark:bg-zinc-100 dark:text-black">
-                  Ekle
+                <button type="submit" className="rounded-xl bg-amber-400 hover:bg-amber-300 px-5 py-2 text-sm font-bold text-black transition-all shadow-2xs">
+                  Temettü Ekle
                 </button>
               </form>
             </div>

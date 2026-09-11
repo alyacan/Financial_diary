@@ -91,7 +91,6 @@ export const EXPENSE_CATEGORIES = [
   "Eğlence",
   "Spor",
   "Eğitim",
-  "Kira",
   "Faturalar",
   "Sağlık",
   "Diğer",

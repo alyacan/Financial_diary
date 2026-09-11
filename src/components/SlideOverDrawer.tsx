@@ -11,6 +11,10 @@ interface Props {
   width?: "normal" | "wide" | "extra-wide";
 }
 
+/**
+ * Centered Modal Window (formerly slide-over drawer).
+ * Opens smoothly right in the center of the screen with backdrop blur and responsive dimensions.
+ */
 export default function SlideOverDrawer({
   isOpen,
   onClose,
@@ -19,7 +23,7 @@ export default function SlideOverDrawer({
   children,
   width = "wide",
 }: Props) {
-  const drawerRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Close on Escape key
   useEffect(() => {
@@ -32,7 +36,7 @@ export default function SlideOverDrawer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Lock body scroll when drawer is open
+  // Lock body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -48,61 +52,62 @@ export default function SlideOverDrawer({
 
   const widthClass =
     width === "extra-wide"
-      ? "max-w-4xl"
+      ? "max-w-5xl"
       : width === "wide"
-      ? "max-w-2xl"
-      : "max-w-lg";
+      ? "max-w-3xl"
+      : "max-w-xl";
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Dimmed Backdrop */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+      {/* Dimmed Blurred Backdrop */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 animate-fadeIn"
+        className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity duration-200"
+        aria-hidden="true"
       />
 
-      {/* Drawer Container */}
-      <div className="fixed inset-y-0 right-0 flex max-w-full pl-6 sm:pl-10">
+      {/* Centered Modal Container */}
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        className={`relative z-10 w-full ${widthClass} my-auto flex max-h-[90vh] flex-col rounded-3xl shadow-2xl border transition-all duration-200 overflow-hidden`}
+        style={{
+          background: "var(--shell-card-solid)",
+          borderColor: "var(--shell-border)",
+          color: "var(--foreground)",
+        }}
+      >
+        {/* Modal Header */}
         <div
-          ref={drawerRef}
-          className={`w-screen ${widthClass} flex flex-col shadow-2xl transition-transform duration-300 ease-out`}
-          style={{
-            background: "var(--shell-card-solid)",
-            borderLeft: "1px solid var(--shell-border)",
-            color: "var(--foreground)",
-          }}
+          className="flex items-start justify-between border-b px-6 py-5 sm:px-8 shrink-0"
+          style={{ borderColor: "var(--shell-border)", background: "var(--shell-card)" }}
         >
-          {/* Drawer Header */}
-          <div
-            className="flex items-start justify-between border-b px-6 py-5 sm:px-8"
-            style={{ borderColor: "var(--shell-border)" }}
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              {title}
+            </h2>
+            {subtitle && (
+              <p className="mt-1 text-xs font-medium" style={{ color: "var(--shell-muted)" }}>
+                {subtitle}
+              </p>
+            )}
+          </div>
+
+          <button
+            onClick={onClose}
+            className="rounded-xl p-2 text-zinc-400 transition-colors hover:bg-zinc-500/10 hover:text-zinc-700 dark:hover:text-zinc-200"
+            aria-label="Kapat"
           >
-            <div>
-              <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                {title}
-              </h2>
-              {subtitle && (
-                <p className="mt-1 text-xs font-medium" style={{ color: "var(--shell-muted)" }}>
-                  {subtitle}
-                </p>
-              )}
-            </div>
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-            <button
-              onClick={onClose}
-              className="rounded-xl p-2 text-zinc-400 transition-colors hover:bg-zinc-500/10 hover:text-zinc-700 dark:hover:text-zinc-200"
-              aria-label="Kapat"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Drawer Body (Scrollable & Spacious) */}
-          <div className="flex-1 overflow-y-auto p-6 sm:p-8">
-            {children}
-          </div>
+        {/* Modal Body (Scrollable & Spacious) */}
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+          {children}
         </div>
       </div>
     </div>
