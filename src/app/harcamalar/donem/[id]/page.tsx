@@ -133,7 +133,7 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
         <div className="flex items-center gap-2">
           <button
             onClick={startEdit}
-            className="flex items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium transition-colors hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+            className="flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all shadow-2xs" style={{ background: "var(--shell-card-solid)", border: "1px solid var(--shell-border)", color: "var(--shell-muted-2)" }}
           >
             <Icon name="edit" /> Dönemi Düzenle
           </button>
@@ -147,7 +147,7 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
       </div>
 
       {/* Folder Header Card */}
-      <header className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+      <header className="rounded-3xl p-6 sm:p-8 shadow-xs" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
         {editing ? (
           <div className="flex flex-col gap-3">
             <label className="flex flex-col gap-1 text-xs text-zinc-500">
@@ -198,12 +198,12 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
         ) : (
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <Icon name="folder" className="h-8 w-8" strokeWidth={1.5} />
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg shadow-2xs" style={{ background: "var(--shell-accent-bg)", color: "var(--shell-accent)" }}><Icon name="folder" /></span>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">
                   {period.name ? period.name : `${formatDate(period.startDate)} - ${formatDate(period.endDate)}`}
                 </h1>
-                <span className="mt-1 inline-block rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                <span className="mt-1 inline-block rounded-full px-3 py-0.5 text-xs font-bold" style={{ background: "var(--shell-accent-bg)", color: "var(--shell-accent)" }}>
                   <Icon name="calendar" /> {formatDate(period.startDate)} — {formatDate(period.endDate)} Hesabı
                 </span>
               </div>
@@ -227,7 +227,7 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
 
       {/* KPI Stats Grid */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="rounded-3xl p-6 shadow-xs transition-all hover:shadow-md" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
           <div className="text-xs uppercase tracking-wider text-zinc-500">Dönem Toplam Harcama</div>
           <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
             {formatTRY(stats.totalExpense)}
@@ -235,7 +235,7 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
           <div className="mt-1 text-xs text-zinc-400">Klasör içi kapanış tutarı</div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="rounded-3xl p-6 shadow-xs transition-all hover:shadow-md" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
           <div className="text-xs uppercase tracking-wider text-zinc-500">Harcama İşlem Sayısı</div>
           <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
             {stats.expenseCount} Adet
@@ -243,7 +243,7 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
           <div className="mt-1 text-xs text-zinc-400">Kayıtlı işlem</div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="rounded-3xl p-6 shadow-xs transition-all hover:shadow-md" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
           <div className="text-xs uppercase tracking-wider text-zinc-500">Ortalama İşlem Tutarı</div>
           <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
             {formatTRY(stats.averageExpense)}
@@ -255,7 +255,7 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
       {/* Category Distribution & Highlights */}
       <section className="grid gap-6 md:grid-cols-2">
         <div className="flex flex-col gap-6">
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="rounded-3xl p-6 sm:p-7 shadow-xs" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
             <h2 className="mb-4 text-lg font-semibold tracking-tight">Kategori Dağılımı</h2>
             <ExpenseChart expenses={period.expenses} />
           </div>
@@ -265,7 +265,7 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
         </div>
 
         <div className="flex flex-col gap-4">
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="rounded-3xl p-6 shadow-xs transition-all hover:shadow-md" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
             <h3 className="mb-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">En Büyük Harcamalar</h3>
             {stats.biggestExpenses.length === 0 ? (
               <p className="text-xs text-zinc-500">Kayıt yok.</p>
@@ -281,7 +281,7 @@ export default function ArchivedPeriodPage({ params }: { params: Promise<{ id: s
             )}
           </div>
 
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="rounded-3xl p-6 shadow-xs transition-all hover:shadow-md" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
             <h3 className="mb-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">Tekrarlayan Harcamalar</h3>
             {stats.recurringExpenses.length === 0 ? (
               <p className="text-xs text-zinc-500">Tespit edilmedi.</p>

@@ -94,7 +94,7 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-      <div className="relative w-full max-w-lg rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900 sm:p-8">
+      <div className="relative w-full max-w-lg rounded-3xl p-6 sm:p-8 shadow-2xl" style={{ background: "var(--shell-card-solid)", border: "1px solid var(--shell-border)" }}>
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -115,7 +115,7 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
           <ProfileAvatar
             avatarUrl={avatarPreview}
             name={nameInput}
-            className="h-24 w-24 border-4 border-amber-500/30 shadow-md"
+            className="h-24 w-24 border-4 border-[var(--shell-accent)]/40 shadow-md"
           />
 
           <input
@@ -129,7 +129,7 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
           <div className="flex gap-2">
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+              className="rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all shadow-2xs" style={{ background: "var(--shell-accent-bg)", color: "var(--shell-accent)", border: "1px solid var(--shell-border)" }}
             >
               Fotoğraf Seç / Yükle
             </button>
@@ -189,7 +189,7 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex-1 rounded-xl bg-zinc-900 py-2.5 text-xs font-bold text-white shadow-md transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-black dark:hover:bg-zinc-200"
+              className="flex-1 rounded-xl py-2.5 text-xs font-bold text-white shadow-md transition-all hover:opacity-90 disabled:opacity-50" style={{ background: "var(--shell-accent)" }}
             >
               {isSaving ? "Kaydediliyor..." : "Profil Değişikliklerini Kaydet"}
             </button>

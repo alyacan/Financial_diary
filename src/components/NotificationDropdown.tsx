@@ -94,7 +94,8 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
     <>
       <div
         ref={containerRef}
-        className="absolute right-0 top-12 z-50 w-80 sm:w-96 rounded-2xl border border-zinc-200 bg-white/95 p-4 shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/95"
+        className="absolute right-0 top-12 z-50 w-80 sm:w-96 rounded-3xl p-5 shadow-2xl backdrop-blur-md"
+        style={{ background: "var(--shell-card-solid)", border: "1px solid var(--shell-border)" }}
       >
         <div className="flex items-center justify-between border-b border-zinc-100 pb-3 dark:border-zinc-800">
           <div className="flex items-center gap-2">
@@ -104,7 +105,7 @@ export default function NotificationDropdown({ isOpen, onClose }: Props) {
           {plan === "pro" && (
             <button
               onClick={() => setShowPriceAlertModal(true)}
-              className="rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-2xs hover:bg-amber-600 transition-colors"
+              className="rounded-full px-3 py-1 text-[11px] font-bold text-white shadow-2xs hover:opacity-90 transition-all" style={{ background: "var(--shell-accent)" }}
             >
               <Icon name="plus" /> Alarm Ekle
             </button>

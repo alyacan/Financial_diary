@@ -64,12 +64,12 @@ export default function AiAnalysisPackage({ period, allPeriods, periodTransactio
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-purple-200/80 bg-gradient-to-br from-purple-50/70 via-indigo-50/40 to-blue-50/50 p-5 shadow-xs dark:border-purple-900/40 dark:from-purple-950/30 dark:via-indigo-950/20 dark:to-zinc-900/50">
+    <section className="flex flex-col gap-4 rounded-3xl p-6 shadow-xs" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <Icon name="bot" className="h-6 w-6" />
-          <h2 className="font-semibold text-purple-950 dark:text-purple-200">AI Analiz & Prompt Sihirbazı</h2>
-          <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+          <h2 className="font-bold text-zinc-900 dark:text-zinc-100">AI Analiz & Prompt Sihirbazı</h2>
+          <span className="rounded-full px-2.5 py-0.5 text-[10px] font-extrabold" style={{ background: "var(--shell-gold-bg)", color: "var(--shell-gold)" }}>
             PROMPT ENGINE
           </span>
         </div>
@@ -81,7 +81,7 @@ export default function AiAnalysisPackage({ period, allPeriods, periodTransactio
       <div className="flex flex-wrap gap-2.5">
         <button
           onClick={() => setWizardOpen((v) => !v)}
-          className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-purple-700"
+          className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:opacity-90" style={{ background: "var(--shell-accent)" }}
         >
           <Icon name="sparkles" />
           <span>{wizardOpen ? "Sihirbazı Kapat" : "AI Promptu Oluştur"}</span>
@@ -89,7 +89,7 @@ export default function AiAnalysisPackage({ period, allPeriods, periodTransactio
         <button
           onClick={handleDownloadDocx}
           disabled={generatingDocx}
-          className="flex items-center gap-1.5 rounded-xl border border-purple-300 bg-white px-4 py-2 text-xs font-semibold text-purple-900 shadow-2xs transition-colors hover:bg-purple-50 disabled:opacity-50 dark:border-purple-800 dark:bg-zinc-900 dark:text-purple-200 dark:hover:bg-purple-950/40"
+          className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all shadow-2xs hover:opacity-90 disabled:opacity-50" style={{ background: "var(--shell-card-solid)", border: "1px solid var(--shell-border)", color: "var(--shell-muted-2)" }}
         >
           <Icon name="file" />
           <span>{generatingDocx ? "Oluşturuluyor..." : "Word (.docx) Rapor İndir"}</span>
@@ -97,7 +97,7 @@ export default function AiAnalysisPackage({ period, allPeriods, periodTransactio
       </div>
 
       {wizardOpen && (
-        <div className="flex flex-col gap-3 rounded-xl border border-purple-200 bg-white p-4 shadow-2xs dark:border-purple-900/60 dark:bg-zinc-900">
+        <div className="flex flex-col gap-3.5 rounded-2xl p-5 shadow-2xs" style={{ background: "var(--shell-card-solid)", border: "1px solid var(--shell-border)" }}>
           <label className="flex flex-col gap-1 text-xs font-medium text-zinc-700 dark:text-zinc-300">
             Nasıl bir analiz istiyorsun?
             <select

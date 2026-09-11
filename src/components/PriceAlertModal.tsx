@@ -59,7 +59,7 @@ export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-      <div className="relative w-full max-w-lg rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900 sm:p-8">
+      <div className="relative w-full max-w-lg rounded-3xl p-6 sm:p-8 shadow-2xl" style={{ background: "var(--shell-card-solid)", border: "1px solid var(--shell-border)" }}>
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -134,7 +134,7 @@ export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props
           <button
             type="submit"
             disabled={isSaving}
-            className="mt-1 rounded-xl bg-amber-500 py-2.5 text-xs font-bold text-white shadow-md transition-colors hover:bg-amber-600 disabled:opacity-50"
+            className="mt-1 rounded-xl py-2.5 text-xs font-bold text-white shadow-md transition-all hover:opacity-90 disabled:opacity-50" style={{ background: "var(--shell-accent)" }}
           >
             {isSaving ? "Kaydediliyor..." : <><Icon name="bell" /> Alarmı Kaydet</>}
           </button>
@@ -148,7 +148,7 @@ export default function PriceAlertModal({ isOpen, onClose, onAlertAdded }: Props
               {alerts.map((a) => (
                 <div
                   key={a.id}
-                  className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50/80 p-2.5 dark:border-zinc-800 dark:bg-zinc-950/60"
+                  className="flex items-center justify-between rounded-2xl p-3 shadow-2xs" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}
                 >
                   <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-zinc-100">
                     <span><Icon name={a.triggeredAt ? "check-circle" : "bell"} /> {a.asset}</span>

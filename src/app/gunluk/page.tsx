@@ -31,11 +31,25 @@ export default function GunlukPage() {
   const transactionsWithNotes = transactions.filter((t) => t.note && t.note.trim().length > 0);
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-6 sm:p-10">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">Finans Günlüğüm</h1>
-        <p className="text-sm text-zinc-500">
-          Önemli ekonomik tarihler, temettü takvimi ve yatırım kararlarının gerekçeleri tek ekranda.
+    <div className="mx-auto flex max-w-5xl flex-col gap-8 p-6 sm:p-10">
+      {/* Header */}
+      <header className="flex flex-col gap-1.5">
+        <div className="flex items-center gap-2.5">
+          <span
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-sm shadow-2xs"
+            style={{
+              background: "var(--shell-accent-bg)",
+              color: "var(--shell-accent)",
+            }}
+          >
+            <Icon name="book" />
+          </span>
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl text-zinc-900 dark:text-zinc-100">
+            Finans Günlüğüm
+          </h1>
+        </div>
+        <p className="text-xs sm:text-sm font-medium text-zinc-500">
+          Önemli makroekonomik kararlar, temettü ajandası ve yatırım gerekçelerinin kişisel karar defteri.
         </p>
       </header>
 
@@ -44,62 +58,144 @@ export default function GunlukPage() {
 
       {/* KPI Stats Bar */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <div className="text-xs uppercase tracking-wider text-zinc-500">Takvim Notları</div>
-          <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            {calendarNotes.length} Kayıt
+        <div
+          className="group flex flex-col justify-between rounded-3xl p-5 sm:p-6 shadow-xs transition-all hover:shadow-md"
+          style={{
+            background: "var(--shell-card)",
+            border: "1px solid var(--shell-border)",
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+              Takvim Notları
+            </span>
+            <span
+              className="flex h-7 w-7 items-center justify-center rounded-xl text-xs"
+              style={{ background: "var(--shell-accent-bg)", color: "var(--shell-accent)" }}
+            >
+              <Icon name="calendar" />
+            </span>
           </div>
-          <div className="mt-1 text-xs text-zinc-400">Ekonomik kararlar & notlar</div>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+              {calendarNotes.length} <span className="text-sm font-semibold text-zinc-400">Kayıt</span>
+            </div>
+            <div className="mt-1 text-xs font-medium text-zinc-400">
+              Ekonomik kararlar & özel notlar
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <div className="text-xs uppercase tracking-wider text-zinc-500">Temettü Takip</div>
-          <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            {dividends.length + stockTickers.length} Hisse
+        <div
+          className="group flex flex-col justify-between rounded-3xl p-5 sm:p-6 shadow-xs transition-all hover:shadow-md"
+          style={{
+            background: "var(--shell-card)",
+            border: "1px solid var(--shell-border)",
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+              Temettü Ajandası
+            </span>
+            <span
+              className="flex h-7 w-7 items-center justify-center rounded-xl text-xs"
+              style={{ background: "var(--shell-gold-bg)", color: "var(--shell-gold)" }}
+            >
+              <Icon name="coins" />
+            </span>
           </div>
-          <div className="mt-1 text-xs text-zinc-400">Nasdaq otomatik + BIST manuel</div>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+              {dividends.length + stockTickers.length} <span className="text-sm font-semibold text-zinc-400">Hisse</span>
+            </div>
+            <div className="mt-1 text-xs font-medium text-zinc-400">
+              Nasdaq otomatik + BIST manuel
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <div className="text-xs uppercase tracking-wider text-zinc-500">Yatırım Günlüğü</div>
-          <div className="mt-1.5 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            {transactionsWithNotes.length} Notlu İşlem
+        <div
+          className="group flex flex-col justify-between rounded-3xl p-5 sm:p-6 shadow-xs transition-all hover:shadow-md"
+          style={{
+            background: "var(--shell-card)",
+            border: "1px solid var(--shell-border)",
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+              Yatırım Günlüğü
+            </span>
+            <span
+              className="flex h-7 w-7 items-center justify-center rounded-xl text-xs"
+              style={{ background: "var(--shell-positive-bg)", color: "var(--shell-positive)" }}
+            >
+              <Icon name="note" />
+            </span>
           </div>
-          <div className="mt-1 text-xs text-zinc-400">Alım/satım gerekçeleri</div>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+              {transactionsWithNotes.length} <span className="text-sm font-semibold text-zinc-400">Notlu İşlem</span>
+            </div>
+            <div className="mt-1 text-xs font-medium text-zinc-400">
+              Kişisel alım/satım gerekçeleri
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Tabs Bar */}
-      <nav className="flex gap-2 border-b border-zinc-200 pb-2 dark:border-zinc-800" aria-label="Günlük sekmeleri">
+      <nav
+        className="flex gap-2 rounded-2xl p-1.5 backdrop-blur-xs"
+        style={{
+          background: "var(--shell-card)",
+          border: "1px solid var(--shell-border)",
+        }}
+        aria-label="Günlük sekmeleri"
+      >
         <button
           onClick={() => setActiveTab("calendar")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all"
+          style={
             activeTab === "calendar"
-              ? "bg-zinc-900 text-white shadow-xs dark:bg-zinc-100 dark:text-black"
-              : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-          }`}
+              ? {
+                  background: "var(--shell-accent)",
+                  color: "#ffffff",
+                  boxShadow: "0 2px 8px rgba(66, 99, 56, 0.25)",
+                }
+              : {
+                  color: "var(--shell-muted-2)",
+                }
+          }
         >
           <Icon name="calendar" />
-          <span>Finansal Takvim & Temettüler</span>
+          <span>Ekonomik Takvim & Temettüler</span>
         </button>
 
         <button
           onClick={() => setActiveTab("journal")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all"
+          style={
             activeTab === "journal"
-              ? "bg-zinc-900 text-white shadow-xs dark:bg-zinc-100 dark:text-black"
-              : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-          }`}
+              ? {
+                  background: "var(--shell-accent)",
+                  color: "#ffffff",
+                  boxShadow: "0 2px 8px rgba(66, 99, 56, 0.25)",
+                }
+              : {
+                  color: "var(--shell-muted-2)",
+                }
+          }
         >
           <Icon name="book" />
-          <span>Yatırım Günlüğü Zaman Tüneli</span>
+          <span>Yatırım Karar Defteri</span>
           {transactionsWithNotes.length > 0 && (
             <span
-              className={`ml-1 rounded-full px-2 py-0.5 text-xs ${
+              className="ml-1 rounded-full px-2 py-0.5 text-[11px] font-extrabold"
+              style={
                 activeTab === "journal"
-                  ? "bg-zinc-700 text-zinc-100 dark:bg-zinc-300 dark:text-zinc-900"
-                  : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-              }`}
+                  ? { background: "rgba(255, 255, 255, 0.25)", color: "#ffffff" }
+                  : { background: "var(--shell-accent-bg)", color: "var(--shell-accent)" }
+              }
             >
               {transactionsWithNotes.length}
             </span>
@@ -109,8 +205,21 @@ export default function GunlukPage() {
 
       {/* Tab 1: Calendar */}
       {activeTab === "calendar" && (
-        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <h2 className="mb-4 text-lg font-semibold tracking-tight">Finansal Takvim</h2>
+        <section
+          className="rounded-3xl p-6 sm:p-8 shadow-xs"
+          style={{
+            background: "var(--shell-card)",
+            border: "1px solid var(--shell-border)",
+          }}
+        >
+          <div className="mb-6 flex flex-col gap-1 border-b pb-4" style={{ borderColor: "var(--shell-border)" }}>
+            <h2 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              Finansal & Ekonomik Ajanda
+            </h2>
+            <p className="text-xs text-zinc-500">
+              TCMB ve FED faiz toplantıları, enflasyon verileri ve hisse temettü dağıtım tarihleri.
+            </p>
+          </div>
           <FinancialCalendar
             notes={calendarNotes}
             onAdd={handleAddCalendarNote}
@@ -125,11 +234,19 @@ export default function GunlukPage() {
 
       {/* Tab 2: Investment Journal Timeline */}
       {activeTab === "journal" && (
-        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold tracking-tight">Yatırım Günlüğü Zaman Tüneli</h2>
+        <section
+          className="rounded-3xl p-6 sm:p-8 shadow-xs"
+          style={{
+            background: "var(--shell-card)",
+            border: "1px solid var(--shell-border)",
+          }}
+        >
+          <div className="mb-6 flex flex-col gap-1 border-b pb-4" style={{ borderColor: "var(--shell-border)" }}>
+            <h2 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              Yatırım Karar Defteri (Zaman Tüneli)
+            </h2>
             <p className="text-xs text-zinc-500">
-              Varlık alım/satım işlemleriniz esnasında yazdığınız tüm karar gerekçeleri kronolojik sırayla listelenir.
+              Hisse, altın, fon veya döviz alırken düştüğünüz tüm notlar ve alım gerekçeleriniz.
             </p>
           </div>
           <FinancialJournal transactions={transactions} />

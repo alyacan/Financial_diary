@@ -39,7 +39,7 @@ export default function FinancialJournal({ transactions }: Props) {
 
   if (entriesWithNotes.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-800">
+      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed p-10 text-center" style={{ borderColor: "var(--shell-border)", background: "var(--shell-card)" }}>
         <Icon name="book" className="h-8 w-8" strokeWidth={1.5} />
         <h3 className="mt-3 text-base font-semibold text-zinc-900 dark:text-zinc-100">Henüz Günlük Notu Yok</h3>
         <p className="mt-1 max-w-md text-sm text-zinc-500">
@@ -59,7 +59,7 @@ export default function FinancialJournal({ transactions }: Props) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Günlük notlarında veya varlıklarda ara..."
-            className="w-full rounded-xl border border-zinc-300 bg-white py-2 pl-9 pr-3 text-sm transition-colors dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            className="w-full rounded-2xl border py-2.5 pl-9 pr-3 text-xs sm:text-sm font-medium transition-all focus:outline-none" style={{ background: "var(--shell-card-solid)", borderColor: "var(--shell-border)" }}
           />
           <span className="absolute left-3 top-2.5 text-xs text-zinc-400"><Icon name="search" /></span>
         </div>
@@ -67,11 +67,12 @@ export default function FinancialJournal({ transactions }: Props) {
         <div className="flex flex-wrap gap-1.5">
           <button
             onClick={() => setSelectedAsset("all")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+            className="rounded-xl px-3.5 py-2 text-xs font-bold transition-all shadow-2xs"
+            style={
               selectedAsset === "all"
-                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-black"
-                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-            }`}
+                ? { background: "var(--shell-accent)", color: "#ffffff" }
+                : { background: "var(--shell-card-solid)", border: "1px solid var(--shell-border)", color: "var(--shell-muted-2)" }
+            }
           >
             Hepsi ({entriesWithNotes.length})
           </button>
@@ -79,11 +80,12 @@ export default function FinancialJournal({ transactions }: Props) {
             <button
               key={type}
               onClick={() => setSelectedAsset(type)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              className="rounded-xl px-3.5 py-2 text-xs font-bold transition-all shadow-2xs"
+              style={
                 selectedAsset === type
-                  ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-black"
-                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-              }`}
+                  ? { background: "var(--shell-accent)", color: "#ffffff" }
+                  : { background: "var(--shell-card-solid)", border: "1px solid var(--shell-border)", color: "var(--shell-muted-2)" }
+              }
             >
               <Icon name={getAssetIcon(type)} /> {ASSET_LABELS[type as AssetType] ?? type}
             </button>
@@ -95,17 +97,17 @@ export default function FinancialJournal({ transactions }: Props) {
       {filteredEntries.length === 0 ? (
         <p className="py-6 text-center text-sm text-zinc-500">Aramanıza veya filtrenize uygun günlük notu bulunamadı.</p>
       ) : (
-        <div className="relative flex flex-col gap-6 pl-4 sm:pl-6 before:absolute before:left-2 sm:before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-200 dark:before:bg-zinc-800">
+        <div className="relative flex flex-col gap-6 pl-4 sm:pl-6 before:absolute before:left-2 sm:before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--shell-border)]">
           {filteredEntries.map((t) => (
-            <div key={t.id} className="relative flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs transition-all hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700">
+            <div key={t.id} className="relative flex flex-col gap-3 rounded-3xl p-6 shadow-xs transition-all hover:shadow-md" style={{ background: "var(--shell-card)", border: "1px solid var(--shell-border)" }}>
               {/* Timeline dot */}
-              <div className="absolute -left-4 sm:-left-6 top-5 flex h-4 w-4 items-center justify-center rounded-full bg-zinc-900 ring-4 ring-white dark:bg-zinc-100 dark:ring-zinc-950">
-                <div className="h-1.5 w-1.5 rounded-full bg-white dark:bg-zinc-900" />
+              <div className="absolute -left-4 sm:-left-6 top-6 flex h-4 w-4 items-center justify-center rounded-full ring-4 ring-white dark:ring-zinc-900 shadow-2xs" style={{ background: "var(--shell-accent)" }}>
+                <div className="h-1.5 w-1.5 rounded-full bg-white" />
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 pb-3 dark:border-zinc-800">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                  <span className="rounded-xl px-2.5 py-1 text-xs font-bold" style={{ background: "var(--shell-accent-bg)", color: "var(--shell-accent)" }}>
                     <Icon name="calendar" /> {formatDate(t.date)}
                   </span>
                   <span className="font-semibold text-zinc-900 dark:text-zinc-100">

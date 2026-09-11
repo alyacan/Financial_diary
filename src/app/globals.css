@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: oklch(0.965 0.014 70);
-  --foreground: oklch(0.2 0.014 50);
+  --background: oklch(0.975 0.01 100);
+  --foreground: oklch(0.22 0.02 135);
 }
 
 @theme inline {
@@ -12,83 +12,88 @@
   --font-serif: var(--font-montserrat);
 }
 
-/* Ana Sayfa tasarım paleti — sıcak/terrakota, oklch tabanlı kabuk (sidebar + arkaplan) */
+/* Finansal Günlük Tasarım Paleti — İkonumuzla Uyumlu "Botanical Sage & Forest Olive" */
 :root {
-  --shell-card: oklch(0.99 0.006 80 / 0.85);
-  --shell-card-solid: oklch(0.99 0.006 80);
-  --shell-border: oklch(0.86 0.02 60 / 0.6);
-  --shell-muted: oklch(0.5 0.02 50);
-  --shell-muted-2: oklch(0.45 0.02 50);
-  --shell-accent: oklch(0.55 0.1 25);
-  --shell-accent-strong: oklch(0.4 0.1 30);
-  --shell-hero-from: oklch(0.3 0.03 40);
-  --shell-hero-to: oklch(0.2 0.02 40);
-  --shell-hero-fg: oklch(0.98 0.01 70);
-  --shell-positive: oklch(0.5 0.13 145);
-  --shell-positive-bg: oklch(0.4 0.1 145 / 0.15);
-  --shell-negative: oklch(0.5 0.15 25);
-  --shell-nav-active-fg: oklch(0.22 0.02 40);
+  --shell-card: oklch(0.995 0.005 100 / 0.88);
+  --shell-card-solid: oklch(0.995 0.005 100);
+  --shell-border: oklch(0.88 0.02 135 / 0.65);
+  --shell-muted: oklch(0.5 0.03 135);
+  --shell-muted-2: oklch(0.42 0.03 135);
+  --shell-accent: oklch(0.48 0.09 138);
+  --shell-accent-strong: oklch(0.38 0.09 138);
+  --shell-accent-soft: oklch(0.72 0.07 138);
+  --shell-accent-bg: oklch(0.48 0.09 138 / 0.12);
+  --shell-hero-from: oklch(0.3 0.04 138);
+  --shell-hero-to: oklch(0.2 0.03 138);
+  --shell-hero-fg: oklch(0.98 0.01 100);
+  --shell-positive: oklch(0.52 0.14 142);
+  --shell-positive-bg: oklch(0.52 0.14 142 / 0.15);
+  --shell-negative: oklch(0.52 0.16 28);
+  --shell-gold: oklch(0.75 0.12 85);
+  --shell-gold-bg: oklch(0.75 0.12 85 / 0.15);
+  --shell-nav-active-fg: oklch(0.22 0.05 138);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: oklch(0.2 0.014 50);
-    --foreground: oklch(0.93 0.01 70);
-    --shell-card: oklch(0.27 0.014 50 / 0.85);
-    --shell-card-solid: oklch(0.27 0.014 50);
-    --shell-border: oklch(0.38 0.02 50 / 0.7);
-    --shell-muted: oklch(0.75 0.02 60);
-    --shell-muted-2: oklch(0.8 0.02 60);
-    --shell-hero-from: oklch(0.32 0.03 40);
-    --shell-hero-to: oklch(0.16 0.02 40);
-    --shell-nav-active-fg: oklch(0.95 0.02 60);
-    --shell-accent: oklch(0.72 0.12 35);
-    --shell-accent-strong: oklch(0.88 0.09 45);
+    --background: oklch(0.18 0.02 135);
+    --foreground: oklch(0.94 0.01 100);
+    --shell-card: oklch(0.25 0.02 135 / 0.88);
+    --shell-card-solid: oklch(0.25 0.02 135);
+    --shell-border: oklch(0.35 0.03 135 / 0.7);
+    --shell-muted: oklch(0.75 0.02 120);
+    --shell-muted-2: oklch(0.8 0.02 120);
+    --shell-hero-from: oklch(0.28 0.04 138);
+    --shell-hero-to: oklch(0.16 0.03 138);
+    --shell-nav-active-fg: oklch(0.96 0.02 120);
+    --shell-accent: oklch(0.68 0.11 138);
+    --shell-accent-strong: oklch(0.82 0.1 138);
+    --shell-accent-soft: oklch(0.78 0.08 138);
+    --shell-accent-bg: oklch(0.68 0.11 138 / 0.2);
+    --shell-gold: oklch(0.8 0.12 85);
+    --shell-gold-bg: oklch(0.8 0.12 85 / 0.2);
   }
 }
 
-/* Dataviz palette (see references/palette.md in the dataviz skill) */
+/* Dataviz palette */
 :root {
   --viz-surface: #fcfcfb;
-  --viz-text-secondary: #52514e;
-  --viz-muted: #898781;
-  --viz-gridline: #e1e0d9;
-  --viz-sequential: #2a78d6;
+  --viz-text-secondary: #4a5448;
+  --viz-muted: #7b8579;
+  --viz-gridline: #e2e6e0;
+  --viz-sequential: #426338;
 }
 
-/* Harcama yoğunluk takvimi: sequential (tek renk, açık→koyu = az→çok) ramp, 5 kademe.
-   Her kademenin okunabilir metin rengi de birlikte tanımlanır — koyu temada
-   anchor ters döndüğü için (az veri koyu yüzeye yakın, çok veri parlak) metin
-   rengi kademe numarasından değil, bu değişkenlerden okunur. */
+/* Harcama yoğunluk takvimi: Yeşil botanik kademe rampası */
 :root {
-  --heat-1: #b7d3f6;
-  --heat-fg-1: #171717;
-  --heat-2: #86b6ef;
-  --heat-fg-2: #171717;
-  --heat-3: #3987e5;
+  --heat-1: #d8e5d4;
+  --heat-fg-1: #1a2617;
+  --heat-2: #b0cca9;
+  --heat-fg-2: #1a2617;
+  --heat-3: #7fa876;
   --heat-fg-3: #fff;
-  --heat-4: #1c5cab;
+  --heat-4: #527c49;
   --heat-fg-4: #fff;
-  --heat-5: #0d366b;
+  --heat-5: #30502a;
   --heat-fg-5: #fff;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --viz-surface: #1a1a19;
-    --viz-text-secondary: #c3c2b7;
-    --viz-muted: #898781;
-    --viz-gridline: #2c2c2a;
-    --viz-sequential: #3987e5;
-    --heat-1: #184f95;
+    --viz-surface: #172016;
+    --viz-text-secondary: #c2ccc0;
+    --viz-muted: #7b8579;
+    --viz-gridline: #273325;
+    --viz-sequential: #6ea162;
+    --heat-1: #253a21;
     --heat-fg-1: #fff;
-    --heat-2: #2a78d6;
+    --heat-2: #3a5b33;
     --heat-fg-2: #fff;
-    --heat-3: #5598e7;
+    --heat-3: #56844d;
     --heat-fg-3: #fff;
-    --heat-4: #86b6ef;
+    --heat-4: #7fb574;
     --heat-fg-4: #171717;
-    --heat-5: #b7d3f6;
+    --heat-5: #b0cca9;
     --heat-fg-5: #171717;
   }
 }

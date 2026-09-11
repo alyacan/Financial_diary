@@ -183,7 +183,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-      <div className="relative w-full max-w-md rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900 sm:p-8">
+      <div className="relative w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl" style={{ background: "var(--shell-card-solid)", border: "1px solid var(--shell-border)" }}>
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -191,6 +191,15 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: Props) {
         >
           <Icon name="x" />
         </button>
+
+        {/* Brand Header */}
+        <div className="mb-4 flex items-center gap-3">
+          <img src="/icon.png" alt="Logo" className="h-10 w-10 object-contain drop-shadow-xs" />
+          <div className="flex flex-col">
+            <span className="text-base font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">Finansal Günlük</span>
+            <span className="text-[10px] font-bold tracking-wider uppercase" style={{ color: "var(--shell-accent)" }}>Kişisel Servet Defteri</span>
+          </div>
+        </div>
 
         {/* Title */}
         <div className="flex flex-col gap-1">
@@ -252,21 +261,23 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: Props) {
           <div className="mt-5 flex rounded-2xl bg-zinc-100 p-1 dark:bg-zinc-800/80">
             <button
               onClick={() => handleSwitchMode("signup")}
-              className={`flex-1 rounded-xl py-2 text-xs font-bold transition-all ${
+              className="flex-1 rounded-xl py-2 text-xs font-bold transition-all"
+              style={
                 mode === "signup"
-                  ? "bg-white text-zinc-900 shadow-2xs dark:bg-zinc-900 dark:text-zinc-100"
-                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
-              }`}
+                  ? { background: "var(--shell-accent)", color: "#ffffff", boxShadow: "0 2px 8px rgba(66, 99, 56, 0.25)" }
+                  : { color: "var(--shell-muted-2)" }
+              }
             >
               Hesap Aç (Kayıt Ol)
             </button>
             <button
               onClick={() => handleSwitchMode("login")}
-              className={`flex-1 rounded-xl py-2 text-xs font-bold transition-all ${
+              className="flex-1 rounded-xl py-2 text-xs font-bold transition-all"
+              style={
                 mode === "login"
-                  ? "bg-white text-zinc-900 shadow-2xs dark:bg-zinc-900 dark:text-zinc-100"
-                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
-              }`}
+                  ? { background: "var(--shell-accent)", color: "#ffffff", boxShadow: "0 2px 8px rgba(66, 99, 56, 0.25)" }
+                  : { color: "var(--shell-muted-2)" }
+              }
             >
               Giriş Yap
             </button>
