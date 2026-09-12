@@ -45,9 +45,10 @@ export default function FinancialCalendar({
   onDeleteDividend,
 }: Props) {
   const today = new Date();
+  const todayISO = toISODate(today.getFullYear(), today.getMonth(), today.getDate());
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth()); // 0-indexed
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(todayISO);
   const [text, setText] = useState("");
 
   const [subTab, setSubTab] = useState<SubTab>("economic");
@@ -58,7 +59,7 @@ export default function FinancialCalendar({
   });
   const [autoDividends, setAutoDividends] = useState<AutoDividendEvent[]>([]);
   const [divTicker, setDivTicker] = useState("");
-  const [divDate, setDivDate] = useState("");
+  const [divDate, setDivDate] = useState(todayISO);
   const [divAmount, setDivAmount] = useState("");
 
   const [aiTicker, setAiTicker] = useState("");
@@ -163,16 +164,18 @@ export default function FinancialCalendar({
 
   function handleAddDividendSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!divTicker || !divDate) return;
+    const ticker = divTicker.trim().toUpperCase();
+    const targetDate = divDate || todayISO;
+    if (!ticker || !targetDate) return;
     onAddDividend({
       id: crypto.randomUUID(),
-      ticker: divTicker.toUpperCase(),
-      date: divDate,
+      ticker,
+      date: targetDate,
       amountPerShare: divAmount ? parseFloat(divAmount) : undefined,
     });
     setDivTicker("");
-    setDivDate("");
     setDivAmount("");
+    setAiMessage(`${ticker} hissesi için ${formatDate(targetDate)} tarihli temettü kaydı takvime eklendi.`);
   }
 
   const manualKeys = new Set(dividends.map((d) => `${d.ticker}|${d.date}`));
@@ -185,9 +188,10 @@ export default function FinancialCalendar({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!date || !text) return;
-    onAdd({ id: crypto.randomUUID(), date, text });
-    setDate("");
+    const targetDate = date || todayISO;
+    const trimmed = text.trim();
+    if (!trimmed || !targetDate) return;
+    onAdd({ id: crypto.randomUUID(), date: targetDate, text: trimmed });
     setText("");
   }
 
@@ -223,7 +227,6 @@ export default function FinancialCalendar({
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const leadingBlanks = (firstOfMonth.getDay() + 6) % 7;
 
-  const todayISO = toISODate(today.getFullYear(), today.getMonth(), today.getDate());
   const cells: (number | null)[] = [
     ...Array(leadingBlanks).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
@@ -249,10 +252,24 @@ export default function FinancialCalendar({
           </button>
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold tracking-tight">{MONTH_NAMES[viewMonth]} {viewYear}</span>
-            {viewYear === today.getFullYear() && viewMonth === today.getMonth() && (
+            {viewYear === today.getFullYear() && viewMonth === today.getMonth() ? (
               <span className="rounded-full px-2.5 py-0.5 text-[11px] font-bold" style={{ background: "var(--shell-accent-bg)", color: "var(--shell-accent)" }}>
                 Bu Ay
               </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setViewYear(today.getFullYear());
+                  setViewMonth(today.getMonth());
+                  setDate(todayISO);
+                  setDivDate(todayISO);
+                }}
+                className="rounded-full px-2.5 py-0.5 text-[11px] font-bold transition-all hover:opacity-85 cursor-pointer"
+                style={{ background: "var(--shell-accent-bg)", color: "var(--shell-accent)" }}
+              >
+                Bugüne Dön
+              </button>
             )}
           </div>
           <button
@@ -288,7 +305,10 @@ export default function FinancialCalendar({
             return (
               <button
                 key={i}
-                onClick={() => setDate(iso)}
+                onClick={() => {
+                  setDate(date === iso ? "" : iso);
+                  setDivDate(iso);
+                }}
                 className={`flex min-h-[3.5rem] flex-col items-center justify-between p-1.5 rounded-xl text-sm transition-all ${
                   isSelected
                     ? "bg-zinc-900 text-white shadow-md dark:bg-zinc-100 dark:text-black"
@@ -523,10 +543,10 @@ export default function FinancialCalendar({
             </div>
 
             {/* Manual Dividend Form */}
-            <div className="border-t border-zinc-200 pt-4 dark:border-zinc-800">
-              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">Manuel Temettü Ekle</h4>
-              <form onSubmit={handleAddDividendSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                <label className="flex flex-col gap-1 text-xs text-zinc-500">
+            <div className="rounded-2xl border border-zinc-200/80 bg-white/70 p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
+              <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-zinc-500">Manuel Temettü Ekle</h4>
+              <form onSubmit={handleAddDividendSubmit} className="flex flex-wrap items-end gap-3">
+                <label className="flex flex-col gap-1 text-xs font-semibold text-zinc-500">
                   Hisse Kodu
                   <input
                     type="text"
@@ -534,24 +554,28 @@ export default function FinancialCalendar({
                     onChange={(e) => setDivTicker(e.target.value)}
                     placeholder="Örn: THYAO"
                     required
-                    className="rounded-xl border border-zinc-300 p-2 text-sm uppercase dark:border-zinc-700 dark:bg-zinc-900"
+                    className="w-32 rounded-xl border border-zinc-300 p-2 text-xs font-bold uppercase outline-none focus:ring-1 focus:ring-amber-500/50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
                   />
                 </label>
-                <label className="flex flex-col gap-1 text-xs text-zinc-500">
-                  Tarih
-                  <DateSelect value={divDate} onChange={setDivDate} required />
-                </label>
-                <label className="flex flex-col gap-1 text-xs text-zinc-500">
-                  Hisse Başı Tutar (opsiyonel)
+                <div className="flex flex-col gap-1 text-xs font-semibold text-zinc-500">
+                  <span>Tarih</span>
+                  <DateSelect value={divDate} onChange={setDivDate} allowFuture={true} required />
+                </div>
+                <label className="flex flex-col gap-1 text-xs font-semibold text-zinc-500">
+                  Hisse Başı Tutar
                   <input
                     type="number"
                     step="any"
                     value={divAmount}
                     onChange={(e) => setDivAmount(e.target.value)}
-                    className="rounded-xl border border-zinc-300 p-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                    placeholder="Opsiyonel"
+                    className="w-32 rounded-xl border border-zinc-300 p-2 text-xs outline-none focus:ring-1 focus:ring-amber-500/50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
                   />
                 </label>
-                <button type="submit" className="rounded-xl bg-amber-400 hover:bg-amber-300 px-5 py-2 text-sm font-bold text-black transition-all shadow-2xs">
+                <button
+                  type="submit"
+                  className="rounded-xl bg-amber-400 hover:bg-amber-300 px-5 py-2 text-xs font-bold text-black transition-all shadow-2xs active:scale-98 cursor-pointer"
+                >
                   Temettü Ekle
                 </button>
               </form>
@@ -581,22 +605,26 @@ export default function FinancialCalendar({
               )}
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/40 sm:flex-row sm:items-end">
-              <label className="flex flex-col gap-1 text-xs text-zinc-500">
-                Tarih
-                <DateSelect value={date} onChange={setDate} />
-              </label>
-              <label className="flex flex-1 flex-col gap-1 text-xs text-zinc-500">
+            <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3 rounded-2xl border border-zinc-200/80 bg-white/70 p-4 dark:border-zinc-800 dark:bg-zinc-900/40">
+              <div className="flex flex-col gap-1 text-xs font-semibold text-zinc-500">
+                <span>Tarih</span>
+                <DateSelect value={date} onChange={setDate} allowFuture={true} />
+              </div>
+              <label className="flex flex-1 min-w-[200px] flex-col gap-1 text-xs font-semibold text-zinc-500">
                 Not
                 <input
                   type="text"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   placeholder="Örn: TCMB PPK toplantısı veya Şirket Genel Kurul"
-                  className="rounded-xl border border-zinc-300 p-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+                  required
+                  className="rounded-xl border border-zinc-300 p-2 text-xs outline-none focus:ring-1 focus:ring-amber-500/50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
                 />
               </label>
-              <button type="submit" className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors dark:bg-zinc-100 dark:text-black">
+              <button
+                type="submit"
+                className="rounded-xl bg-zinc-900 px-4 py-2 text-xs font-bold text-white transition-all dark:bg-zinc-100 dark:text-black hover:opacity-90 active:scale-98 cursor-pointer"
+              >
                 Not Ekle
               </button>
             </form>

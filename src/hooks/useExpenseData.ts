@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { ArchivedPeriod, CategoryBudget, Expense } from "@/lib/types";
 import {
   addExpense,
@@ -25,14 +26,43 @@ export function useExpenseData() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    Promise.all([loadExpenses(), loadArchivedPeriods(), loadCategoryBudgets()]).then(([e, a, b]) => {
+  const loadAllExpenseData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [e, a, b] = await Promise.all([loadExpenses(), loadArchivedPeriods(), loadCategoryBudgets()]);
       setExpenses(e);
       setArchivedPeriods(a);
       setBudgets(b);
+    } catch (err) {
+      fail(err, "Harcama verileri yüklenemedi.");
+    } finally {
       setIsLoading(false);
-    });
+    }
   }, []);
+
+  useEffect(() => {
+    loadAllExpenseData();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (
+        event === "SIGNED_IN" ||
+        event === "INITIAL_SESSION" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "USER_UPDATED"
+      ) {
+        loadAllExpenseData();
+      } else if (event === "SIGNED_OUT") {
+        setExpenses([]);
+        setArchivedPeriods([]);
+        setBudgets([]);
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [loadAllExpenseData]);
 
   function fail(err: unknown, fallback: string) {
     setError(err instanceof Error ? err.message : fallback);

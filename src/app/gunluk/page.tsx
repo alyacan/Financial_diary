@@ -17,11 +17,18 @@ export default function GunlukPage() {
     calendarNotes,
     handleAddCalendarNote,
     handleDeleteCalendarNote,
+    isLoading: notesLoading,
     error: calendarError,
     clearError: clearCalendarError,
   } = useCalendarNotes();
-  const { dividends, handleAddDividend, handleDeleteDividend, error: dividendError, clearError: clearDividendError } =
-    useDividends();
+  const {
+    dividends,
+    handleAddDividend,
+    handleDeleteDividend,
+    isLoading: dividendsLoading,
+    error: dividendError,
+    clearError: clearDividendError,
+  } = useDividends();
   const [activeTab, setActiveTab] = useState<TabType>("calendar");
 
   const stockTickers = Array.from(
@@ -77,8 +84,14 @@ export default function GunlukPage() {
             </span>
           </div>
           <div className="mt-3">
-            <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
-              {calendarNotes.length} <span className="text-sm font-semibold text-zinc-400">Kayıt</span>
+            <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-baseline gap-2">
+              {notesLoading ? (
+                <span className="inline-block h-7 w-16 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
+              ) : (
+                <>
+                  {calendarNotes.length} <span className="text-sm font-semibold text-zinc-400">Kayıt</span>
+                </>
+              )}
             </div>
             <div className="mt-1 text-xs font-medium text-zinc-400">
               Ekonomik kararlar & özel notlar
@@ -105,8 +118,14 @@ export default function GunlukPage() {
             </span>
           </div>
           <div className="mt-3">
-            <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
-              {dividends.length + stockTickers.length} <span className="text-sm font-semibold text-zinc-400">Hisse</span>
+            <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-baseline gap-2">
+              {dividendsLoading ? (
+                <span className="inline-block h-7 w-16 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
+              ) : (
+                <>
+                  {dividends.length + stockTickers.length} <span className="text-sm font-semibold text-zinc-400">Hisse</span>
+                </>
+              )}
             </div>
             <div className="mt-1 text-xs font-medium text-zinc-400">
               Nasdaq otomatik + BIST manuel

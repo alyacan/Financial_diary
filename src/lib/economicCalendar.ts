@@ -64,7 +64,10 @@ export async function fetchTcmbPpkDates(): Promise<EconomicEvent[]> {
   try {
     const res = await fetch(
       "https://www.tcmb.gov.tr/wps/wcm/connect/tr/tcmb+tr/main+menu/duyurular/takvim",
-      { headers: { "User-Agent": "Mozilla/5.0" } }
+      {
+        headers: { "User-Agent": "Mozilla/5.0" },
+        signal: AbortSignal.timeout(3000),
+      }
     );
     const html = await res.text();
     const tableMatch = html.match(/<table[^>]*id="midTable"[^>]*>([\s\S]*?)<\/table>/);
@@ -89,7 +92,9 @@ export async function fetchTcmbPpkDates(): Promise<EconomicEvent[]> {
 
 export async function fetchForexFactoryEvents(): Promise<EconomicEvent[]> {
   try {
-    const res = await fetch("https://nfs.faireconomy.media/ff_calendar_thisweek.json");
+    const res = await fetch("https://nfs.faireconomy.media/ff_calendar_thisweek.json", {
+      signal: AbortSignal.timeout(3000),
+    });
     const data: { title: string; country: string; date: string; impact: string }[] = await res.json();
     return data
       .filter((e) => (e.country === "USD" || e.country === "EUR") && (e.impact === "High" || e.impact === "Medium"))

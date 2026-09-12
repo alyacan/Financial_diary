@@ -66,6 +66,8 @@ export async function deleteTransaction(id: string): Promise<Transaction[]> {
 }
 
 async function currentUserId(): Promise<string | null> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (sessionData.session?.user?.id) return sessionData.session.user.id;
   const { data } = await supabase.auth.getUser();
   return data.user?.id ?? null;
 }

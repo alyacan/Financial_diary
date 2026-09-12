@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { Transaction, GOLD_SUBTYPES } from "@/lib/types";
 import { addTransaction, deleteTransaction, loadTransactions } from "@/lib/storage";
 import {
@@ -34,36 +35,64 @@ export function useInvestments() {
   const [loadingPrices, setLoadingPrices] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    Promise.all([loadTransactions(), loadManualPrices(), loadFundMetadataMap()]).then(
-      ([loaded, manualPricesLoaded, fundMetadataLoaded]) => {
-        setTransactions(loaded);
-        setManualPricesMap(manualPricesLoaded);
-        setFundMetadataState(fundMetadataLoaded);
+  const loadAllInvestmentData = useCallback(async () => {
+    try {
+      const [loaded, manualPricesLoaded, fundMetadataLoaded] = await Promise.all([
+        loadTransactions(),
+        loadManualPrices(),
+        loadFundMetadataMap(),
+      ]);
+      setTransactions(loaded);
+      setManualPricesMap(manualPricesLoaded);
+      setFundMetadataState(fundMetadataLoaded);
 
-        const initialGold: Record<string, string> = {};
-        for (const g of MANUAL_GOLD_SUBTYPES) {
-          const saved = manualPricesLoaded[priceKey("gold", g.id)];
-          if (saved) initialGold[g.id] = saved.toString();
-        }
-        setManualGoldInputs(initialGold);
-
-        const initialFund: Record<string, string> = {};
-        const initialFundReturn: Record<string, string> = {};
-        const initialFundRisk: Record<string, string> = {};
-        for (const code of new Set(loaded.filter((t) => t.assetType === "fund").map((t) => t.subType))) {
-          const savedPrice = manualPricesLoaded[priceKey("fund", code)];
-          if (savedPrice) initialFund[code] = savedPrice.toString();
-          const meta = fundMetadataLoaded[code];
-          if (meta?.annualReturnPercent !== undefined) initialFundReturn[code] = meta.annualReturnPercent.toString();
-          if (meta?.riskLevel !== undefined) initialFundRisk[code] = meta.riskLevel.toString();
-        }
-        setManualFundInputs(initialFund);
-        setManualFundReturnInputs(initialFundReturn);
-        setManualFundRiskInputs(initialFundRisk);
+      const initialGold: Record<string, string> = {};
+      for (const g of MANUAL_GOLD_SUBTYPES) {
+        const saved = manualPricesLoaded[priceKey("gold", g.id)];
+        if (saved) initialGold[g.id] = saved.toString();
       }
-    );
+      setManualGoldInputs(initialGold);
+
+      const initialFund: Record<string, string> = {};
+      const initialFundReturn: Record<string, string> = {};
+      const initialFundRisk: Record<string, string> = {};
+      for (const code of new Set(loaded.filter((t) => t.assetType === "fund").map((t) => t.subType))) {
+        const savedPrice = manualPricesLoaded[priceKey("fund", code)];
+        if (savedPrice) initialFund[code] = savedPrice.toString();
+        const meta = fundMetadataLoaded[code];
+        if (meta?.annualReturnPercent !== undefined) initialFundReturn[code] = meta.annualReturnPercent.toString();
+        if (meta?.riskLevel !== undefined) initialFundRisk[code] = meta.riskLevel.toString();
+      }
+      setManualFundInputs(initialFund);
+      setManualFundReturnInputs(initialFundReturn);
+      setManualFundRiskInputs(initialFundRisk);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Yatırım verileri yüklenemedi.");
+    }
   }, []);
+
+  useEffect(() => {
+    loadAllInvestmentData();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (
+        event === "SIGNED_IN" ||
+        event === "INITIAL_SESSION" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "USER_UPDATED"
+      ) {
+        loadAllInvestmentData();
+      } else if (event === "SIGNED_OUT") {
+        setTransactions([]);
+        setManualPricesMap({});
+        setFundMetadataState({});
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [loadAllInvestmentData]);
 
   function manualPrices(txs: Transaction[]): PriceMap {
     const result: PriceMap = {};
