@@ -92,4 +92,6 @@ export async function signOutUser(): Promise<void> {
   await supabase.auth.signOut();
   if (typeof window === "undefined") return;
   localStorage.removeItem(PROFILE_STORAGE_KEY);
+  localStorage.removeItem("financial-diary-dividend-auto-cache");
+  localStorage.removeItem("financial-diary-economic-events-cache");
 }

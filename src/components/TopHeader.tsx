@@ -59,8 +59,15 @@ export default function TopHeader() {
   });
 
   async function handleSignOut() {
-    await signOutUser();
+    try {
+      await signOutUser();
+    } catch {
+      // ignore
+    }
     setUserProfile(null);
+    if (typeof window !== "undefined") {
+      window.location.href = window.location.pathname;
+    }
   }
 
   return (

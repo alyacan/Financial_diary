@@ -9,7 +9,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onProfileUpdated: (newProfile: UserProfile) => void;
-  onSignOut: () => void;
+  onSignOut: () => void | Promise<void>;
 }
 
 export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSignOut }: Props) {
@@ -202,15 +202,22 @@ export default function ProfileModal({ isOpen, onClose, onProfileUpdated, onSign
           </div>
 
           <button
-            onClick={() => {
+            type="button"
+            onClick={async () => {
               if (window.confirm("Hesabınızdan çıkış yapmak istediğinize emin misiniz?")) {
-                onSignOut();
-                onClose();
+                try {
+                  setIsSaving(true);
+                  await onSignOut();
+                  onClose();
+                } catch {
+                  setIsSaving(false);
+                }
               }
             }}
-            className="w-full rounded-xl border border-red-200 bg-red-50/60 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400"
+            disabled={isSaving}
+            className="w-full rounded-xl border border-red-200 bg-red-50/60 py-2.5 text-xs font-bold text-red-600 transition-colors hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400 disabled:opacity-50 cursor-pointer"
           >
-            Oturumu Kapat / Çıkış Yap
+            {isSaving ? "Çıkış Yapılıyor..." : "Oturumu Kapat / Çıkış Yap"}
           </button>
         </div>
       </div>
